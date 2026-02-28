@@ -1,4 +1,4 @@
-const amadeusAPI = require("../config/amadeus");
+const amadeusAPI = require("../services/amadeus");
 const validateFlightSearch = require("../middleware/FlightDestinationMW");
 
 const searchFlights = async (req, res) => {

@@ -6,7 +6,7 @@ const app = express();
 dotenv.config();
 
 
-const connectDB = require("./config/db");
+const connectDB = require("./services/db");
 const addTripRoute = require("./routes/AddTripRoutes");
 const FlightRoute = require("./routes/flight");
 const HotelRoute = require("./routes/HotelRoutes");
@@ -23,7 +23,7 @@ app.use(cors());
 app.use(helmet());
 app.use("/addtrip", addTripRoute);
 app.use("/flight", FlightRoute);
-app.use("/hotel", HotelRoute);
+app.use("/hotels", HotelRoute);
 app.use("/contact", contactRoute);
 app.use("/blog", blogRoute);
 

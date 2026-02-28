@@ -1,10 +1,15 @@
 const trip = require("../model/tripSchema");
+const cloudinary = require("../services/cloudinary");
 
-
-
+// create trip
 const createTrip = async (req, res) => {
   const { name, city, category, description, price, duration, location } =
     req.body;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "Please upload an image" });
+  }
+  const imagepath = req.file.path;
 
   if (
     !name ||
@@ -19,12 +24,9 @@ const createTrip = async (req, res) => {
   }
 
   try {
-    let imageUrl = null;
-
-    if (req.file) {
-      imageUrl = req.file.path; 
-    }
-
+    const result = await cloudinary.uploader.upload(imagepath, {
+      folder: "trips",
+    });
     const newTrip = new trip({
       name,
       city,
@@ -33,9 +35,9 @@ const createTrip = async (req, res) => {
       price,
       duration,
       location,
-      imageUrl,
+      imageUrl: result.secure_url,
+      cloudinaryId: result.public_id,
     });
-
     await newTrip.save();
 
     res.status(201).json({

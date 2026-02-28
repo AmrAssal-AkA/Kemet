@@ -1,6 +1,7 @@
-const amadeusAPI = require("../config/amadeus");
+const amadeusAPI = require("../services/amadeus");
 
-const searchHotels = async (req, res) => {
+
+const getHotelOffers = async (req, res) => {
   const { cityCode, checkInDate, checkOutDate, NumberOfGuests, NumberOfrooms } =
     req.body;
   if (
@@ -12,7 +13,7 @@ const searchHotels = async (req, res) => {
   ) {
     return res.status(400).json({
       error:
-        "Missing required body parameters. Please provide cityCode, checkInDate, checkOutDate, NumberOfGuests, and NumberOfrooms.",
+        "Missing required query parameters. Please provide cityCode, checkInDate, checkOutDate, NumberOfGuests, and NumberOfrooms.",
     });
   }
   try {
@@ -60,6 +61,37 @@ const searchHotels = async (req, res) => {
   }
 };
 
+const BookingHotel = async (req, res) => {
+  const { offerId, checkInDate, checkOutDate, guests } = req.body;
+  if (!offerId || !checkInDate || !checkOutDate || !guests) {
+    return res.status(400).json({
+      error:
+        "Missing required parameters. Please provide offerId, checkInDate, checkOutDate, and guests.",
+    });
+  }
+  try {
+    const bookingResponse = await amadeusAPI.booking.hotelBookings.post({
+      offerId,
+      checkInDate,
+      checkOutDate,
+      guests: [
+        {
+          adults: parseInt(guests.adults) || 1,
+          children: parseInt(guests.children) || 0,
+          infants: parseInt(guests.infants) || 0,
+        },
+      ],
+    });
+
+    res.status(201).json({
+      success: true,
+      data: bookingResponse.data,
+    });
+  } catch (error) {
+    console.error("Error booking hotel:", error);
+    res.status(500).json({ error: "Failed to book hotel" });
+  }
+}
 
 
-module.exports = searchHotels;
+module.exports = { getHotelOffers, BookingHotel };

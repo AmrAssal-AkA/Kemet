@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 
 const tripSchema = new mongoose.Schema({
     id : {
-    type: Date,
-    default: Date.now
+    type: String,
+    default: () => new mongoose.Types.ObjectId().toString(),
     },
     name: {
         type: String,

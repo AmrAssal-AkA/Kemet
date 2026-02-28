@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const blogSchema = new mongoose.Schema({
     id: {
-        type: Date,
-        default: Date.now
+        type: String,
+        default: () => new mongoose.Types.ObjectId().toString()
     },
     title: {
         type: String,
@@ -15,6 +15,7 @@ const blogSchema = new mongoose.Schema({
     },
     imageUrl: {
         type: String,
+        required: true
     },
 });
 

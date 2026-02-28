@@ -13,8 +13,7 @@ module.exports = (req, res, nxt) => {
     "MUH", // Marsa Matruh
     "SSH", // Sharm El Sheikh
     "RMF", // Marsa Alam
-    "DBB",  // Dabaa
-
+    "DBB", // Dabaa
   ];
   if (allowedCities.includes(cityCode)) {
     nxt();

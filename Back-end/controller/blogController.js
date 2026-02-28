@@ -1,4 +1,5 @@
 const blog = require("../model/blogSchema");
+const cloudinary = require("../services/cloudinary");
 
 // Create Blog
 const createBlog = async (req, res) => {
@@ -6,16 +7,24 @@ const createBlog = async (req, res) => {
   if (!title || !content) {
     return res.status(400).json({ message: "Please fill the blog" });
   }
-  let imageUrl = null;
-  if (req.file) {
-    imageUrl = req.file.path;
+  if(!req.file){
+    return res.status(400).json({ message: "Please upload an image" });
+  }
+  const imagePath = req.file.path;
+
+  if(!title || !content || !imagePath){
+    return res.status(400).json({ message: "Please fill all the fields" });
   }
 
   try {
+    const imageResult = await cloudinary.uploader.upload(imagePath, {
+      folder: "blogs",
+    })
     const blogs = new blog({
       title,
       content,
-      imageUrl,
+      imageUrl: imageResult.secure_url,
+      cloudinaryId: imageResult.public_id,
     });
     await blogs.save();
     res.status(201).json({ message: "Blog Created" });
