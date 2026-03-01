@@ -8,10 +8,11 @@ dotenv.config();
 
 const connectDB = require("./services/db");
 const addTripRoute = require("./routes/AddTripRoutes");
-const FlightRoute = require("./routes/flight");
+const FlightRoute = require("./routes/flightRoutes");
 const HotelRoute = require("./routes/HotelRoutes");
 const contactRoute = require("./routes/contactRoutes");
 const blogRoute = require("./routes/blogRoutes");
+const BookingRoute = require("./routes/BookingRoutes");
 const port = process.env.PORT;
 
 
@@ -26,6 +27,7 @@ app.use("/flight", FlightRoute);
 app.use("/hotels", HotelRoute);
 app.use("/contact", contactRoute);
 app.use("/blog", blogRoute);
+app.use("/booking", BookingRoute);
 
 app.get("/", (req,res) => {
     res.send("Welcome to Kemet Travel Agency API");

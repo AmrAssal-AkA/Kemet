@@ -1,7 +1,7 @@
 const amadeusAPI = require("../services/amadeus");
 
 
-const getHotelOffers = async (req, res) => {
+exports.SearchHotel = async (req, res) => {
   const { cityCode, checkInDate, checkOutDate, NumberOfGuests, NumberOfrooms } =
     req.body;
   if (
@@ -61,37 +61,33 @@ const getHotelOffers = async (req, res) => {
   }
 };
 
-const BookingHotel = async (req, res) => {
-  const { offerId, checkInDate, checkOutDate, guests } = req.body;
-  if (!offerId || !checkInDate || !checkOutDate || !guests) {
-    return res.status(400).json({
-      error:
-        "Missing required parameters. Please provide offerId, checkInDate, checkOutDate, and guests.",
-    });
-  }
+exports.getHotelOffers = async (req, res) => {
   try {
-    const bookingResponse = await amadeusAPI.booking.hotelBookings.post({
-      offerId,
+    const { hotelId, checkInDate, checkOutDate, adults } = req.query;
+
+    if(!hotelId || !checkInDate || !checkOutDate || !adults) {
+      return res.status(400).json({
+        error: "Missing required query parameters. Please provide hotelId, checkInDate, checkOutDate, and adults.",
+      });
+    }
+
+    const response = await amadeusAPI.shopping.hotelOffersSearch.get({
+      hotelIds: hotelId,
       checkInDate,
       checkOutDate,
-      guests: [
-        {
-          adults: parseInt(guests.adults) || 1,
-          children: parseInt(guests.children) || 0,
-          infants: parseInt(guests.infants) || 0,
-        },
-      ],
+      adults: parseInt(adults) || 1,
+      currency: "EGP",
     });
-
-    res.status(201).json({
-      success: true,
-      data: bookingResponse.data,
-    });
+    res.status(200).json(response.data);
   } catch (error) {
-    console.error("Error booking hotel:", error);
-    res.status(500).json({ error: "Failed to book hotel" });
+    console.error("Error fetching hotel offers:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to fetch hotel offers from the server" });
   }
 }
 
 
-module.exports = { getHotelOffers, BookingHotel };
+
+
+

@@ -4,9 +4,7 @@ const flightController = require("../controller/flighController");
 const FlightDestinationMW = require("../middleware/FlightDestinationMW");
 
 router.get("/search", FlightDestinationMW, flightController.searchFlights);
+router.post("/price", FlightDestinationMW, flightController.priceFlight);
 
-router.post("/pricing", flightController.flightOfferPricing);
-
-router.post("/book", flightController.createFlightOrder);
 
 module.exports = router;
