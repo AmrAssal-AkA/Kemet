@@ -36,10 +36,9 @@ const tripSchema = new mongoose.Schema({
         required: true
     },
     imageUrl: {
-        type: String,
-        required: true
+        type: String
     }
 });
 
-const trip =  mongoose.model("trip", tripSchema);
-module.exports = trip;
+
+module.exports = mongoose.models.trips || mongoose.model("trips", tripSchema);

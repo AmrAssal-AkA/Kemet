@@ -100,11 +100,16 @@ const updataTripByName = async (req, res) => {
       duration: req.body.duration,
       location: req.body.location,
     };
-
-    // Add image URL if image was uploaded
-    if (req.file && req.file.path) {
-      updateData.imageUrl = req.file.path;
+    if (!req.file) {
+      return res.status(400).json({ message: "Please upload an image" });
     }
+    const imagepath = req.file.path;
+
+    const result = await cloudinary.uploader.upload(imagepath, {
+      folder: "trips",
+    });
+    updateData.imageUrl = result.secure_url;
+    updateData.cloudinaryId = result.public_id;
 
     const tripByName = await trip.findOneAndUpdate(
       {

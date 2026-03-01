@@ -1,64 +1,6 @@
 const mongoose = require("mongoose");
 
 
-const HotelOfferSchema = new mongoose.Schema({
-    hotelId: {
-        type: String,
-        required: true,
-    },
-    offerId: {
-        type: String,
-        required: true,
-    },
-    checkInDate: {
-        type: Date,
-        required: true,
-    },
-    checkOutDate: {
-        type: Date,
-        required: true,
-    },
-    roomQuantity: {
-        type: Number,
-        required: true,
-    },
-    adults: {
-        type: Number,
-        required: true,
-    },
-    price: {
-        type: Number,
-        required: true,
-    },
-});
-
-const flightOfferSchema = new mongoose.Schema({
-    offerId: {
-        type: String,
-        required: true,
-    },
-    origin: {
-        type: String,
-        required: true,
-    },
-    destination: {
-        type: String,
-        required: true,
-    },
-    departureDate: {
-        type: Date,
-        required: true,
-    },
-    returnDate: {
-        type: Date,
-        required: true,
-    },
-    price: {
-        type: Number,
-        required: true,
-    },
-});
-
 
 const BookingSchema = new mongoose.Schema({
     user: {
@@ -68,13 +10,22 @@ const BookingSchema = new mongoose.Schema({
     },
     BookingType: {
         type: String,
-        enum: ["trip", "Hotel", "Flight"],
+        enum : ["Flight", "Hotel", "trips"],
         required: true,
     },
-    trip: {
+    flight: {
+        orderId: String,
+        data: mongoose.Schema.Types.Mixed,
+    },
+    hotel: {
+        orderId: String,
+        data: mongoose.Schema.Types.Mixed,
+    },
+    trip: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "trip",
-    },
+        required: true,
+    }],
     status: {
         type: String,
         enum: ["Pending", "Confirmed", "Cancelled"],
@@ -87,19 +38,22 @@ const BookingSchema = new mongoose.Schema({
     },
     totalPrice: {
         type: Number,
-        currency: "EGP",
     },
     details: {
-        flightOffer: flightOfferSchema,
-        hotelOffer: HotelOfferSchema,
         type: mongoose.Schema.Types.Mixed,
+    },
+    currency: {
+        type: String,
+        default: "EGP"
     },
     createdAt: {
         type: Date,
         default: Date.now,
     }
     
-})
+}, {
+    timestamps: true,
+});
 
 
 module.exports = mongoose.model("Booking" , BookingSchema);
