@@ -33,7 +33,7 @@ const getAllContacts = async (req, res) => {
 };
 
 // Get Single Contact
-const getTripBySingle = async (req, res) => {
+const getContactByName = async (req, res) => {
     const {name} = req.params;
     try{
         const contactByOne = await contact.findOne({name: name});
@@ -61,4 +61,4 @@ const deleteContact = async (req, res) => {
     }
 };
 
-module.exports = {createContact, getAllContacts, getTripBySingle, deleteContact};
+module.exports = {createContact, getAllContacts, getContactByName, deleteContact};

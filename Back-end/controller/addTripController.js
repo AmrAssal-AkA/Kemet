@@ -35,7 +35,7 @@ const createTrip = async (req, res) => {
       price,
       duration,
       location,
-      imageUrl: result.secure_url,
+      imageUrl: result.secure_url || null,
       cloudinaryId: result.public_id,
     });
     await newTrip.save();
@@ -75,7 +75,7 @@ const getTripByName = async (req, res) => {
 };
 
 //delete by name
-const DeletTripByName = async (req, res) => {
+const DeleteTripByName = async (req, res) => {
   const { name } = req.params;
   try {
     const tripByName = await trip.findOneAndDelete({ name: name });
@@ -135,6 +135,6 @@ module.exports = {
   createTrip,
   getAllTrips,
   getTripByName,
-  DeletTripByName,
+  DeleteTripByName,
   updataTripByName,
 };

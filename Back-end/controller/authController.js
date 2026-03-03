@@ -68,6 +68,7 @@ const login = async (req, res) => {
 
 // Logout (Sign Out)
 const logout = (req, res) => {
+  res.clearCookie("x-auth-token");
   res.status(200).json({ message: "Logged out successfully" });
 };
 
