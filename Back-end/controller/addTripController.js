@@ -60,26 +60,26 @@ const getAllTrips = async (req, res) => {
   }
 };
 
-//get by name
-const getTripByName = async (req, res) => {
-  const { name } = req.params;
+//get by id
+const getTripById = async (req, res) => {
+  const { id } = req.params;
   try {
-    const tripByName = await trip.findOne({ name: name });
-    if (!tripByName) {
+    const tripById = await trip.findOne({ id: id });
+    if (!tripById) {
       return res.status(404).json({ message: "Trip not found" });
     }
-    res.status(201).json(tripByName);
+    res.status(201).json(tripById);
   } catch (error) {
     res.status(500).json({ message: "Server Error " });
   }
 };
 
-//delete by name
-const DeleteTripByName = async (req, res) => {
-  const { name } = req.params;
+//delete by id
+const DeleteTripById = async (req, res) => {
+  const { id } = req.params;
   try {
-    const tripByName = await trip.findOneAndDelete({ name: name });
-    if (!tripByName) {
+    const tripById = await trip.findOneAndDelete({ id: id });
+    if (!tripById) {
       return res.status(404).json({ message: "Trip not found" });
     }
     res.status(201).json({ message: "Trip deleted successfully" });
@@ -88,8 +88,8 @@ const DeleteTripByName = async (req, res) => {
   }
 };
 
-//update by name
-const updataTripByName = async (req, res) => {
+//update by id
+const updateTripById = async (req, res) => {
   try {
     const updateData = {
       name: req.body.name,
@@ -111,20 +111,20 @@ const updataTripByName = async (req, res) => {
     updateData.imageUrl = result.secure_url;
     updateData.cloudinaryId = result.public_id;
 
-    const tripByName = await trip.findOneAndUpdate(
+    const tripById = await trip.findOneAndUpdate(
       {
-        name: req.params.name,
+        id: req.params.id,
       },
       updateData,
       { new: true },
     );
 
-    if (!tripByName) {
+    if (!tripById) {
       return res.status(404).json({ message: "Trip not found" });
     }
     res.status(201).json({
       message: "Trip updated successfully",
-      trip: tripByName,
+      trip: tripById,
     });
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -134,7 +134,7 @@ const updataTripByName = async (req, res) => {
 module.exports = {
   createTrip,
   getAllTrips,
-  getTripByName,
-  DeleteTripByName,
-  updataTripByName,
+  getTripById,
+  DeleteTripById,
+  updateTripById,
 };

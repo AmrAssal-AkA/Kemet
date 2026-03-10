@@ -45,10 +45,10 @@ const getAllBlog = async (req, res) => {
 };
 
 // Get Single Blog
-const getOneBlog = async (req, res) => {
-  const { name } = req.params;
+const getOneBlogById = async (req, res) => {
+  const { id } = req.params;
   try {
-    const blogByOne = await blog.findOne({ name: name });
+    const blogByOne = await blog.findOne({ id: id });
     if (!blogByOne) {
       return res.status(404).json({ message: "blog not found." });
     }
@@ -59,11 +59,11 @@ const getOneBlog = async (req, res) => {
 };
 
 // Update Blog
-const updateBlog = async (req, res) => {
+const updateBlogById = async (req, res) => {
   try {
     const blogUpdate = await blog.findOneAndUpdate(
       {
-        name: req.params.name,
+        id: req.params.id,
       },
       {
         title: req.body.title,
@@ -82,10 +82,10 @@ const updateBlog = async (req, res) => {
 };
 
 // Delete Blog
-const deleteBlog = async (req, res) => {
-  const { name } = req.params;
+const deleteBlogById = async (req, res) => {
+  const { id } = req.params;
   try {
-    const blogDelete = await blog.findOneAndDelete({ name: name });
+    const blogDelete = await blog.findOneAndDelete({ id: id });
     if (!blogDelete) {
       return res.status(404).json({ message: "Blog not found" });
     }
@@ -95,4 +95,4 @@ const deleteBlog = async (req, res) => {
   }
 };
 
-module.exports = { createBlog, getAllBlog, getOneBlog, updateBlog, deleteBlog };
+module.exports = { createBlog, getAllBlog, getOneBlogById, updateBlogById, deleteBlogById };

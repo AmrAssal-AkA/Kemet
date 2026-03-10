@@ -26,6 +26,22 @@ export default function Login() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const { token, user: userParam, error } = router.query;
+
+    if (token && userParam) {
+      try {
+        const user = JSON.parse(decodeURIComponent(userParam));
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        redirectByRole(user.role);
+        return;
+      } catch (_) {}
+    }
+
+    if (error) {
+      setError("Google sign-in failed. Please try again.");
+    }
+
     const user = JSON.parse(localStorage.getItem("user"));
     if (user) {
       redirectByRole(user.role);
@@ -58,22 +74,8 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setError("");
-    setLoading(true);
-
-    try {
-      const data = await loginWithGoogle();
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      redirectByRole(data.user.role);
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+  const handleGoogleLogin = () => {
+    loginWithGoogle();
   };
 
   return (
@@ -90,7 +92,8 @@ export default function Login() {
           required
         />
 
-        <br /><br />
+        <br />
+        <br />
 
         <input
           type="password"
@@ -101,13 +104,15 @@ export default function Login() {
           required
         />
 
-        <br /><br />
+        <br />
+        <br />
 
         <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <br /><br />
+        <br />
+        <br />
 
         <button type="button" onClick={handleGoogleLogin} disabled={loading}>
           Continue with Google

@@ -7,9 +7,9 @@ const AuthorizeVerifyMW = require("../middleware/AuthorizeMW");
 
 router.post("/", authVerifyMW, AuthorizeVerifyMW("admin"), upload.single("image"), addTripController.createTrip);
 router.get("/", addTripController.getAllTrips);
-router.get("/:name", addTripController.getTripByName);
-router.put("/:name", authVerifyMW, AuthorizeVerifyMW("admin"), upload.single("image"), addTripController.updataTripByName);
-router.delete("/:name", authVerifyMW, AuthorizeVerifyMW("admin"), addTripController.DeleteTripByName);
+router.get("/:id", addTripController.getTripById);
+router.put("/:id", authVerifyMW, AuthorizeVerifyMW("admin"), upload.single("image"), addTripController.updateTripById);
+router.delete("/:id", authVerifyMW, AuthorizeVerifyMW("admin"), addTripController.DeleteTripById);
 
 
 module.exports = router;

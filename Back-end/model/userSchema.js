@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function () { return !this.googleId; }, 
     minlength: 7,
     select: false,
     validate: {
@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["user", "admin", "guide", "guest"],
+    enum: ["user", "admin", "LocalGuide"],
     default: "user",
   },
   bookings: [
@@ -45,6 +45,15 @@ const userSchema = new mongoose.Schema({
       ref: "Booking",
     },
   ],
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  googleId: {
+    type: String,
+    sparse: true, 
+    unique: true,
+  }
 });
 
 userSchema.method("generateAuthToken", function () {

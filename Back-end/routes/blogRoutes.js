@@ -8,8 +8,8 @@ const AuthorizeVerifyMW = require("../middleware/AuthorizeMW");
 
 router.post("/", authVerifyMW,upload.single("image"), blogController.createBlog);
 router.get("/", blogController.getAllBlog);
-router.get("/:name", blogController.getOneBlog);
-router.put("/:name", authVerifyMW, AuthorizeVerifyMW("admin"), upload.single("image"), blogController.updateBlog);
-router.delete("/:name", authVerifyMW, AuthorizeVerifyMW("admin"), blogController.deleteBlog);
+router.get("/:id", blogController.getOneBlogById);
+router.put("/:id", authVerifyMW, AuthorizeVerifyMW("admin"), upload.single("image"), blogController.updateBlogById);
+router.delete("/:id", authVerifyMW, AuthorizeVerifyMW("admin"), blogController.deleteBlogById);
 
 module.exports = router;
