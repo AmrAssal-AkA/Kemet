@@ -4,8 +4,9 @@ const trip = require("../model/TripSchema");
 const flightServices = require("./flight.services");
 const hotelServices = require("./Hotel.services");
 
-exports.createunifiedBooking = async (data, userId) => {
-    let totalPrice =0;
+
+exports.createUnifiedBooking = async (data, userId) => {
+  let totalPrice =0;
     let currency = "EGP";
 
     let flightData = null;
@@ -52,4 +53,6 @@ exports.createunifiedBooking = async (data, userId) => {
         currency,
         status: "confirmed"
     })
-}
+};
+
+exports.createUnifiedBooking;
