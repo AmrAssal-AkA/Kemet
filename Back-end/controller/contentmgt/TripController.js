@@ -1,5 +1,5 @@
-const trip = require("../model/tripSchema");
-const cloudinary = require("../services/cloudinary");
+const trip = require("../../model/tripSchema");
+const cloudinary = require("../../services/cloudinary");
 
 // create trip
 const createTrip = async (req, res) => {

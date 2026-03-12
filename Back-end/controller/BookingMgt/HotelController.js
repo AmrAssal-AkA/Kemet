@@ -1,4 +1,4 @@
-const amadeusAPI = require("../services/amadeus");
+const amadeusAPI = require("../../services/amadeus");
 
 
 exports.SearchHotel = async (req, res) => {

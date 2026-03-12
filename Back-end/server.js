@@ -27,10 +27,10 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({origin: "http://localhost:3000", credentials: true}));
+app.use(session({secret: "SessionSecret", resave: false, saveUninitialized: true}));
 app.use(helmet());
-app.use(session({secret: "secretSession", resave: false, saveUninitialized: true}));
-require("./controller/authController");
+require("./controller/auth/authController");
 app.use(passport.initialize());
 
 // Routes

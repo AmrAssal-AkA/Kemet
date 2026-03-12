@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const contactController = require("../controller/contactController");
+const contactController = require("../controller/contentmgt/contactController");
 const authVerifyMW = require("../middleware/AuthVerifyMW");
 const AuthorizeVerifyMW = require("../middleware/AuthorizeMW");
 

@@ -1,11 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const authController = require("../controller/authController");
+const authController = require("../controller/auth/authController");
 const authVerifyMW = require("../middleware/AuthVerifyMW");
 const passport = require("passport");
 
 // Register a new user (Sign Up)
 router.post("/register", authController.register);
+
+// Verify user's email
+router.get("/verify-email", authController.verifyEmail);
 
 // Continue with Google 
 router.get(

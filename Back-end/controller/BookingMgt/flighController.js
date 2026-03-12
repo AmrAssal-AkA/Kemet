@@ -1,5 +1,5 @@
-const amadeus = require("../services/amadeus");
-const FlightService = require("../services/flight.services");
+const amadeus = require("../../services/amadeus");
+const FlightService = require("../../services/flight.services");
 
 // search for flights
 exports.searchFlights = async (req, res) => {

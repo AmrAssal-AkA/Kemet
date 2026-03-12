@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const flightController = require("../controller/flighController");
+const flightController = require("../controller/BookingMgt/flighController");
 const FlightDestinationMW = require("../middleware/FlightDestinationMW");
 const authVerifyMW = require("../middleware/AuthVerifyMW");
 const AuthorizeVerifyMW = require("../middleware/AuthorizeMW");

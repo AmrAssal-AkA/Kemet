@@ -1,8 +1,9 @@
-const User = require("../model/userSchema");
+const User = require("../../model/userSchema");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require("passport");
+const { sendEmail } = require("../../services/miling");
 
 // JWT
 const generateToken = (userId, role) => {
@@ -29,7 +30,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:8000/auth/google/callback",
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -74,7 +75,7 @@ const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role === "admin" ? "admin" : "user",
+      role: "user", 
     });
 
     const token = generateToken(user.userId, user.role);
@@ -87,7 +88,19 @@ const register = async (req, res) => {
       },
       message: "User registered successfully",
     });
+
+    // Send verification email
+    const verifyURL = `${process.env.BASE_URL || "http://localhost:8000"}/auth/verify-email?token=${token}`;
+    await sendEmail({
+      to: user.email,
+      subject: "Kemet Travel - Verify Your Email",
+      html: `<p>Hello ${user.name},</p>
+             <p>Thank you for registering. Please verify your email by clicking this link:</p>
+             <a href="${verifyURL}">${verifyURL}</a>`,
+      text: `Hello ${user.name},\n\nThank you for registering. Please verify your email by copying and pasting this link into your browser:\n${verifyURL}`,
+    });
   } catch (error) {
+    console.error("Registration error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -116,8 +129,14 @@ const login = async (req, res) => {
     }
 
     const token = generateToken(existingUser.userId, existingUser.role);
+    res.cookie("x-auth-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
-      token,
       user: {
         name: existingUser.name,
         email: existingUser.email,
@@ -150,4 +169,39 @@ const googleCallback = (req, res) => {
   }
 };
 
-module.exports = { register, login, logout, googleCallback };
+// Email Verification
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res
+        .status(400)
+        .json({ message: "Verification token is missing." });
+    }
+
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findOne({ userId: decoded.userId });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found for verification." });
+    }
+
+    if (user.isVerified) {
+      return res.status(200).send("<h1>Email has already been verified.</h1>");
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    res
+      .status(200)
+      .send("<h1>Email verified successfully! You can now log in.</h1>");
+  } catch (error) {
+    console.error("Email verification error:", error);
+    res.status(400).send("<h1>Invalid or expired verification link.</h1>");
+  }
+};
+
+module.exports = { register, login, logout, googleCallback, verifyEmail };

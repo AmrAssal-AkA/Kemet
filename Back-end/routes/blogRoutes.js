@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const blogController = require("../controller/blogController");
+const blogController = require("../controller/contentmgt/blogController");
 const upload = require("../middleware/multer");
 const authVerifyMW = require("../middleware/AuthVerifyMW");
 const AuthorizeVerifyMW = require("../middleware/AuthorizeMW");
