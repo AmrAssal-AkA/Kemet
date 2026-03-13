@@ -26,7 +26,7 @@ if (typeof window === "undefined") return;
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/login");
+    router.push("/auth/login");
   };
 
   return (

@@ -21,3 +21,23 @@ export const registerUser = async (formData) => {
 export const loginWithGoogle = () => {
   window.location.href = "http://localhost:8000/auth/continueWithGoogle";
 };
+
+export const resetPassword = async (email) => {
+  try {
+    const res = await axios.post("/api/auth/reset-password", { email });
+    return res.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Reset password failed");
+  }
+};
+
+export const confirmResetPassword = async (formData) => {
+  try {
+    const res = await axios.post("/api/auth/reset-password/confirm", formData);
+    return res.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Reset password confirmation failed",
+    );
+  }
+};

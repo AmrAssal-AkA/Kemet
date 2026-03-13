@@ -3,9 +3,8 @@ const {sendEmail} = require("../../services/miling");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const RESET_PASSWORD_SECRET =
-    process.env.RESET_PASSWORD_SECRET || process.env.ACCESS_TOKEN_SECRET || "ResetSecretKey";
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const RESET_PASSWORD_SECRET = process.env.ACCESS_TOKEN_SECRET ;
+const FRONTEND_URL = "http://localhost:3000/auth/PasswrdConfirm";
 
 const generateResetToken = async (req, res) => {
     const {email} = req.body;
@@ -18,7 +17,7 @@ const generateResetToken = async (req, res) => {
            return res.status(404).json({ message: "User not found" });
        }
        const resetToken = jwt.sign({userId: user.userId}, RESET_PASSWORD_SECRET, {expiresIn: "1h"});
-       const resetLink = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
+       const resetLink = `${FRONTEND_URL}/?token=${resetToken}`;
        await sendEmail({
         to: email,
         subject: "Password Reset Request",
@@ -33,13 +32,12 @@ const generateResetToken = async (req, res) => {
 }
 
 const resetPassword = async (req, res)=> {
-    const token = req.query.token || req.body.token;
+    const token = req.query.token ;
     const {newPassword} = req.body;
     try{
         if (!token || !newPassword) {
             return res.status(400).json({ message: "Token and newPassword are required" });
         }
-
         if (newPassword.length < 7) {
             return res.status(400).json({ message: "Password must be at least 7 characters" });
         }
