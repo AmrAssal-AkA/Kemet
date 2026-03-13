@@ -2,11 +2,19 @@ const express = require("express");
 const router = express.Router();
 const flightController = require("../controller/BookingMgt/flighController");
 const FlightDestinationMW = require("../middleware/FlightDestinationMW");
-const authVerifyMW = require("../middleware/AuthVerifyMW");
-const AuthorizeVerifyMW = require("../middleware/AuthorizeMW");
+const isUser = require("../middleware/isUser");
 
-router.get("/search", authVerifyMW, FlightDestinationMW, flightController.searchFlights);
-router.post("/price", authVerifyMW, AuthorizeVerifyMW("admin"), FlightDestinationMW, flightController.priceFlight);
-
+router.get(
+  "/search",
+  isUser,
+  FlightDestinationMW,
+  flightController.searchFlights,
+);
+router.post(
+  "/price",
+  isUser,
+  FlightDestinationMW,
+  flightController.priceFlight,
+);
 
 module.exports = router;

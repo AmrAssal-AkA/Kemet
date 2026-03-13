@@ -32,7 +32,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
     },
-    async (accessToken, refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, profilePhotos,done) => {
       try {
         let user = await User.findOne({ googleId: profile.id });
 
@@ -46,6 +46,7 @@ passport.use(
               name: profile.displayName,
               email: profile.emails[0].value,
               googleId: profile.id,
+              profilePhoto: profilePhotos[0]?.url,
             });
           }
         }
@@ -61,7 +62,7 @@ passport.use(
 // Register a new user (Sign Up)
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -75,7 +76,6 @@ const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: "user", 
     });
 
     const token = generateToken(user.userId, user.role);

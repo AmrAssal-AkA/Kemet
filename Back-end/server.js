@@ -41,7 +41,7 @@ app.use("/contact", contactRoute);
 app.use("/blog", blogRoute);
 app.use("/booking", BookingRoute);
 app.use("/auth", authRoute);
-app.use("/admin", adminRoute);
+app.use("/adminDashboard", adminRoute);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Kemet Travel Agency API");

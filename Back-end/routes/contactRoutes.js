@@ -1,12 +1,8 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const contactController = require("../controller/contentmgt/contactController");
-const authVerifyMW = require("../middleware/AuthVerifyMW");
-const AuthorizeVerifyMW = require("../middleware/AuthorizeMW");
+const isUser = require("../middleware/isUser");
 
-router.post("/", authVerifyMW, contactController.createContact);
-router.get("/" , authVerifyMW, AuthorizeVerifyMW("admin"), contactController.getAllContacts);
-router.get("/:name", authVerifyMW, AuthorizeVerifyMW("admin"), contactController.getContactByName);
-router.delete("/:name", authVerifyMW, AuthorizeVerifyMW("admin"), contactController.deleteContact);
+router.post("/", isUser, contactController.createContact);
 
 module.exports = router;
