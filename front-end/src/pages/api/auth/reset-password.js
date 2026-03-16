@@ -19,6 +19,7 @@ async function handler(req, res) {
     if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
 

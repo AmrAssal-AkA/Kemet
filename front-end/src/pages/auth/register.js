@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { loginWithGoogle, registerUser } from "../services/authService";
+import { loginWithGoogle, registerUser } from "@/services/authService";
 import Link from "next/link";
 import { FaGoogle } from "react-icons/fa";
 import Image from "next/image";

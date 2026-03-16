@@ -1,9 +1,9 @@
 import React from 'react'
 
-function OfferingPage() {
+function Offerings() {
   return (
-    <div>OfferingPage</div>
+    <div>Offerings</div>
   )
 }
 
-export default OfferingPage
+export default Offerings

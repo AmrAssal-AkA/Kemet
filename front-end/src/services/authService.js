@@ -5,7 +5,7 @@ export const loginUser = async (formData) => {
     const res = await axios.post("/api/auth/login", formData);
     return res.data;
   } catch (error) {
-    throw error.response?.data?.message || "Login failed";
+    throw new Error(error.response?.data?.message || "Login failed");
   }
 };
 
@@ -14,7 +14,7 @@ export const registerUser = async (formData) => {
     const res = await axios.post("/api/auth/register", formData);
     return res.data;
   } catch (error) {
-    throw error.response?.data?.message || "Registration failed";
+    throw new Error(error.response?.data?.message || "Registration failed");
   }
 };
 
@@ -33,7 +33,7 @@ export const resetPassword = async (email) => {
 
 export const confirmResetPassword = async (formData) => {
   try {
-    const res = await axios.post("/api/auth/reset-password/confirm", formData);
+    const res = await axios.post("/api/auth/reset-passwordConfirm", formData);
     return res.data;
   } catch (error) {
     throw new Error(
