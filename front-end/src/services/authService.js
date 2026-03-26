@@ -1,5 +1,15 @@
 import axios from "axios";
 
+export const ApiCall = async (url, options = {}) => {
+  const token = localStorage.getItem("x-auth-token");
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
+  return axios({ url, ...options, headers, credentials: "include" });
+};
+
 export const loginUser = async (formData) => {
   try {
     const res = await axios.post("/api/auth/login", formData);

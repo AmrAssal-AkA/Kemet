@@ -18,7 +18,7 @@ const createContact = async (req, res) => {
         res.status(201).json({message: 'Thank you for contacting us'});
     } catch (error) {
         console.error("Error creating form:", error);
-        res.status(500).json({message: "Server Error"});
+        res.status(500).json({message: "Server Error", error: error.message});
     }
 };
 
@@ -28,7 +28,7 @@ const getAllContacts = async (req, res) => {
         const allcontacts = await contact.find();
         res.status(201).json(allcontacts);
   } catch (error) {
-        res.status(500).json({message: "Server Error"});
+        res.status(500).json({message: "Server Error", error: error.message});
   }
 };
 
@@ -42,13 +42,13 @@ const getContactByName = async (req, res) => {
         }
         res.status(201).json(contactByOne);
     } catch(error){
-        res.status(500).json({message: "Server Error"});
+        res.status(500).json({message: "Server Error", error: error.message});
     }
 };
 
 
 // Delete Contact
-const deleteContact = async (req, res) => {
+const deleteContactByName = async (req, res) => {
     const {name} = req.params;
     try{
         const tripDelete = await contact.findOneAndDelete({name: name});
@@ -57,8 +57,8 @@ const deleteContact = async (req, res) => {
         }
         res.status(201).json({message: "Contact deleted successfully"});
     } catch(error){
-        res.status(500).json({message: "Server Error"});
+        res.status(500).json({message: "Server Error", error: error.message });
     }
 };
 
-module.exports = {createContact, getAllContacts, getContactByName, deleteContact};
+module.exports = {createContact, getAllContacts, getContactByName, deleteContactByName};

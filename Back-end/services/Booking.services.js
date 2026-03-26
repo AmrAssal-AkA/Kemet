@@ -70,6 +70,6 @@ exports.createUnifiedBooking = async (data, userId) => {
     });
   } catch (error) {
     console.error("Error creating unified booking:", error);
-    throw new Error("Failed to create booking. Please try again later.");
+    throw new Error("Failed to create booking. Please try again later.", { cause: error });
   }
 };

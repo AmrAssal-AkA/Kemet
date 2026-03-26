@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 export default function UserDashboard() {
-
   const router = useRouter();
   const [user, setUser] = useState(null);
+
 
   useEffect(() => {
 if (typeof window === "undefined") return;

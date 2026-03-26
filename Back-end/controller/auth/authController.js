@@ -32,7 +32,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
     },
-    async (accessToken, refreshToken, profile, profilePhotos,done) => {
+    async (accessToken, refreshToken, profile, done) => {
       try {
         let user = await User.findOne({ googleId: profile.id });
 
@@ -46,7 +46,7 @@ passport.use(
               name: profile.displayName,
               email: profile.emails[0].value,
               googleId: profile.id,
-              profilePhoto: profilePhotos[0]?.url,
+              profilePhoto: profile.photos[0]?.value,
             });
           }
         }
@@ -58,8 +58,7 @@ passport.use(
     },
   ),
 );
-
-// Register a new user (Sign Up)
+// Registration (Sign Up)
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -79,6 +78,15 @@ const register = async (req, res) => {
     });
 
     const token = generateToken(user.userId, user.role);
+    res.header("X-Auth-Token", `Bearer ${token}`);
+
+    const verifyURL = `${process.env.BASE_URL || "http://localhost:8000"}/auth/verify-email?token=${token}`;
+    await sendEmail({
+      to: user.email,
+      subject: "Kemet Travel - Verify Your Email",
+      text: `Hello ${user.name},\n\nThank you for registering. Please verify your email by copying and pasting this link into your browser:\n${verifyURL}`,
+    });
+
     res.status(201).json({
       token,
       user: {
@@ -88,24 +96,13 @@ const register = async (req, res) => {
       },
       message: "User registered successfully",
     });
-
-    // Send verification email
-    const verifyURL = `${process.env.BASE_URL || "http://localhost:8000"}/auth/verify-email?token=${token}`;
-    await sendEmail({
-      to: user.email,
-      subject: "Kemet Travel - Verify Your Email",
-      html: `<p>Hello ${user.name},</p>
-             <p>Thank you for registering. Please verify your email by clicking this link:</p>
-             <a href="${verifyURL}">${verifyURL}</a>`,
-      text: `Hello ${user.name},\n\nThank you for registering. Please verify your email by copying and pasting this link into your browser:\n${verifyURL}`,
-    });
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Login user (Sign In)
+// Login (Sign In)
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -135,7 +132,7 @@ const login = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
-
+    res.header("X-Auth-Token", `Bearer ${token}`);
     res.status(200).json({
       user: {
         name: existingUser.name,
@@ -155,7 +152,7 @@ const logout = (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 };
 
-const googleCallback = (req, res) => {
+const googleCallback = async (req, res) => {
   try {
     const token = generateToken(req.user.userId, req.user.role);
     const user = encodeURIComponent(JSON.stringify({
@@ -163,9 +160,16 @@ const googleCallback = (req, res) => {
       email: req.user.email,
       role: req.user.role,
     }));
+
+    await sendEmail({
+      to: req.user.email,
+      subject: "Kemet Travel - Google Sign-In Successful",
+      text: `Hello ${req.user.name},\n\nYou have successfully signed in with Google. If this wasn't you, please secure your account immediately.`,
+    });
     res.redirect(`http://localhost:3000/login?token=${token}&user=${user}`);
   } catch (error) {
     res.redirect("http://localhost:3000/login?error=google_auth_failed");
+    res.status(500).json({ message: "Google authentication failed", error: error.message });
   }
 };
 

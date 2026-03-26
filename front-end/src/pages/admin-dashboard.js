@@ -1,8 +1,12 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 
-export default function AdminDashboard() {
+
+
+
+export default async function AdminDashboard() {
   const router = useRouter();
+
 
   useEffect(() => {
      if (typeof window === "undefined") return;

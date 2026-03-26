@@ -45,8 +45,7 @@ const createTrip = async (req, res) => {
       trip: newTrip,
     });
   } catch (error) {
-    console.error("Error creating trip:", error);
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error" , error: error.message   });
   }
 };
 
@@ -56,7 +55,7 @@ const getAllTrips = async (req, res) => {
     const allTrips = await trip.find();
     res.status(201).json(allTrips);
   } catch (error) {
-    res.status(500).json({ message: "Server Error " });
+    res.status(500).json({ message: "Server Error " , error: error.message   });
   }
 };
 
@@ -70,7 +69,7 @@ const getTripById = async (req, res) => {
     }
     res.status(201).json(tripById);
   } catch (error) {
-    res.status(500).json({ message: "Server Error " });
+    res.status(500).json({ message: "Server Error " , error: error.message   });
   }
 };
 
@@ -84,7 +83,7 @@ const DeleteTripById = async (req, res) => {
     }
     res.status(201).json({ message: "Trip deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server Error " });
+    res.status(500).json({ message: "Server Error " , error: error.message   });
   }
 };
 
@@ -127,7 +126,7 @@ const updateTripById = async (req, res) => {
       trip: tripById,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error", error: error.message   });
   }
 };
 

@@ -27,8 +27,15 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({origin: "http://localhost:3000", credentials: true}));
-app.use(session({secret: "SessionSecret", resave: false, saveUninitialized: true}));
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(
+  session({
+    secret: "SessionSecretKey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
+  }),
+);
 app.use(helmet());
 require("./controller/auth/authController");
 app.use(passport.initialize());
