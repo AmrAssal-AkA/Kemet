@@ -140,7 +140,7 @@ export default function Register() {
             </div>
             <p className="text-gray-600 text-lg">
               Already Have an account?{" "}
-              <Link href="/login" className="text-blue-500 hover:underline">
+              <Link href="/auth/login" className="text-blue-500 hover:underline">
                 Login
               </Link>
             </p>
@@ -153,6 +153,7 @@ export default function Register() {
             </button>
             <p className="text-gray-600 text-lg mt-4 text-center">Or</p>
             <button
+              type="button"
               className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mt-4 flex items-center justify-center"
               onClick={handleGoogleRegister}
             >

@@ -1,31 +1,27 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 
-
-
-
-export default async function AdminDashboard() {
+export default function AdminDashboard() {
   const router = useRouter();
 
-
   useEffect(() => {
-     if (typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user) {
-      router.push("/login");
+      router.push("/auth/login");
       return;
     }
 
     if (user.role !== "admin") {
-      router.push("/login");
+      router.push("/auth/login");
     }
   }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/login");
+    router.push("/auth/login");
   };
 
   return (

@@ -18,16 +18,9 @@ const handler = async (req, res) => {
     );
 
     const data = await response.data;
-
-    if (data.token) {
-
-      res.setHeader(
-        "Set-Cookie",
-        `x-auth-token=${data.token}; Path=/; HttpOnly; Secure; SameSite=Strict`
-      );
-
-      res.setHeader("X-Auth-Token", data.token);
-      return res.status(200).json(data);
+    const token = response.headers["x-auth-token"];
+    if (token) {
+      res.setHeader("x-auth-token", token);
     }
 
     return res.status(200).json(data);

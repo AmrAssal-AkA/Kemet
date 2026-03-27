@@ -1,7 +1,7 @@
 import axios from "axios";
 
-export const ApiCall = async (url, options = {}) => {
-  const token = localStorage.getItem("x-auth-token");
+export const ApiCall = async (res, url, options = {}) => {
+  const token = res.headers["x-auth-token"];
   const headers = {
     "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -28,7 +28,7 @@ export const registerUser = async (formData) => {
   }
 };
 
-export const loginWithGoogle = () => {
+export const loginWithGoogle = async () => {
   window.location.href = "http://localhost:8000/auth/continueWithGoogle";
 };
 

@@ -155,21 +155,27 @@ const logout = (req, res) => {
 const googleCallback = async (req, res) => {
   try {
     const token = generateToken(req.user.userId, req.user.role);
-    const user = encodeURIComponent(JSON.stringify({
+    const tokenCookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    };
+    res.cookie("x-auth-token", token, tokenCookieOptions);
+    res.header("X-Auth-Token", `Bearer ${token}`);
+    const user = JSON.stringify({
       name: req.user.name,
       email: req.user.email,
       role: req.user.role,
-    }));
-
-    await sendEmail({
+    });
+    res.redirect(`http://localhost:3000/login?token=${token}&user=${user}`);
+    const emailResult = await sendEmail({
       to: req.user.email,
       subject: "Kemet Travel - Google Sign-In Successful",
       text: `Hello ${req.user.name},\n\nYou have successfully signed in with Google. If this wasn't you, please secure your account immediately.`,
     });
-    res.redirect(`http://localhost:3000/login?token=${token}&user=${user}`);
   } catch (error) {
     res.redirect("http://localhost:3000/login?error=google_auth_failed");
-    res.status(500).json({ message: "Google authentication failed", error: error.message });
   }
 };
 

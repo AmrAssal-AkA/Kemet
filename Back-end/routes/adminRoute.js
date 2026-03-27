@@ -19,8 +19,7 @@ router.patch(
   userRoleUpdate,
 );
 
-
-
+// View Booking Details Route for Admin
 router.get(
   "/bookingDetails",
   authVerifyMW,

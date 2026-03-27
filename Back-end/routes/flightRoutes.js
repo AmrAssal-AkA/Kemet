@@ -10,7 +10,7 @@ router.get(
   FlightDestinationMW,
   flightController.searchFlights,
 );
-router.post(
+router.get(
   "/price",
   isUser,
   FlightDestinationMW,

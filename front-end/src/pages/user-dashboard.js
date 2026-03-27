@@ -11,12 +11,12 @@ if (typeof window === "undefined") return;
     const storedUser = JSON.parse(localStorage.getItem("user"));
 
     if (!storedUser) {
-      router.push("/login");
+      router.push("/auth/login");
       return;
     }
 
     if (storedUser.role !== "user") {
-      router.push("/login");
+      router.push("/auth/login");
     }
 
     setUser(storedUser);
