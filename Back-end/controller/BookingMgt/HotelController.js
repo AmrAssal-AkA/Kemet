@@ -1,7 +1,7 @@
 const amadeusAPI = require("../../services/amadeus");
 
 
-exports.SearchHotel = async (req, res) => {
+const SearchHotel = async (req, res) => {
   const { cityCode, checkInDate, checkOutDate, NumberOfGuests, NumberOfrooms } =
     req.body;
   if (
@@ -61,9 +61,9 @@ exports.SearchHotel = async (req, res) => {
   }
 };
 
-exports.getHotelOffers = async (req, res) => {
+const getHotelOffers = async (req, res) => {
   try {
-    const { hotelId, checkInDate, checkOutDate, adults } = req.query;
+    const { hotelId, checkInDate, checkOutDate, adults } = req.body;
 
     if(!hotelId || !checkInDate || !checkOutDate || !adults) {
       return res.status(400).json({
@@ -89,5 +89,7 @@ exports.getHotelOffers = async (req, res) => {
 
 
 
-
-
+module.exports = {
+  SearchHotel,
+  getHotelOffers,
+};

@@ -2,7 +2,7 @@ const amadeus = require("../../services/amadeus");
 const FlightService = require("../../services/flight.services");
 
 // search for flights
-exports.searchFlights = async (req, res) => {
+const searchFlights = async (req, res) => {
   const {
     origin,
     destination,
@@ -105,17 +105,42 @@ exports.searchFlights = async (req, res) => {
 
 // price a flight offer
 
-exports.priceFlight = async (req, res) => {
+const priceFlight = async (req, res) => {
   try {
-    const pricedFlight = await FlightService.priceFlightOffers(req.body.flightOffers);
+    const flightOffer = req.body.flightOffer || req.body.flightOffers;
+    if (!flightOffer) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Missing flightOffer in request body" 
+      });
+    }
+
+    const pricedFlight = await FlightService.priceFlightOffers(flightOffer);
+    
+    // 3. Return success
     res.status(200).json({
       success: true,
       data: pricedFlight,
     });
   } catch (error) {
-    console.error("Error pricing flight offer:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while pricing the flight offer." });
+    console.error("Error pricing flight offer:", error.response?.data || error.message);
+
+    const errorMessage =
+      error.response?.data?.errors?.[0]?.detail ||
+      error.message ||
+      "An error occurred while pricing the flight offer.";
+
+    const statusCode = error.response?.status || 500;
+
+    res.status(statusCode).json({ 
+      success: false,
+      error: errorMessage,
+      details: error.response?.data?.errors || null
+    });
   }
+};
+
+module.exports = {
+  searchFlights,
+  priceFlight,
 };

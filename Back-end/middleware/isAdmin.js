@@ -1,20 +1,21 @@
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 module.exports = (req, res, nxt) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ message: "Access token is missing" });
-  }
+  const token = req.headers.authorization?.split(" ")[1];
 
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+  if(!token){
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const secretKey = process.env.ACCESS_TOKEN_SECRET
+  jwt.verify(token, secretKey, (err, decoded) => {
     if (err) {
-      return res.status(403).json({ message: "Invalid access token" });
+      return res.status(401).json({ error: "Unauthorized" });
     }
-    if (user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied: Not an admin" });
+    if (decoded.role !== "admin") {
+      return res.status(403).json({ error: "Forbidden" });
     }
-    req.user = user;
+    req.user = decoded;
   nxt();
 });
 }

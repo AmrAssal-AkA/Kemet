@@ -6,7 +6,7 @@ async function handler(req, res) {
   }
   try {
     const response = await axios.post(
-      `http://localhost:8000/auth/reset-password/${req.query.token}`,
+      `http://localhost:8000/api/auth/reset-password/${req.query.token}`,
       req.body,
       {
         headers: {

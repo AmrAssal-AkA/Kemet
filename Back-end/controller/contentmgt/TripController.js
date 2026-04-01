@@ -24,9 +24,7 @@ const createTrip = async (req, res) => {
   }
 
   try {
-    const result = await cloudinary.uploader.upload(imagepath, {
-      folder: "trips",
-    });
+    const result = await cloudinary.uploadImage(imagepath, "trip_images");
     const newTrip = new trip({
       name,
       city,
@@ -63,7 +61,7 @@ const getAllTrips = async (req, res) => {
 const getTripById = async (req, res) => {
   const { id } = req.params;
   try {
-    const tripById = await trip.findOne({ id: id });
+    const tripById = await trip.findById(id);
     if (!tripById) {
       return res.status(404).json({ message: "Trip not found" });
     }
@@ -77,7 +75,7 @@ const getTripById = async (req, res) => {
 const DeleteTripById = async (req, res) => {
   const { id } = req.params;
   try {
-    const tripById = await trip.findOneAndDelete({ id: id });
+    const tripById = await trip.findByIdAndDelete(id);
     if (!tripById) {
       return res.status(404).json({ message: "Trip not found" });
     }
@@ -104,16 +102,12 @@ const updateTripById = async (req, res) => {
     }
     const imagepath = req.file.path;
 
-    const result = await cloudinary.uploader.upload(imagepath, {
-      folder: "trips",
-    });
+    const result = await cloudinary.uploadImage(imagepath, "trip_images");
     updateData.imageUrl = result.secure_url;
     updateData.cloudinaryId = result.public_id;
 
-    const tripById = await trip.findOneAndUpdate(
-      {
-        id: req.params.id,
-      },
+    const tripById = await trip.findByIdAndUpdate(
+      req.params.id,
       updateData,
       { new: true },
     );

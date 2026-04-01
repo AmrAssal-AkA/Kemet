@@ -8,11 +8,6 @@ const BookingSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
-    BookingType: {
-        type: String,
-        enum : ["Flight", "Hotel", "trips"],
-        required: true,
-    },
     flight: {
         orderId: String,
         data: mongoose.Schema.Types.Mixed,

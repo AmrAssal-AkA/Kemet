@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const contactSchema = new mongoose.Schema({
     id: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        unique: true
     },
     name: {
         type: String,

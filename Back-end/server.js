@@ -41,14 +41,14 @@ require("./controller/auth/authController");
 app.use(passport.initialize());
 
 // Routes
-app.use("/addtrip", addTripRoute);
-app.use("/flight", FlightRoute);
-app.use("/hotels", HotelRoute);
-app.use("/contact", contactRoute);
-app.use("/blog", blogRoute);
-app.use("/booking", BookingRoute);
-app.use("/auth", authRoute);
-app.use("/adminDashboard", adminRoute);
+app.use("/api/Trip", addTripRoute);
+app.use("/api/flight", FlightRoute);
+app.use("/api/hotels", HotelRoute);
+app.use("/api/contact", contactRoute);
+app.use("/api/blog", blogRoute);
+app.use("/api/booking", BookingRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/adminDashboard", adminRoute);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Kemet Travel Agency API");

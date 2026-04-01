@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require("passport");
-const { sendEmail } = require("../../services/miling");
+const { sendEmail, verifyEmailTemplate } = require("../../services/miling");
 
 // JWT
 const generateToken = (userId, role) => {
@@ -80,12 +80,8 @@ const register = async (req, res) => {
     const token = generateToken(user.userId, user.role);
     res.header("X-Auth-Token", `Bearer ${token}`);
 
-    const verifyURL = `${process.env.BASE_URL || "http://localhost:8000"}/auth/verify-email?token=${token}`;
-    await sendEmail({
-      to: user.email,
-      subject: "Kemet Travel - Verify Your Email",
-      text: `Hello ${user.name},\n\nThank you for registering. Please verify your email by copying and pasting this link into your browser:\n${verifyURL}`,
-    });
+    const verifyURL = `"http://localhost:8000"/auth/verify-email?token=${token}`;
+   await verifyEmailTemplate(name, verifyURL);
 
     res.status(201).json({
       token,

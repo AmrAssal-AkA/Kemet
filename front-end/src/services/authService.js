@@ -29,7 +29,7 @@ export const registerUser = async (formData) => {
 };
 
 export const loginWithGoogle = async () => {
-  window.location.href = "http://localhost:8000/auth/continueWithGoogle";
+  window.location.href = "http://localhost:8000/api/auth/continueWithGoogle";
 };
 
 export const resetPassword = async (email) => {

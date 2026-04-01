@@ -17,9 +17,7 @@ const createBlog = async (req, res) => {
   }
 
   try {
-    const imageResult = await cloudinary.uploader.upload(imagePath, {
-      folder: "blogs",
-    })
+    const imageResult = await cloudinary.uploadImage(imagePath, "blog_images");
     const blogs = new blog({
       title,
       content,
@@ -48,7 +46,7 @@ const getAllBlog = async (req, res) => {
 const getOneBlogById = async (req, res) => {
   const { id } = req.params;
   try {
-    const blogByOne = await blog.findOne({ id: id });
+    const blogByOne = await blog.findById(id);
     if (!blogByOne) {
       return res.status(404).json({ message: "blog not found." });
     }
@@ -61,10 +59,8 @@ const getOneBlogById = async (req, res) => {
 // Update Blog
 const updateBlogById = async (req, res) => {
   try {
-    const blogUpdate = await blog.findOneAndUpdate(
-      {
-        id: req.params.id,
-      },
+    const blogUpdate = await blog.findByIdAndUpdate(
+      req.params.id,
       {
         title: req.body.title,
         content: req.body.content,
@@ -85,7 +81,7 @@ const updateBlogById = async (req, res) => {
 const deleteBlogById = async (req, res) => {
   const { id } = req.params;
   try {
-    const blogDelete = await blog.findOneAndDelete({ id: id });
+    const blogDelete = await blog.findByIdAndDelete(id);
     if (!blogDelete) {
       return res.status(404).json({ message: "Blog not found" });
     }

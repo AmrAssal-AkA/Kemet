@@ -47,18 +47,5 @@ const getContactByName = async (req, res) => {
 };
 
 
-// Delete Contact
-const deleteContactByName = async (req, res) => {
-    const {name} = req.params;
-    try{
-        const tripDelete = await contact.findOneAndDelete({name: name});
-        if (!tripDelete){
-            return res.status(404).json({message: "Contact not found"});
-        }
-        res.status(201).json({message: "Contact deleted successfully"});
-    } catch(error){
-        res.status(500).json({message: "Server Error", error: error.message });
-    }
-};
 
-module.exports = {createContact, getAllContacts, getContactByName, deleteContactByName};
+module.exports = {createContact, getAllContacts, getContactByName};

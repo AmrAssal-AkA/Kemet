@@ -4,16 +4,7 @@ const hotelController = require("../controller/BookingMgt/HotelController");
 const hotelCityValid = require("../middleware/HotelCityMW");
 const isUser = require("../middleware/isUser");
 
-router.get(
-  "/search",
-  isUser,
-  hotelCityValid,
-  hotelController.SearchHotel,
-);
-router.get(
-  "/offers",
-  hotelCityValid,
-  hotelController.getHotelOffers,
-);
+router.get("/search",  hotelCityValid, hotelController.SearchHotel);
+router.get("/getOneHotelDetails", hotelController.getHotelOffers);
 
 module.exports = router;

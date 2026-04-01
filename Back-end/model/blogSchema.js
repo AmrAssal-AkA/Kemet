@@ -2,8 +2,9 @@ const mongoose = require('mongoose');
 
 const blogSchema = new mongoose.Schema({
     id: {
-        type: String,
-        default: () => new mongoose.Types.ObjectId().toString()
+        type: Date,
+        default: Date.now,
+        unique: true
     },
     title: {
         type: String,
