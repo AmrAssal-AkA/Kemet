@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require("passport");
+const session = require("express-session")
+
 const { sendEmail, verifyEmailTemplate } = require("../../services/miling");
 
 // JWT
@@ -78,8 +80,13 @@ const register = async (req, res) => {
     });
 
     const token = generateToken(user.userId, user.role);
-    res.header("X-Auth-Token", `Bearer ${token}`);
-
+    res.cookie("x-auth-token", token,{
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    })
+    res.json({success: true, message: "Registration successful. Please check your email to verify your account."});
     const verifyURL = `"http://localhost:8000"/auth/verify-email?token=${token}`;
    await verifyEmailTemplate(name, verifyURL);
 
@@ -128,7 +135,12 @@ const login = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
-    res.header("X-Auth-Token", `Bearer ${token}`);
+    res.cookie("x-auth-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
     res.status(200).json({
       user: {
         name: existingUser.name,

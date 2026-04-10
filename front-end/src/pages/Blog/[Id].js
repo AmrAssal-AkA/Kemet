@@ -1,9 +1,9 @@
 
 
-function BlogPage() {
+function BlogDetailPage() {
   return (
     <div>BlogPage</div>
   )
 }
 
-export default BlogPage
+export default BlogDetailPage

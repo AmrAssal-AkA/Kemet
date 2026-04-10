@@ -2,7 +2,6 @@ const User = require("../../model/userSchema");
 const Booking = require("../../model/BookingSchema");
 
 const getAllUsers = async (req, res) => {
-  
   try {
     const users = await User.find();
     res.status(201).json(users);

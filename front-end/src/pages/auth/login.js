@@ -8,7 +8,6 @@ import { FaGoogle } from "react-icons/fa";
 
 export default function Login() {
   const router = useRouter();
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -118,11 +117,6 @@ export default function Login() {
                 required
                 className="w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm sm:text-base"
               />
-              {error && (
-                <p className="text-red-600 text-sm sm:text-base mt-2">
-                  {error}
-                </p>
-              )}
             </div>
             <div className="mb-4">
               <label
@@ -140,11 +134,6 @@ export default function Login() {
                 required
                 className="w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm sm:text-base"
               />
-              {error && (
-                <p className="text-red-600 text-sm sm:text-base mt-2">
-                  {error}
-                </p>
-              )}
             </div>
             <p className="text-gray-600 text-sm sm:text-md">
               Don't remember Your Password?
