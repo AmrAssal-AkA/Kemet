@@ -20,16 +20,20 @@ export default function Register() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const user = JSON.parse(localStorage.getItem("user"));
-
-    if (user) {
-      if (user.role === "user") {
-        router.push("/user-dashboard");
-      } else if (user.role === "guide") {
-        router.push("/guide-dashboard");
-      } else if (user.role === "admin") {
-        router.push("/admin-dashboard");
+    try {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.role === "user") {
+          router.push("/user-dashboard");
+        } else if (user.role === "guide") {
+          router.push("/guide-dashboard");
+        } else if (user.role === "admin") {
+          router.push("/admin-dashboard");
+        }
       }
+    } catch (_) {
+
     }
   }, [router]);
 
@@ -138,7 +142,10 @@ export default function Register() {
             </div>
             <p className="text-gray-600 text-lg">
               Already Have an account?{" "}
-              <Link href="/auth/login" className="text-blue-500 hover:underline">
+              <Link
+                href="/auth/login"
+                className="text-blue-500 hover:underline"
+              >
                 Login
               </Link>
             </p>

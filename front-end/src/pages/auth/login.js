@@ -45,9 +45,14 @@ export default function Login() {
       setError("Google sign-in failed. Please try again.");
     }
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user) {
-      redirectByRole(user.role);
+    try {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        redirectByRole(user.role);
+      }
+    } catch (_) {
+      // Ignore localStorage parsing errors
     }
   }, [router]);
 

@@ -86,10 +86,9 @@ const register = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     })
-    res.json({success: true, message: "Registration successful. Please check your email to verify your account."});
+
     const verifyURL = `"http://localhost:8000"/auth/verify-email?token=${token}`;
    await verifyEmailTemplate(name, verifyURL);
-
     res.status(201).json({
       token,
       user: {
@@ -129,12 +128,6 @@ const login = async (req, res) => {
     }
 
     const token = generateToken(existingUser.userId, existingUser.role);
-    res.cookie("x-auth-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
     res.cookie("x-auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
