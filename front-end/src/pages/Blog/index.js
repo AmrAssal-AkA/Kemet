@@ -16,7 +16,7 @@ export default function BlogPage(props) {
         className="relative w-full flex flex-col items-center justify-center p-8 text-center bg-cover bg-center"
         style={{
           backgroundImage: `url(${heroImage.src})`,
-          height: "75vh",
+          height: "50vh",
         }}
       >
         <div className="absolute inset-0 bg-black opacity-50"></div>
@@ -64,7 +64,7 @@ export default function BlogPage(props) {
           blogPosts={blogs.map((blog) => ({
             title: blog.title,
             content: blog.content,
-            image: blog.image,
+            image: blog.images[0]?.imageUrl,
           }))}
         />
 
@@ -80,13 +80,14 @@ export default function BlogPage(props) {
 }
 
 
-export async function getServerSideProps() {
+export async function getStaticProps() {
   try{
-    const Blog = await axios.get("/api/Blog/GetBlogs");
+    const Blog = await axios.get("http://localhost:3000/api/Blog/GetBlogs");
     return {
       props: {
         blogs: Blog.data,
-      }
+      },
+        revalidate: 60,
     }
   }catch(error){
     console.error("Error fetching blogs:", error);

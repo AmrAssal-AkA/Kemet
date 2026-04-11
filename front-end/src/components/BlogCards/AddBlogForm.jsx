@@ -1,11 +1,11 @@
 "use client";
 import axios from "axios";
-const { useState } = require("react");
+import { useState } from "react";
 
 export default function AddBlogForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -21,7 +21,7 @@ export default function AddBlogForm() {
       setError("Content is required");
       return;
     }
-    if (!image) {
+    if (image.length === 0) {
       setError("Image is required");
       return;
     }
@@ -34,19 +34,17 @@ export default function AddBlogForm() {
       const formData = new FormData();
       formData.append("title", title);
       formData.append("content", content);
-      formData.append("image", image);
-
-      const response = await axios.post("http://localhost:8000/api/blog", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      Array.from(image).forEach((file) => {
+        formData.append("images", file);
       });
+
+      const response = await axios.post("/api/Blog/AddBlog", formData);
 
       setLoading(false);
       setSuccess(true);
       setTitle("");
       setContent("");
-      setImage(null);
+      setImage([]);
       e.target.reset();
     } catch (error) {
       setLoading(false);
@@ -103,7 +101,8 @@ export default function AddBlogForm() {
             id="image"
             type="file"
             accept="image/*"
-            onChange={(e) => setImage(e.target.files[0])}
+            onChange={(e) => setImage(e.target.files)}
+            multiple
           />
         </div>
         <button

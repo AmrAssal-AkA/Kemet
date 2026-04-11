@@ -11,7 +11,6 @@ async function handler(req,res){
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(req.body),
         })
         res.status(200).json(response.data);
     }catch(error){

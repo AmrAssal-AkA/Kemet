@@ -7,22 +7,19 @@ const createBlog = async (req, res) => {
   if (!title || !content) {
     return res.status(400).json({ message: "Please fill the blog" });
   }
-  if(!req.file){
-    return res.status(400).json({ message: "Please upload an image" });
-  }
-  const imagePath = req.file.path;
-
-  if(!title || !content || !imagePath){
-    return res.status(400).json({ message: "Please fill all the fields" });
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: "Please upload at least one image" });
   }
 
   try {
-    const imageResult = await cloudinary.uploadImage(imagePath, "blog_images");
+    const imageResult = await Promise.all(req.files.map((file) => cloudinary.uploadImage(file.path, "blog_images")));
     const blogs = new blog({
       title,
       content,
-      imageUrl: imageResult.secure_url,
-      cloudinaryId: imageResult.public_id,
+      images: imageResult.map((result) => ({
+        imageUrl: result.secure_url,
+        cloudinaryId: result.public_id,
+      })),
     });
     await blogs.save();
     res.status(201).json({ message: "Blog Created" });
@@ -64,7 +61,7 @@ const updateBlogById = async (req, res) => {
       {
         title: req.body.title,
         content: req.body.content,
-        imageUrl: req.file ? req.file.path : null,
+        images: req.files ? req.files.map((file) => file.path) : null,
       },
       { new: true },
     );
