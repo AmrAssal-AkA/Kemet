@@ -1,9 +1,11 @@
 import { useRouter } from "next/router";
 import heroImage from "../../../public/images/BlogPageImages/hero.jpg";
 import BlogGrid from "@/components/BlogCards/Blog-Grid";
+import axios from "axios";
 
-export default function BlogPage() {
+export default function BlogPage(props) {
   const router = useRouter();
+  const { blogs } = props;
 
   function handleAddArticle() {
     router.push("/Blog/addBlog");
@@ -59,15 +61,13 @@ export default function BlogPage() {
         </h2>
 
         <BlogGrid
-          blogPosts={[
-            {
-              title: "Discovering the Mysteries of the Pyramids",
-              content:
-                "Explore the secrets of the ancient pyramids, from their construction to their purpose.",
-              image: "/images/sign-in.jpg",
-            },
-          ]}
+          blogPosts={blogs.map((blog) => ({
+            title: blog.title,
+            content: blog.content,
+            image: blog.image,
+          }))}
         />
+
 
         <div className="flex justify-center mt-8">
           <button className="bg-gray-800 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-yellow-600 transform hover:scale-105 transition-transform duration-300 shadow-lg cursor-pointer">
@@ -77,4 +77,23 @@ export default function BlogPage() {
       </section>
     </main>
   );
+}
+
+
+export async function getServerSideProps() {
+  try{
+    const Blog = await axios.get("/api/Blog/GetBlogs");
+    return {
+      props: {
+        blogs: Blog.data,
+      }
+    }
+  }catch(error){
+    console.error("Error fetching blogs:", error);
+    return {
+      props: {
+        blogs: [],
+      },
+    };
+  }
 }
