@@ -6,9 +6,9 @@ const isAdmin = require("../middleware/isAdmin");
 
 router.post("/",upload.array("images", 5),blogController.createBlog);
 router.get("/", blogController.getAllBlog);
-router.get("/:id", blogController.getOneBlogById);
-router.put("/updateBlog/:id", isAdmin,upload.single("image"),blogController.updateBlogById,);
-router.delete("/deleteBlog/:id", isAdmin, blogController.deleteBlogById);
+router.get("/:blogId", blogController.getOneBlogById);
+router.put("/updateBlog/:blogId", isAdmin,upload.single("image"),blogController.updateBlogById,);
+router.delete("/deleteBlog/:blogId", isAdmin, blogController.deleteBlogById);
 
 
 module.exports = router;

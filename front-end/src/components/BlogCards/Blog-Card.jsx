@@ -1,8 +1,11 @@
 import Image from "next/image";
+import { useRouter } from "next/router";
 
-function BlogCard({ title, content, image }, index) {
+function BlogCard({ title, content, image, id , index}) {
+  const router = useRouter();
+
   return (
-    <li className="bg-white rounded-lg shadow-md overflow-hidden justify-center items-center flex flex-col border border-orange-300 border-dashed p-3">
+    <li className="bg-white rounded-lg text-center shadow-md overflow-hidden justify-center items-center flex flex-col border border-orange-300 border-dashed p-3">
       <Image
         src={image}
         alt={title}
@@ -13,9 +16,12 @@ function BlogCard({ title, content, image }, index) {
       />
       <div className="p-4">
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
-        <p className="text-gray-600">{content}</p>
+        <p className="text-gray-600 text-left">{content}</p>
       </div>
-      <button className="bg-yellow-500 text-black font-bold py-2 px-4 rounded-full m-4 hover:bg-yellow-600 transform hover:scale-105 transition-transform duration-300">
+      <button
+        className="bg-yellow-500 text-black font-bold py-2 px-4 rounded-full m-4 hover:bg-yellow-600 transform hover:scale-105 transition-transform duration-300"
+        onClick={() => router.push(`/Blog/${id}`)}
+      >
         Read More
       </button>
     </li>

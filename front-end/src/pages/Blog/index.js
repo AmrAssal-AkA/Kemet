@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import heroImage from "../../../public/images/BlogPageImages/hero.jpg";
 import BlogGrid from "@/components/BlogCards/Blog-Grid";
 import axios from "axios";
+import Head from "next/head";
 
 export default function BlogPage(props) {
   const router = useRouter();
@@ -10,7 +11,16 @@ export default function BlogPage(props) {
   function handleAddArticle() {
     router.push("/Blog/addBlog");
   }
+
   return (
+    <>
+    <Head>
+      <title>Blog - Kemet Travel</title>
+      <meta name="description" content="Discover the wonders of Egypt through our travel blog. Explore ancient temples, vibrant culture, and hidden gems with us." />
+      <meta name="keywords" content="Egypt travel blog, travel tips Egypt, things to do in Egypt, Egypt culture, Egypt history, travel guides Egypt" />
+      <meta name="author" content="Kemet Travel" />
+      <meta name="robots" content="nofollow"/>
+    </Head>
     <main className="w-full min-h-screen bg-gray-100">
       <section
         className="relative w-full flex flex-col items-center justify-center p-8 text-center bg-cover bg-center"
@@ -63,8 +73,9 @@ export default function BlogPage(props) {
         <BlogGrid
           blogPosts={blogs.map((blog) => ({
             title: blog.title,
-            content: blog.content,
+            content: blog.content.slice(0, 100) + "...",
             image: blog.images[0]?.imageUrl,
+            id: blog._id
           }))}
         />
 
@@ -76,6 +87,7 @@ export default function BlogPage(props) {
         </div>
       </section>
     </main>
+  </>
   );
 }
 

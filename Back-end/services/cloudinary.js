@@ -13,8 +13,8 @@ const uploadImage = async (filePath) => {
     const result = await cloudinary.uploader.upload(filePath, {
       folder: "KEMET",
       transformation:[
-        { width: 1000, height: 1000, crop: "limit" },
-        { quality: "auto" }
+        { width: 800, height: 600, crop: "limit" },
+        { quality: "medium" }
       ]
     });
     return result;

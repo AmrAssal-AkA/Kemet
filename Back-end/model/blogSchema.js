@@ -1,12 +1,6 @@
 const mongoose = require('mongoose');
 
 const blogSchema = new mongoose.Schema({
-    blogId: {
-        type: mongoose.Schema.Types.ObjectId,
-        default: new mongoose.Types.ObjectId(),
-        required: true,
-        unique: true
-    },  
     title: {
         type: String,
         required: true
@@ -25,6 +19,10 @@ const blogSchema = new mongoose.Schema({
             required: true
         }
     }],
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    }
 
 }, { timestamps: true }
 );
