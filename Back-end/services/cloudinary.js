@@ -1,4 +1,4 @@
-const cloudinary = require("cloudinary");
+const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 cloudinary.config({
@@ -10,11 +10,10 @@ cloudinary.config({
 
 const uploadImage = async (filePath) => {
   try {
-    const result = await cloudinary.v2.uploader.upload(filePath, {
+    const result = await cloudinary.uploader.upload(filePath, {
       folder: "KEMET", 
     });
-    return result.secure_url; 
-    console.log("Image uploaded to Cloudinary:", result.secure_url);
+    return result;
   } catch (error) {
     console.error("Error uploading image to Cloudinary:", error);
     throw error; 

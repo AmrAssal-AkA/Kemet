@@ -3,9 +3,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require("passport");
-const session = require("express-session")
+const session = require("express-session");
 
-const { sendEmail, verifyEmailTemplate } = require("../../services/miling");
+const { sendEmail } = require("../../services/miling");
 
 // JWT
 const generateToken = (userId, role) => {
@@ -80,15 +80,24 @@ const register = async (req, res) => {
     });
 
     const token = generateToken(user.userId, user.role);
-    res.cookie("x-auth-token", token,{
+    res.cookie("x-auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
-    })
+    });
 
     const verifyURL = `"http://localhost:8000"/auth/verify-email?token=${token}`;
-   await verifyEmailTemplate(name, verifyURL);
+    const emailResult = await sendEmail({
+      to: user.email,
+      subject: "Kemet Travel - Verify Your Email",
+      text: `Hello ${user.name},\n\nThank you for registering with Kemet Travel! Please verify your email by clicking the link below:\n\n${verifyURL}\n\nIf you did not create an account, please ignore this email.\n\nBest regards,\nKemet Travel Team`,
+      html: `<div style="font-family: Arial, sans-serif; color: #333;">
+        <h2 style="color: #decb00;">Welcome to Kemet Travel, ${user.name}!</h2>
+        <p>Thank you for registering. Please verify your email by clicking the button below:</p> 
+        <a href="${verifyURL}">${verifyURL}</a>
+        `
+    });
     res.status(201).json({
       token,
       user: {
@@ -156,14 +165,13 @@ const logout = (req, res) => {
 const googleCallback = async (req, res) => {
   try {
     const token = generateToken(req.user.userId, req.user.role);
-    const tokenCookieOptions = {
+
+    res.cookie("x-auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
-    };
-    res.cookie("x-auth-token", token, tokenCookieOptions);
-    res.header("X-Auth-Token", `Bearer ${token}`);
+    });
     const user = JSON.stringify({
       name: req.user.name,
       email: req.user.email,

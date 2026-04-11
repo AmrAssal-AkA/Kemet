@@ -14,9 +14,14 @@ const blogSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    imageUrl: {
+    imageUrl: [{
         type: String,
-    },
+        required: true
+    }],
+    cloudinaryId: [{
+        type: String,
+        required: true
+    }]
 });
 
 const blog =  mongoose.model("blog", blogSchema);
