@@ -1,9 +1,9 @@
 "use client";
 import axios from "axios";
-import { useReducer, useState } from "react";
+import {  useState } from "react";
 
 
-export default function AddBlogForm() {
+export default function AddBlogForm({onSuccess}) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState([]);
@@ -48,6 +48,7 @@ export default function AddBlogForm() {
       setContent("");
       setImage([]);
       e.target.reset();
+      onSuccess();
     } catch (error) {
       setLoading(false);
       const errorMessage = error.response?.data?.message || "Failed to submit blog post. Please try again.";
@@ -58,7 +59,7 @@ export default function AddBlogForm() {
 
   return (
     <>
-
+      <div className="bg-black opacity-60 "/>
       <form className="w-full flex flex-col gap-6" onSubmit={handleSubmit}>
         <div>
           <label

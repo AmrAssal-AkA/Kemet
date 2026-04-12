@@ -4,8 +4,9 @@ const jwt = require("jsonwebtoken");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require("passport");
 const session = require("express-session");
+const crypto = require("crypto");
 
-const { sendEmail } = require("../../services/miling");
+const { sendEmail, verifyEmailTemplate, GoogleSignInTemplate } = require("../../services/miling");
 
 // JWT
 const generateToken = (userId, role) => {
@@ -86,20 +87,19 @@ const register = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
-
-    const verifyURL = `"http://localhost:8000"/auth/verify-email?token=${token}`;
-    const emailResult = await sendEmail({
-      to: user.email,
+    const verifyToken = crypto.randomBytes(32).toString("hex");
+    await User.findByIdAndUpdate(user._id, {
+      emailVerificationToken: verifyToken,
+      emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
+    })
+    const verifyURL = `http://localhost:8000/auth/verify-email?token=${verifyToken}`;
+    const emailResult = await verifyEmailTemplate(name, verifyURL);
+    await sendEmail({
+      to: email,
       subject: "Kemet Travel - Verify Your Email",
-      text: `Hello ${user.name},\n\nThank you for registering with Kemet Travel! Please verify your email by clicking the link below:\n\n${verifyURL}\n\nIf you did not create an account, please ignore this email.\n\nBest regards,\nKemet Travel Team`,
-      html: `<div style="font-family: Arial, sans-serif; color: #333;">
-        <h2 style="color: #decb00;">Welcome to Kemet Travel, ${user.name}!</h2>
-        <p>Thank you for registering. Please verify your email by clicking the button below:</p> 
-        <a href="${verifyURL}">${verifyURL}</a>
-        `
+      html: emailResult,
     });
     res.status(201).json({
-      token,
       user: {
         name: user.name,
         email: user.email,
@@ -108,8 +108,7 @@ const register = async (req, res) => {
       message: "User registered successfully",
     });
   } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "An internal server error occurred" });
   }
 };
 
@@ -152,7 +151,7 @@ const login = async (req, res) => {
       message: `Login successful, welcome back ${existingUser.name}`,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "An internal server error occurred" });
   }
 };
 
@@ -178,10 +177,11 @@ const googleCallback = async (req, res) => {
       role: req.user.role,
     });
     res.redirect(`http://localhost:3000/login?token=${token}&user=${user}`);
-    const emailResult = await sendEmail({
+    const emailResult = await GoogleSignInTemplate(req.user.name);
+    await sendEmail({
       to: req.user.email,
       subject: "Kemet Travel - Google Sign-In Successful",
-      text: `Hello ${req.user.name},\n\nYou have successfully signed in with Google. If this wasn't you, please secure your account immediately.`,
+      html: emailResult,
     });
   } catch (error) {
     res.redirect("http://localhost:3000/login?error=google_auth_failed");

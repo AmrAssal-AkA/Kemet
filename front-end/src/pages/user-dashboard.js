@@ -11,12 +11,12 @@ if (typeof window === "undefined") return;
     const storedUser = JSON.parse(localStorage.getItem("user"));
 
     if (!storedUser) {
-      router.push("/auth/login");
+      router.push("/auth/auth");
       return;
     }
 
     if (storedUser.role !== "user") {
-      router.push("/auth/login");
+      router.push("/auth/auth");
     }
 
     setUser(storedUser);
@@ -26,7 +26,7 @@ if (typeof window === "undefined") return;
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/auth/login");
+    router.push("/");
   };
 
   return (

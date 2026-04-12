@@ -1,18 +1,26 @@
 import axios from "axios";
 
-export const ApiCall = async (res, url, options = {}) => {
-  const token = res.headers["x-auth-token"];
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
-  };
-  return axios({ url, ...options, headers, credentials: "include" });
+export const ApiCall = async (url, options = {}) => {
+  return axios({
+    url,
+    ...options,
+    withCredentials: true,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
 };
 
 export const loginUser = async (formData) => {
+  if (!formData.email || !formData.password) {
+    throw new Error("Email and password are required");
+  }
   try {
-    const res = await axios.post("/api/auth/login", formData);
+    const res = await ApiCall("/api/auth/login", {
+      method: "POST",
+      data: formData,
+    });
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Login failed");
@@ -20,8 +28,17 @@ export const loginUser = async (formData) => {
 };
 
 export const registerUser = async (formData) => {
+  if (!formData.name || !formData.email || !formData.password) {
+    throw new Error("Name, email and password are required");
+  }
+  if (formData.password.length < 8) {
+    throw new Error("Password must be at least 8 characters long");
+  }
   try {
-    const res = await axios.post("/api/auth/register", formData);
+    const res = await ApiCall("/api/auth/register", {
+      method: "POST",
+      data: formData,
+    });
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Registration failed");
@@ -33,8 +50,14 @@ export const loginWithGoogle = async () => {
 };
 
 export const resetPassword = async (email) => {
+  if (!email) {
+    throw new Error("Email is required");
+  }
   try {
-    const res = await axios.post("/api/auth/reset-password", { email });
+    const res = await ApiCall("/api/auth/reset-password", {
+      method: "POST",
+      data: { email },
+    });
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Reset password failed");
@@ -42,8 +65,20 @@ export const resetPassword = async (email) => {
 };
 
 export const confirmResetPassword = async (formData) => {
+  if (!formData.token || !formData.newPassword) {
+    throw new Error("Token and new password are required");
+  }
+  if (formData.newPassword.length < 8) {
+    throw new Error("New password must be at least 8 characters long");
+  }
   try {
-    const res = await axios.post("/api/auth/reset-passwordConfirm", formData);
+    const res = await ApiCall(
+      `/api/auth/reset-password-confirm.js`,
+      {
+        method: "POST",
+        data: { token: formData.token, newPassword: formData.newPassword },
+      },
+    );
     return res.data;
   } catch (error) {
     throw new Error(

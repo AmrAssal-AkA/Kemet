@@ -4,14 +4,19 @@ async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
   try {
     const response = await axios.post(
       "http://localhost:8000/api/auth/reset-password",
-      req.body,
+      { email },
       {
         headers: {
           "Content-Type": "application/json",
         },
+        withCredentials: true,
       },
     );
     res.status(response.status).json(response.data);
