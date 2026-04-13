@@ -1,0 +1,74 @@
+const offer = require("../../model/offeringSchema");
+
+// Create Offering Post
+const createOffers = async (req, res) => {
+    const {title, image, description, reviews, price} = req.body;
+    if (!title || !description || !image) {
+        return res.status(400).json({message: "Please fill the offer"});
+    }
+    try {
+    const offering = await offer.create({title, image, description, reviews, price});
+    res.status(200).json({message: "Offer Created"});
+    } catch (error) {
+    console.error("Error creating offer:", error);
+    res.status(500).json({message: "Server Error" , error: error.message});
+    }
+};
+
+// Get All Offering Posts
+const getAllOffers = async (req, res) => {
+    try {
+        const allOfferings = await offer.find();
+        res.status(200).json({allOfferings});
+    } catch (error) {
+        res.status(500).json({message: "Server error", error: error.message});
+    }
+};
+
+// Get Single Offering Post
+const getOneOfferById = async (req, res) => {
+    const {Offerings} = req.params;
+    try {
+        const offerByOne = await offer.findById(Offerings);
+        if (!offerByOne) {
+        return res.status(404).json({message: "Offer not found."});
+        }
+        res.status(200).json(offerByOne);
+    } catch (error) {
+        res.status(500).json({message: "Server Error", error: error.message});
+    }
+};
+
+// Update Offering Post
+const updateOffersById = async (req, res) => {
+    const {title, image, description, reviews, price} = req.body;
+    try {
+        const offerUpdate = await offer.findByIdAndUpdate(
+        req.params.id,
+        {title, image, description, reviews, price},
+        {new: true},
+        );
+        if (!offerUpdate) {
+        return res.status(404).json({message: "Offer not found"});
+        }
+        res.status(200).json({message: "Offer updated successfully"});
+    } catch (error) {
+        res.status(500).json({message: "Server Error", error: error.message});
+    }
+};
+
+// Delete Offering Post
+const deleteOffersById = async (req, res) => {
+    const {offeringg} = req.params;
+    try {
+        const offerDelete = await offer.findByIdAndDelete(offeringg);
+        if (!offerDelete) {
+        return res.status(404).json({message: "Offer not found"});
+        }
+        res.status(200).json({message: "Offer deleted successfully"});
+    } catch (error) {
+        res.status(500).json({message: "Server Error", error: error.message});
+    }
+};
+
+module.exports = {createOffers, getAllOffers, getOneOfferById, updateOffersById, deleteOffersById};
