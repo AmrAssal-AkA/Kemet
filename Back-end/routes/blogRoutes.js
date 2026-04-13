@@ -2,13 +2,14 @@ const express = require("express");
 const router = express.Router();
 const blogController = require("../controller/contentmgt/blogController");
 const upload = require("../middleware/multer");
-const isAdmin = require("../middleware/isAdmin");
+const authenticate = require("../middleware/authenticate");
+const authorize = require("../middleware/authorize");
 
-router.post("/",upload.array("images", 5),blogController.createBlog);
+router.post("/", authenticate,upload.array("images", 5),blogController.createBlog);
 router.get("/", blogController.getAllBlog);
 router.get("/:blogId", blogController.getOneBlogById);
-router.put("/updateBlog/:blogId", isAdmin,upload.single("image"),blogController.updateBlogById,);
-router.delete("/deleteBlog/:blogId", isAdmin, blogController.deleteBlogById);
+router.put("/updateBlog/:blogId", authenticate,upload.single("image"),blogController.updateBlogById,);
+router.delete("/deleteBlog/:blogId", authenticate,authorize("admin"), blogController.deleteBlogById);
 
 
 module.exports = router;

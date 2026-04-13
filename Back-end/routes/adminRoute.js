@@ -1,25 +1,30 @@
 const express = require("express");
 const router = express.Router();
-const isAdmin = require("../middleware/isAdmin");
+const authenticate = require("../middleware/authenticate");
+const authorize = require("../middleware/authorize");
+
 const userRoleUpdate = require("../controller/auth/userRoleUpdate");
 const adminDashboardController = require("../controller/Dashboards/adminDashboardController");
 
 // Admin Dashboard Routes
 router.get(
   "/AllUsers",
-  isAdmin,
+  authenticate,
+  authorize("admin"),
   adminDashboardController.getAllUsers,
 );
 router.patch(
   "/updateRole/:userId",
-  isAdmin,
+  authenticate,
+  authorize("admin"),
   userRoleUpdate,
 );
 
 // View Booking Details Route for Admin
 router.get(
   "/bookingDetails",
-  isAdmin,
+  authenticate,
+  authorize("admin"),
   adminDashboardController.getBookingsDetails,
 );
 

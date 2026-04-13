@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
-import { loginUser, loginWithGoogle } from "../../../services/authService";
+import { useAuth } from "@/context/AuthContext";
+import {  loginWithGoogle } from "@/services/authService";
 import { FaGoogle } from "react-icons/fa";
 
 export default function LoginForm() {
@@ -11,49 +12,7 @@ export default function LoginForm() {
     email: "",
     password: "",
   });
-
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const redirectByRole = (role) => {
-    if (role === "user") {
-      router.push("/user-dashboard");
-    } else if (role === "guide") {
-      router.push("/guide-dashboard");
-    } else if (role === "admin") {
-      router.push("/admin-dashboard");
-    }
-  };
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const { token, user: userParam, error } = router.query;
-
-    if (token && userParam) {
-      try {
-        const user = JSON.parse(decodeURIComponent(userParam));
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(user));
-        redirectByRole(user.role);
-        return;
-      } catch (_) {}
-    }
-
-    if (error) {
-      setError("Google sign-in failed. Please try again.");
-    }
-
-    try {
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        redirectByRole(user.role);
-      }
-    } catch (_) {
-      // Ignore localStorage parsing errors
-    }
-  }, [router]);
+  const { loading, error, login } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -64,21 +23,7 @@ export default function LoginForm() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const data = await loginUser(formData);
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      redirectByRole(data.user.role);
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+   await login(formData);
   };
 
   const handleGoogleLogin = () => {

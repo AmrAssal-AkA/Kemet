@@ -18,6 +18,10 @@ const blogRoute = require("./routes/blogRoutes");
 const BookingRoute = require("./routes/BookingRoutes");
 const authRoute = require("./routes/authRoutes");
 const adminRoute = require("./routes/adminRoute");
+const newsletterRoute = require("./routes/newsletterRoutes");
+const { authLimiter, apiLimiter } = require("./middleware/rateLimiter");
+const Logger = require("./services/logger");
+const morganMiddleware = require("./middleware/morganMW");
 const passport = require("passport");
 const port = process.env.PORT;
 
@@ -28,6 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({origin: "http://localhost:3000", credentials: true }));
+app.use(morganMiddleware);
 app.use(
   session({
     secret: "SessionSecretKey",
@@ -41,19 +46,22 @@ require("./controller/auth/authController");
 app.use(passport.initialize());
 
 // Routes
+app.use("/api", apiLimiter);
 app.use("/api/Trip", addTripRoute);
 app.use("/api/flight", FlightRoute);
 app.use("/api/hotels", HotelRoute);
 app.use("/api/contact", contactRoute);
 app.use("/api/blog", blogRoute);
 app.use("/api/booking", BookingRoute);
-app.use("/api/auth", authRoute);
+app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
+app.use("/api/newsletter", newsletterRoute);
 
 app.get("/", (req, res) => {
-  res.send("Welcome to Kemet Travel Agency API");
+  Logger.info("Root endpoint accessed");
+  res.send("Welcome to the Travel Agency API");
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  Logger.info(`Server is running on port ${port}`);
 });

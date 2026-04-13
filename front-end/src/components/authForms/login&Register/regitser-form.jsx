@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
-import { FaGoogle } from "react-icons/fa";
 
-import { loginWithGoogle, registerUser } from "@/services/authService";
+import { FaGoogle } from "react-icons/fa";
+import { loginWithGoogle } from "@/services/authService";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -13,27 +13,8 @@ export default function RegisterForm() {
     email: "",
     password: "",
   });
+  const {regitser, loading, error} = useAuth();
 
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.role === "user") {
-          router.push("/user-dashboard");
-        } else if (user.role === "guide") {
-          router.push("/guide-dashboard");
-        } else if (user.role === "admin") {
-          router.push("/admin-dashboard");
-        }
-      }
-    } catch (_) {}
-  }, [router]);
 
   const handleChange = (e) => {
     setFormData({
@@ -44,21 +25,7 @@ export default function RegisterForm() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const data = await registerUser(formData);
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      router.push("/user-dashboard");
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+    await regitser(formData.name, formData.email, formData.password);
   };
 
   const handleGoogleRegister = () => {

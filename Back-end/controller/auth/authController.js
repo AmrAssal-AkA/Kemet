@@ -7,13 +7,9 @@ const session = require("express-session");
 const crypto = require("crypto");
 
 const { sendEmail, verifyEmailTemplate, GoogleSignInTemplate } = require("../../services/miling");
+const {generateToken} = require("../../services/generateToken")
+const RefreshToken = require("../../model/RefreshTokenSchema");
 
-// JWT
-const generateToken = (userId, role) => {
-  return jwt.sign({ userId, role }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "24h",
-  });
-};
 
 passport.serializeUser((user, done) => {
   done(null, user.userId);
@@ -74,21 +70,35 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = await User.create({
+    const Newuser = await User.create({
       name,
       email,
       password: hashedPassword,
     });
 
-    const token = generateToken(user.userId, user.role);
-    res.cookie("x-auth-token", token, {
+    const { accessToken, refreshToken } = generateToken(Newuser);
+    await RefreshToken.create({ 
+      token: refreshToken,
+      userId: Newuser._id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+    // Set tokens in HTTP-only cookies
+    res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
+    // Set refresh token in HTTP-only cookie
+    res.cookie("x-refresh-token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     const verifyToken = crypto.randomBytes(32).toString("hex");
-    await User.findByIdAndUpdate(user._id, {
+    await User.findByIdAndUpdate(Newuser._id, {
       emailVerificationToken: verifyToken,
       emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     })
@@ -101,9 +111,9 @@ const register = async (req, res) => {
     });
     res.status(201).json({
       user: {
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        name: Newuser.name,
+        email: Newuser.email,
+        role: Newuser.role,
       },
       message: "User registered successfully",
     });
@@ -117,49 +127,59 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const existingUser = await User.findOne({ email }).select("+password");
-    if (!existingUser) {
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
     // Google-only users have no password
-    if (!existingUser.password) {
+    if (!user.password) {
       return res.status(401).json({
         message:
           "This account uses Google sign-in. Please continue with Google.",
       });
     }
 
-    const isMatch = await bcrypt.compare(password, existingUser.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
+    const {accessToken, refreshToken} = generateToken(user);
+    
+    await RefreshToken.create({ 
+      token: refreshToken,
+      userId: user._id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
 
-    const token = generateToken(existingUser.userId, existingUser.role);
-    res.cookie("x-auth-token", token, {
+    res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
+
+    res.cookie("x-refresh-token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       user: {
-        name: existingUser.name,
-        email: existingUser.email,
-        role: existingUser.role,
+        name: user.name,
+        email: user.email,
+        role: user.role,
       },
-      message: `Login successful, welcome back ${existingUser.name}`,
+      message: `Login successful, welcome back ${user.name}`,
     });
   } catch (error) {
     res.status(500).json({ message: "An internal server error occurred" });
   }
 };
 
-// Logout (Sign Out)
-const logout = (req, res) => {
-  res.clearCookie("x-auth-token");
-  res.status(200).json({ message: "Logged out successfully" });
-};
+
 
 const googleCallback = async (req, res) => {
   try {
@@ -223,4 +243,53 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-module.exports = { register, login, logout, googleCallback, verifyEmail };
+
+const refresh = async (req, res) => {
+  const refreshToken = req.cookies["x-refresh-token"];
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: "Refresh token missing" });
+  }
+  try{
+    const storedToken = await RefreshToken.findOne({token: refreshToken});
+    if(!storedToken){
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
+      if (err) {
+        await RefreshToken.deleteOne({ token: refreshToken });
+        return res.status(401).json({ message: "Invalid refresh token" });
+      }
+
+      await RefreshToken.deleteOne({ token: refreshToken });
+
+      const user = await User.findById(decoded.id);
+      const {accessToken, refreshToken: newRefreshToken} = generateToken(user);
+      await RefreshToken.create({
+        token: newRefreshToken,
+        userId: user._id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+
+      res.cookie("x-auth-token", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+      res.cookie("x-refresh-token", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.status(200).json({ message: "Token refreshed successfully" });
+    });
+
+  }catch(error){
+    res.status(500).json({ message: "An internal server error occurred" });
+  }
+}
+
+module.exports = { register, login,  googleCallback, verifyEmail , refresh};

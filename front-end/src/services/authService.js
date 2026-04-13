@@ -1,5 +1,6 @@
 import axios from "axios";
 
+
 export const ApiCall = async (url, options = {}) => {
   return axios({
     url,
@@ -49,6 +50,18 @@ export const loginWithGoogle = async () => {
   window.location.href = "http://localhost:8000/api/auth/continueWithGoogle";
 };
 
+
+export const logout = async () => {
+  try{
+    const res = await ApiCall("/api/auth/logout", {
+      method: 'POST',
+    });
+    return res.data;
+  }catch(error){
+    throw new Error(error.response?.data?.message || "Logout failed");
+  }
+}
+
 export const resetPassword = async (email) => {
   if (!email) {
     throw new Error("Email is required");
@@ -73,7 +86,7 @@ export const confirmResetPassword = async (formData) => {
   }
   try {
     const res = await ApiCall(
-      `/api/auth/reset-password-confirm.js`,
+      `/api/auth/reset-password-confirm`,
       {
         method: "POST",
         data: { token: formData.token, newPassword: formData.newPassword },
@@ -86,3 +99,29 @@ export const confirmResetPassword = async (formData) => {
     );
   }
 };
+
+export const refreshToken = async () => {
+    try{
+        const res = await ApiCall("/api/auth/refresh", {method: "POST"});
+        return res.data;
+      }catch(error){
+        throw new Error(error.response?.data?.message || "Session refresh failed");
+    }
+}
+
+export const ApiCallWithRefresh = async (url, options = {}) => {
+  try{
+    return await ApiCall(url, options);
+  }catch(error){
+    if(error.response?.status === 401){
+      try{
+        await refreshToken();
+        return await ApiCall(url, options);
+      }catch(refreshError){
+        window.location.href = "/login";
+        throw refreshError;
+      }
+    }
+    }
+    throw error;
+  }

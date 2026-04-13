@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const contactController = require("../controller/contentmgt/contactController");
-const isUser = require("../middleware/isUser");
-const isAdmin = require("../middleware/isAdmin");
+const authenticate = require("../middleware/authenticate");
+const authorize = require("../middleware/authorize");
 
-router.post("/", isUser, contactController.createContact);
-router.get("/contacts/",isAdmin,contactController.getAllContacts);
-router.get("/contacts/:name",isAdmin,contactController.getContactByName);
-
+router.post("/", authenticate,authorize("user"), contactController.createContact);
+router.get("/contacts/", authenticate,authorize("admin"), contactController.getAllContacts);
+router.get("/contacts/:name", authenticate,authorize("admin"), contactController.getContactByName);
 
 module.exports = router;

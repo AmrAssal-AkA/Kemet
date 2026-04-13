@@ -4,6 +4,7 @@ const cloudinary = require("../../services/cloudinary");
 // Create Blog
 const createBlog = async (req, res) => {
   const { title, content } = req.body;
+  const author = req.user._id;
   if (!title || !content) {
     return res.status(400).json({ message: "Please fill the blog" });
   }
@@ -16,6 +17,7 @@ const createBlog = async (req, res) => {
     const blogs = new blog({
       title,
       content,
+      author,
       images: imageResult.map((result) => ({
         imageUrl: result.secure_url,
         cloudinaryId: result.public_id,
@@ -32,7 +34,7 @@ const createBlog = async (req, res) => {
 // Get Blog
 const getAllBlog = async (req, res) => {
   try {
-    const allblogs = await blog.find();
+    const allblogs = await blog.find().populate("author", "name email");
     res.status(201).json(allblogs);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
@@ -43,7 +45,7 @@ const getAllBlog = async (req, res) => {
 const getOneBlogById = async (req, res) => {
   const { blogId } = req.params;
   try {
-    const blogByOne = await blog.findById(blogId);
+    const blogByOne = await blog.findById(blogId).populate("author", "name email")  ;
     if (!blogByOne) {
       return res.status(404).json({ message: "blog not found." });
     }
@@ -59,7 +61,7 @@ const updateBlogById = async (req, res) => {
     const blogUpdate = await blog.findByIdAndUpdate(
       req.params.blogId,
       {
-        title: req.body.title,
+        title: req.body.title,    
         content: req.body.content,
         images: req.files ? req.files.map((file) => file.path) : null,
       },

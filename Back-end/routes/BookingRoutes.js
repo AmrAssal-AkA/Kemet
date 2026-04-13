@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const BookingController = require("../controller/BookingMgt/BookingController");
-const isUser = require("../middleware/isUser");
+const authenticate = require("../middleware/authenticate");
+const authorize = require("../middleware/authorize");
 
-router.post("/confirm", isUser, BookingController.createBooking);
-
+router.post("/confirm", authenticate, authorize("user"), BookingController.createBooking);
 
 module.exports = router;

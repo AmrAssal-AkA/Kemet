@@ -56,6 +56,7 @@ export default async function handler(req, res) {
       {
         headers: {
           ...formData.getHeaders(),
+          Cookie: req.headers.cookie,
         },
       },
     );
