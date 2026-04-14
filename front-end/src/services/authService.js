@@ -118,7 +118,7 @@ export const ApiCallWithRefresh = async (url, options = {}) => {
         await refreshToken();
         return await ApiCall(url, options);
       }catch(refreshError){
-        window.location.href = "/login";
+        window.location.href = "/auth/auth";
         throw refreshError;
       }
     }

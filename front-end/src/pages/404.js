@@ -1,8 +1,8 @@
 import { useRouter } from "next/router"
 
 
-function notFoundPage() {
-    const router =useRouter();
+function NotFoundPage() {
+    const router = useRouter();
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 py-6 sm:px-6">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">404 - Page Not Found</h1>
@@ -18,4 +18,4 @@ function notFoundPage() {
   )
 }
 
-export default notFoundPage
+export default NotFoundPage

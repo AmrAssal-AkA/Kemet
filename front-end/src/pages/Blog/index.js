@@ -42,7 +42,7 @@ export default function BlogPage(props) {
 
           <div className="relative z-10 text-white">
             <h1 className="text-4xl font-bold leading-tight md:text-6xl">
-              Let's Explore
+              Let&apos;s Explore
               <br />
               <span className="text-sky-400">New Possibilities...</span>
             </h1>

@@ -19,8 +19,13 @@ async function handler(req, res){
         }
         return res.status(200).json({ message: "Token refreshed successfully" });
     }catch(error){
-        console.error("Error refreshing token:", error);
-        res.status(500).json({ message: "Internal server error" });
+        if (error.code === "ECONNREFUSED") {
+            return res.status(503).json({ message: "Auth service unavailable" });
+        }
+
+        const status = error.response?.status || 401;
+        const message = error.response?.data?.message || "Unable to refresh token";
+        return res.status(status).json({ message });
     }
 }
 

@@ -9,19 +9,19 @@ export default function AdminDashboard() {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user) {
-      router.push("/auth/login");
+      router.push("/auth/auth");
       return;
     }
 
     if (user.role !== "admin") {
-      router.push("/auth/login");
+      router.push("/auth/auth");
     }
   }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/auth/login");
+    router.push("/auth/auth");
   };
 
   return (

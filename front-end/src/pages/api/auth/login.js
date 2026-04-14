@@ -28,9 +28,14 @@ const handler = async (req, res) => {
     return res.status(200).json(response.data)
 
   } catch (error) {
+    if (error.code === "ECONNREFUSED") {
+      return res.status(503).json({ message: "Auth service unavailable" });
+    }
+
     if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }
+
     return res.status(500).json({ message: "Internal server error" });
   }
 };

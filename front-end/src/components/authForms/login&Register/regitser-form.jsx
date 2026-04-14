@@ -1,20 +1,16 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-
+import { useState } from "react";
 import { FaGoogle } from "react-icons/fa";
+
 import { loginWithGoogle } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterForm() {
-  const router = useRouter();
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
-  const {regitser, loading, error} = useAuth();
-
+  const { register, loading, error } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -25,7 +21,7 @@ export default function RegisterForm() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    await regitser(formData.name, formData.email, formData.password);
+    await register(formData);
   };
 
   const handleGoogleRegister = () => {

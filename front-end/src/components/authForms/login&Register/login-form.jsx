@@ -68,7 +68,7 @@ export default function LoginForm() {
         />
       </div>
       <p className="text-gray-600 text-sm sm:text-md">
-        Don't remember Your Password?
+        Don&apos;t remember Your Password?
         <Link
           href="/auth/Reset-password"
           className="text-amber-500 hover:underline ml-1"

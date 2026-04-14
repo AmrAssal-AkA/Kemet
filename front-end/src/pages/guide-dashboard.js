@@ -9,19 +9,19 @@ export default function GuideDashboard() {
     const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user) {
-      router.push("/auth/login");
+      router.push("/auth/auth");
       return;
     }
 
     if (user.role !== "guide") {
-      router.push("/auth/login");
+      router.push("/auth/auth");
     }
   }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/auth/login");
+    router.push("/auth/auth");
   };
 
   return (

@@ -12,7 +12,7 @@ export default function ResetPassword({ token }) {
     newPassword: "",
     confirmNewPassword: "",
   });
-   console.log("token in reset password component:", token);
+  console.log("token in reset password component:", token);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -27,7 +27,12 @@ export default function ResetPassword({ token }) {
       setIsLoading(false);
       return;
     }
-    console.log("submitting with token:", token, "and new password:", formData.newPassword);
+    console.log(
+      "submitting with token:",
+      token,
+      "and new password:",
+      formData.newPassword
+    );
     if (formData.newPassword !== formData.confirmNewPassword) {
       setError("Passwords do not match.");
       setIsLoading(false);
@@ -40,8 +45,8 @@ export default function ResetPassword({ token }) {
       });
       setSuccessMessage(res.message || "Password reset successful!");
       setTimeout(() => {
-        router.push("/auth/login");
-      }, 2000);
+        router.push("/auth/auth");
+      }, 1500);
     } catch (error) {
       setError(error.message);
     } finally {

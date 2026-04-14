@@ -183,20 +183,36 @@ const login = async (req, res) => {
 
 const googleCallback = async (req, res) => {
   try {
-    const token = generateToken(req.user.userId, req.user.role);
+    const { accessToken, refreshToken } = generateToken(req.user);
 
-    res.cookie("x-auth-token", token, {
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: req.user._id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
+
+    res.cookie("x-refresh-token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     const user = JSON.stringify({
       name: req.user.name,
       email: req.user.email,
       role: req.user.role,
     });
-    res.redirect(`http://localhost:3000/login?token=${token}&user=${user}`);
+
+    res.redirect(`http://localhost:3000/auth/auth?token=${accessToken}&user=${user}`);
+
     const emailResult = await GoogleSignInTemplate(req.user.name);
     await sendEmail({
       to: req.user.email,
@@ -204,7 +220,7 @@ const googleCallback = async (req, res) => {
       html: emailResult,
     });
   } catch (error) {
-    res.redirect("http://localhost:3000/login?error=google_auth_failed");
+    res.redirect("http://localhost:3000/auth/auth?error=google_auth_failed");
   }
 };
 
