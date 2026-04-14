@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useState } from "react";
 import Link from "next/link";
 
 const popularCities = [
@@ -37,39 +36,9 @@ const packages = [
   },
 ];
 
-export default function UserDashboard() {
-  const router = useRouter();
-  const [userName, setUserName] = useState("");
+export default function UserDashboard({ userName = "Traveler" }) {
   const [searchCity, setSearchCity] = useState("");
   const [selectedTag, setSelectedTag] = useState("Top Picks");
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const userRaw = localStorage.getItem("user");
-    if (!userRaw || userRaw === "undefined") {
-      router.push("/auth/auth");
-      return;
-    }
-
-    let storedUser;
-    try {
-      storedUser = JSON.parse(userRaw);
-    } catch (error) {
-      console.error("Invalid user JSON in localStorage:", error);
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      router.push("/auth/auth");
-      return;
-    }
-
-    if (!storedUser || storedUser.role !== "user") {
-      router.push("/auth/auth");
-      return;
-    }
-
-    setUserName(storedUser.name || storedUser.fullName || "Traveler");
-  }, [router]);
 
   const filteredCities = popularCities.filter((city) =>
     city.name.toLowerCase().includes(searchCity.toLowerCase()),
@@ -233,4 +202,23 @@ export default function UserDashboard() {
       </section>
     </main>
   );
+}
+
+export async function getServerSideProps(context) {
+  const cookie = context.req.headers.cookie || "";
+
+  if (!cookie || !cookie.includes("x-auth-token")) {
+    return {
+      redirect: {
+        destination: "/auth/auth",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {
+      userName: "Traveler",
+    },
+  };
 }
