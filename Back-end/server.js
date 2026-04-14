@@ -24,6 +24,7 @@ const Logger = require("./services/logger");
 const morganMiddleware = require("./middleware/morganMW");
 const passport = require("passport");
 const port = process.env.PORT;
+const userRoutes = require("./routes/userdashboardRoutes");
 
 // Connect to database
 connectDB();
@@ -56,6 +57,8 @@ app.use("/api/booking", BookingRoute);
 app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
 app.use("/api/newsletter", newsletterRoute);
+app.use("/api/userdashboard", userRoutes);
+
 
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");

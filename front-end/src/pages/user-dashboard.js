@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Link from "next/link";
+import axios from "axios";
 
 const popularCities = [
   { name: "Alexandria", image: "/images/cities/alexandria.jpg" },
@@ -125,7 +126,11 @@ export default function UserDashboard({ userName }) {
 
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {filteredCities.map((city) => (
-            <Link key={city.name} href="/Destination" className="group text-center">
+            <Link
+              key={city.name}
+              href="/Destination"
+              className="group text-center"
+            >
               <div
                 className="mx-auto h-24 w-24 rounded-full bg-cover bg-center ring-2 ring-white shadow-md transition group-hover:scale-105"
                 style={{ backgroundImage: `url('${city.image}')` }}
@@ -147,13 +152,20 @@ export default function UserDashboard({ userName }) {
             <div className="md:col-span-2">
               <h3 className="text-3xl font-bold">LUXOR</h3>
               <p className="mt-2 text-sm text-slate-600">
-                A journey through temples, ancient stories, and timeless Nile views.
+                A journey through temples, ancient stories, and timeless Nile
+                views.
               </p>
             </div>
             <div className="space-y-2 text-sm">
-              <p className="rounded-lg bg-slate-50 px-3 py-2">Top attractions</p>
-              <p className="rounded-lg bg-slate-50 px-3 py-2">Best local experiences</p>
-              <p className="rounded-lg bg-slate-50 px-3 py-2">City map & routes</p>
+              <p className="rounded-lg bg-slate-50 px-3 py-2">
+                Top attractions
+              </p>
+              <p className="rounded-lg bg-slate-50 px-3 py-2">
+                Best local experiences
+              </p>
+              <p className="rounded-lg bg-slate-50 px-3 py-2">
+                City map & routes
+              </p>
             </div>
           </div>
         </div>
@@ -179,7 +191,9 @@ export default function UserDashboard({ userName }) {
               <h3 className="mt-3 text-sm font-semibold">{pkg.title}</h3>
               <p className="mt-1 text-xs text-slate-500">{pkg.days}</p>
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-sm font-bold text-[#1a3f7a]">{pkg.price}</span>
+                <span className="text-sm font-bold text-[#1a3f7a]">
+                  {pkg.price}
+                </span>
                 <Link
                   href="/BookTrip"
                   className="rounded-lg bg-amber-400 px-3 py-1 text-xs font-semibold text-slate-900 hover:bg-amber-300"
@@ -217,24 +231,23 @@ export async function getServerSideProps(context) {
   }
 
   try {
-    const response = await fetch("http://localhost:8000/api/auth/refresh", {
-      method: "POST",
-      headers: {
-        Cookie: cookie,
+    const response = await axios.post(
+      "http://localhost:3000/api/auth/refresh",
+      {},
+      {
+        headers: {
+          Cookie: cookie,
+        },
       },
-      credentials: "include",
-    });
+    );
 
-    if (!response.ok) {
-      throw new Error("Session verification failed");
-    }
-
-    const data = await response.json();
-    const userName = data.user?.name || "Traveler";
+    const userName = response.data.user?.name;
+    const userRole = response.data.user?.role;
 
     return {
       props: {
         userName,
+        userRole,
       },
     };
   } catch (error) {

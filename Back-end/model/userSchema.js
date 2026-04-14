@@ -65,7 +65,11 @@ const userSchema = new mongoose.Schema({
   emailVerificationTokenExpires: {
     type: Date,
     select: false,
-  }
+  },
+  savedTrips: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Trip",
+  }]
 });
 
 module.exports = mongoose.model("User", userSchema);

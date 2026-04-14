@@ -12,7 +12,6 @@ const {
   GoogleSignInTemplate,
 } = require("../../services/miling");
 const { generateToken } = require("../../services/generateToken");
-const RefreshToken = require("../../model/RefreshTokenSchema");
 
 passport.serializeUser((user, done) => {
   done(null, user.userId);
@@ -80,11 +79,7 @@ const register = async (req, res) => {
     });
 
     const { accessToken, refreshToken } = generateToken(Newuser);
-    await RefreshToken.create({
-      token: refreshToken,
-      userId: Newuser.userId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
+
     // Set tokens in HTTP-only cookies
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
@@ -151,12 +146,6 @@ const login = async (req, res) => {
     }
     const { accessToken, refreshToken } = generateToken(user);
 
-    await RefreshToken.create({
-      token: refreshToken,
-      userId: user.userId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -187,12 +176,6 @@ const login = async (req, res) => {
 const googleCallback = async (req, res) => {
   try {
     const { accessToken, refreshToken } = generateToken(req.user);
-
-    await RefreshToken.create({
-      token: refreshToken,
-      userId: req.user.userId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
 
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
@@ -242,7 +225,7 @@ const verifyEmail = async (req, res) => {
     const user = await User.findOne({
       emailVerificationToken: token,
       emailVerificationTokenExpires: { $gt: Date.now() },
-    })
+    });
 
     if (!user) {
       return res
@@ -273,29 +256,17 @@ const refresh = async (req, res) => {
     return res.status(401).json({ message: "Refresh token missing" });
   }
   try {
-    const storedToken = await RefreshToken.findOne({ token: refreshToken });
-    if (!storedToken) {
-      return res.status(401).json({ message: "Invalid refresh token" });
-    }
     jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET,
       async (err, decoded) => {
         if (err) {
-          await RefreshToken.deleteOne({ token: refreshToken });
           return res.status(401).json({ message: "Invalid refresh token" });
         }
-
-        await RefreshToken.deleteOne({ token: refreshToken });
 
         const user = await User.findById(decoded.id);
         const { accessToken, refreshToken: newRefreshToken } =
           generateToken(user);
-        await RefreshToken.create({
-          token: newRefreshToken,
-          userId: user._id,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        });
 
         res.cookie("x-auth-token", accessToken, {
           httpOnly: true,
@@ -310,11 +281,14 @@ const refresh = async (req, res) => {
           maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        res.status(200).json({ message: "Token refreshed successfully", user:{
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        } });
+        res.status(200).json({
+          message: "Token refreshed successfully",
+          user: {
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        });
       },
     );
   } catch (error) {

@@ -17,24 +17,6 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const restoredSession = async () => {
-      setLoading(true);
-      try {
-        const res = await ApiCall("/api/auth/refresh", { method: "POST" });
-        setUser(res.data.user);
-      } catch (error) {
-        if (error.response?.status !== 401) {
-          console.debug("Session restore failed:", error.message);
-        }
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    restoredSession();
-  }, []);
-
   const login = async (formData) => {
     setLoading(true);
     setError(null);

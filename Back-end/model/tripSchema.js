@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 
 
 const tripSchema = new mongoose.Schema({
-    id : {
+    tripId : {
     type: String,
     default: () => new mongoose.Types.ObjectId().toString(),
+    index: true,
+    unique: true
     },
     name: {
         type: String,

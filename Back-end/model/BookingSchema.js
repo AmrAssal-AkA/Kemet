@@ -1,54 +1,56 @@
 const mongoose = require("mongoose");
 
-
-
-const BookingSchema = new mongoose.Schema({
+const BookingSchema = new mongoose.Schema(
+  {
     user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     flight: {
-        orderId: String,
-        data: mongoose.Schema.Types.Mixed,
+      orderId: String,
+      data: mongoose.Schema.Types.Mixed,
     },
     hotel: {
-        orderId: String,
-        data: mongoose.Schema.Types.Mixed,
+      orderId: String,
+      data: mongoose.Schema.Types.Mixed,
     },
-    trip: [{
+    trip: [
+      {
         type: mongoose.Schema.Types.ObjectId,
         ref: "trip",
         required: true,
-    }],
+      },
+    ],
     status: {
-        type: String,
-        enum: ["Pending", "Confirmed", "Cancelled"],
-        default: "Pending",
+      type: String,
+      enum: ["Pending", "Confirmed", "Cancelled"],
+      default: "Pending",
     },
     paymentStatus: {
-        type: String,
-        enum: ["Pending", "Paid", "Failed"],
-        default: "Pending",
+      type: String,
+      enum: ["Pending", "Paid", "Failed"],
+      default: "Pending",
     },
     totalPrice: {
-        type: Number,
+      type: Number,
     },
     details: {
-        type: mongoose.Schema.Types.Mixed,
+      type: mongoose.Schema.Types.Mixed,
     },
     currency: {
-        type: String,
-        default: "EGP"
+      type: String,
+      default: "EGP",
     },
     createdAt: {
-        type: Date,
-        default: Date.now,
-    }
-    
-}, {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
     timestamps: true,
-});
+  },
+);
 
-
-module.exports = mongoose.model("Booking" , BookingSchema);
+module.exports =
+  mongoose.models.Booking || mongoose.model("Booking", BookingSchema);

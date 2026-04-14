@@ -1,15 +1,40 @@
 import axios from "axios";
 
+const axiosInstance = axios.create({
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        await axiosInstance.post("/api/auth/refresh");
+
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+
+        window.location.href = "/auth/auth";
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export const ApiCall = async (url, options = {}) => {
-  return axios({
+  return axiosInstance({
     url,
     ...options,
-    withCredentials: true,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
   });
 };
 
@@ -50,17 +75,16 @@ export const loginWithGoogle = async () => {
   window.location.href = "http://localhost:8000/api/auth/continueWithGoogle";
 };
 
-
 export const logout = async () => {
-  try{
+  try {
     const res = await ApiCall("/api/auth/logout", {
-      method: 'POST',
+      method: "POST",
     });
     return res.data;
-  }catch(error){
+  } catch (error) {
     throw new Error(error.response?.data?.message || "Logout failed");
   }
-}
+};
 
 export const resetPassword = async (email) => {
   if (!email) {
@@ -85,13 +109,10 @@ export const confirmResetPassword = async (formData) => {
     throw new Error("New password must be at least 8 characters long");
   }
   try {
-    const res = await ApiCall(
-      `/api/auth/reset-password-confirm`,
-      {
-        method: "POST",
-        data: { token: formData.token, newPassword: formData.newPassword },
-      },
-    );
+    const res = await ApiCall(`/api/auth/reset-password-confirm`, {
+      method: "POST",
+      data: { token: formData.token, newPassword: formData.newPassword },
+    });
     return res.data;
   } catch (error) {
     throw new Error(
@@ -99,29 +120,3 @@ export const confirmResetPassword = async (formData) => {
     );
   }
 };
-
-export const refreshToken = async () => {
-    try{
-        const res = await ApiCall("/api/auth/refresh", {method: "POST"});
-        return res.data;
-      }catch(error){
-        throw new Error(error.response?.data?.message || "Session refresh failed");
-    }
-}
-
-export const ApiCallWithRefresh = async (url, options = {}) => {
-  try{
-    return await ApiCall(url, options);
-  }catch(error){
-    if(error.response?.status === 401){
-      try{
-        await refreshToken();
-        return await ApiCall(url, options);
-      }catch(refreshError){
-        window.location.href = "/auth/auth";
-        throw refreshError;
-      }
-    }
-    throw error;
-    }
-  }
