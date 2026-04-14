@@ -1,10 +1,10 @@
-
-
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import axios from "axios";
+
+
+import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { label: "Destination", href: "/Destination" },
@@ -17,51 +17,39 @@ export default function Header() {
   const router = useRouter();
   const [homeHref, setHomeHref] = useState("/");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentPath, setCurrentPath] = useState("");
+  const { logout, user } = useAuth();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (user) {
+      setHomeHref("/user-dashboard");
+      setIsLoggedIn(true);
+    } else {
+      setHomeHref("/");
+      setIsLoggedIn(false);
+    }
+  }, [user]);
 
-    const syncAuthState = () => {
-      try {
-        const userRaw = localStorage.getItem("user");
-        const token = localStorage.getItem("token");
-
-        if (userRaw && userRaw !== "undefined" && token) {
-          const parsed = JSON.parse(userRaw);
-          if (parsed) {
-            setHomeHref("/user-dashboard");
-            setIsLoggedIn(true);
-            return;
-          }
-        }
-        setHomeHref("/");
-        setIsLoggedIn(false);
-      } catch (error) {
-        setHomeHref("/");
-        setIsLoggedIn(false);
-      }
+  useEffect(() => {
+    const updateCurrentPath = () => {
+      setCurrentPath(router.asPath.split("?")[0]);
     };
 
-    syncAuthState();
-    window.addEventListener("storage", syncAuthState);
-    router.events.on("routeChangeComplete", syncAuthState);
+    updateCurrentPath();
+    router.events.on("routeChangeComplete", updateCurrentPath);
 
     return () => {
-      window.removeEventListener("storage", syncAuthState);
-      router.events.off("routeChangeComplete", syncAuthState);
+      router.events.off("routeChangeComplete", updateCurrentPath);
     };
   }, [router]);
 
   const handleLogout = async () => {
     try {
-      await axios.post("/api/auth/logout");
+      await logout();
     } catch (error) {
       console.error("Logout request failed:", error);
     } finally {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setIsLoggedIn(false);
-      setHomeHref("/");
       router.push("/");
     }
   };
@@ -76,7 +64,7 @@ export default function Header() {
             width={84}
             height={84}
             priority
-            className="h-16 w-16 object-contain sm:h-[84px] sm:w-[84px]"
+            className="h-16 w-16 object-contain sm:h-21 sm:w-21"
           />
           <span className="text-3xl font-extrabold leading-none tracking-tight text-slate-900 sm:text-[2.6rem]">
             Kemet
@@ -85,12 +73,14 @@ export default function Header() {
 
         <nav className="hidden items-center gap-8 md:flex">
           {(() => {
-            const currentPath = router.asPath.split("?")[0];
             const normalizedCurrent =
-              currentPath !== "/" ? currentPath.replace(/\/+$/, "") : currentPath;
+              currentPath !== "/"
+                ? currentPath.replace(/\/+$/, "")
+                : currentPath;
 
             const isHomeActive =
-              normalizedCurrent === "/" || normalizedCurrent.startsWith("/user-dashboard");
+              normalizedCurrent === "/" ||
+              normalizedCurrent.startsWith("/user-dashboard");
 
             return (
               <>
@@ -110,7 +100,9 @@ export default function Header() {
 
                 {navItems.map((item) => {
                   const normalizedItem =
-                    item.href !== "/" ? item.href.replace(/\/+$/, "") : item.href;
+                    item.href !== "/"
+                      ? item.href.replace(/\/+$/, "")
+                      : item.href;
                   const isActive = normalizedCurrent
                     .toLowerCase()
                     .startsWith(normalizedItem.toLowerCase());
@@ -139,7 +131,7 @@ export default function Header() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/BookTrip"
+            href={`${isLoggedIn ? "/user-dashboard" : "/auth/auth"}`}
             className="hidden rounded-full bg-amber-400 px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-amber-300 sm:inline-flex"
           >
             Book Trip

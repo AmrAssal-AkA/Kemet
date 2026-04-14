@@ -36,7 +36,7 @@ const packages = [
   },
 ];
 
-export default function UserDashboard({ userName = "Traveler" }) {
+export default function UserDashboard({ userName }) {
   const [searchCity, setSearchCity] = useState("");
   const [selectedTag, setSelectedTag] = useState("Top Picks");
 
@@ -216,9 +216,34 @@ export async function getServerSideProps(context) {
     };
   }
 
-  return {
-    props: {
-      userName: "Traveler",
-    },
-  };
+  try {
+    const response = await fetch("http://localhost:8000/api/auth/refresh", {
+      method: "POST",
+      headers: {
+        Cookie: cookie,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Session verification failed");
+    }
+
+    const data = await response.json();
+    const userName = data.user?.name || "Traveler";
+
+    return {
+      props: {
+        userName,
+      },
+    };
+  } catch (error) {
+    console.error("Session verification error:", error.message);
+    return {
+      redirect: {
+        destination: "/auth/auth",
+        permanent: false,
+      },
+    };
+  }
 }

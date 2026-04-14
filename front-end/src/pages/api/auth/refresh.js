@@ -17,7 +17,7 @@ async function handler(req, res){
                 res.setHeader("Set-Cookie", cookie);
             });
         }
-        return res.status(200).json({ message: "Token refreshed successfully" });
+        return res.status(200).json(response.data);
     }catch(error){
         if (error.code === "ECONNREFUSED") {
             return res.status(503).json({ message: "Auth service unavailable" });

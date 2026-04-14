@@ -15,9 +15,6 @@ export default function Auth() {
     try {
       const parsedUser = JSON.parse(user);
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(parsedUser));
-
       if (parsedUser.role === "admin") {
         router.replace("/admin-dashboard");
         return;
@@ -31,6 +28,7 @@ export default function Auth() {
       router.replace("/user-dashboard");
     } catch (error) {
       console.error("Invalid Google callback user payload:", error);
+      router.replace("/auth/auth");
     }
   }, [router]);
 
@@ -40,3 +38,4 @@ export default function Auth() {
     </main>
   );
 }
+

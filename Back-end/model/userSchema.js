@@ -3,6 +3,12 @@ const validator = require("validator");
 const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    default: () => new mongoose.Types.ObjectId().toString(),
+    unique: true,
+    index: true,
+  },
   name: {
     type: String,
     required: true,
@@ -45,7 +51,7 @@ const userSchema = new mongoose.Schema({
   ],
   isVerified: {
     type: Boolean,
-    default: false,
+    default: ()=> googleId ? true : false,
   },
   googleId: {
     type: String,

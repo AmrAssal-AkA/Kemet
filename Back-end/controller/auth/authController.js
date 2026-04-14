@@ -6,10 +6,13 @@ const passport = require("passport");
 const session = require("express-session");
 const crypto = require("crypto");
 
-const { sendEmail, verifyEmailTemplate, GoogleSignInTemplate } = require("../../services/miling");
-const {generateToken} = require("../../services/generateToken")
+const {
+  sendEmail,
+  verifyEmailTemplate,
+  GoogleSignInTemplate,
+} = require("../../services/miling");
+const { generateToken } = require("../../services/generateToken");
 const RefreshToken = require("../../model/RefreshTokenSchema");
-
 
 passport.serializeUser((user, done) => {
   done(null, user.userId);
@@ -77,9 +80,9 @@ const register = async (req, res) => {
     });
 
     const { accessToken, refreshToken } = generateToken(Newuser);
-    await RefreshToken.create({ 
+    await RefreshToken.create({
       token: refreshToken,
-      userId: Newuser._id,
+      userId: Newuser.userId,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
     // Set tokens in HTTP-only cookies
@@ -98,10 +101,10 @@ const register = async (req, res) => {
     });
 
     const verifyToken = crypto.randomBytes(32).toString("hex");
-    await User.findByIdAndUpdate(Newuser._id, {
+    await User.findByIdAndUpdate(Newuser.userId, {
       emailVerificationToken: verifyToken,
       emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
-    })
+    });
     const verifyURL = `http://localhost:8000/auth/verify-email?token=${verifyToken}`;
     const emailResult = await verifyEmailTemplate(name, verifyURL);
     await sendEmail({
@@ -118,6 +121,8 @@ const register = async (req, res) => {
       message: "User registered successfully",
     });
   } catch (error) {
+    console.error("Register Error:", error.message);
+    console.error("Register Error Stack:", error.stack);
     res.status(500).json({ message: "An internal server error occurred" });
   }
 };
@@ -144,11 +149,11 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-    const {accessToken, refreshToken} = generateToken(user);
-    
-    await RefreshToken.create({ 
+    const { accessToken, refreshToken } = generateToken(user);
+
+    await RefreshToken.create({
       token: refreshToken,
-      userId: user._id,
+      userId: user.userId,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
@@ -179,15 +184,13 @@ const login = async (req, res) => {
   }
 };
 
-
-
 const googleCallback = async (req, res) => {
   try {
     const { accessToken, refreshToken } = generateToken(req.user);
 
     await RefreshToken.create({
       token: refreshToken,
-      userId: req.user._id,
+      userId: req.user.userId,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
@@ -211,7 +214,9 @@ const googleCallback = async (req, res) => {
       role: req.user.role,
     });
 
-    res.redirect(`http://localhost:3000/auth/auth?token=${accessToken}&user=${user}`);
+    res.redirect(
+      `http://localhost:3000/auth/auth?token=${accessToken}&user=${user}`,
+    );
 
     const emailResult = await GoogleSignInTemplate(req.user.name);
     await sendEmail({
@@ -234,8 +239,10 @@ const verifyEmail = async (req, res) => {
         .json({ message: "Verification token is missing." });
     }
 
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    const user = await User.findOne({ userId: decoded.userId });
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationTokenExpires: { $gt: Date.now() },
+    })
 
     if (!user) {
       return res
@@ -259,53 +266,60 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-
 const refresh = async (req, res) => {
   const refreshToken = req.cookies["x-refresh-token"];
 
   if (!refreshToken) {
     return res.status(401).json({ message: "Refresh token missing" });
   }
-  try{
-    const storedToken = await RefreshToken.findOne({token: refreshToken});
-    if(!storedToken){
+  try {
+    const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    if (!storedToken) {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
-      if (err) {
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      async (err, decoded) => {
+        if (err) {
+          await RefreshToken.deleteOne({ token: refreshToken });
+          return res.status(401).json({ message: "Invalid refresh token" });
+        }
+
         await RefreshToken.deleteOne({ token: refreshToken });
-        return res.status(401).json({ message: "Invalid refresh token" });
-      }
 
-      await RefreshToken.deleteOne({ token: refreshToken });
+        const user = await User.findById(decoded.id);
+        const { accessToken, refreshToken: newRefreshToken } =
+          generateToken(user);
+        await RefreshToken.create({
+          token: newRefreshToken,
+          userId: user._id,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
 
-      const user = await User.findById(decoded.id);
-      const {accessToken, refreshToken: newRefreshToken} = generateToken(user);
-      await RefreshToken.create({
-        token: newRefreshToken,
-        userId: user._id,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      });
+        res.cookie("x-auth-token", accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 24 * 60 * 60 * 1000,
+        });
+        res.cookie("x-refresh-token", newRefreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
 
-      res.cookie("x-auth-token", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        maxAge: 24 * 60 * 60 * 1000,
-      });
-      res.cookie("x-refresh-token", newRefreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-
-      res.status(200).json({ message: "Token refreshed successfully" });
-    });
-
-  }catch(error){
+        res.status(200).json({ message: "Token refreshed successfully", user:{
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        } });
+      },
+    );
+  } catch (error) {
     res.status(500).json({ message: "An internal server error occurred" });
   }
-}
+};
 
-module.exports = { register, login,  googleCallback, verifyEmail , refresh};
+module.exports = { register, login, googleCallback, verifyEmail, refresh };

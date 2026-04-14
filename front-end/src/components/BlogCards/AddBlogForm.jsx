@@ -1,9 +1,11 @@
 "use client";
 import axios from "axios";
 import {  useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 
 export default function AddBlogForm({onSuccess}) {
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState([]);
@@ -14,6 +16,11 @@ export default function AddBlogForm({onSuccess}) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!user) {
+      setError("You must be logged in to submit a blog post");
+      return;
+    }
     
     if (!title.trim()) {
       setError("Title is required");
@@ -40,7 +47,9 @@ export default function AddBlogForm({onSuccess}) {
         formData.append("images", file);
       });
 
-      const response = await axios.post("/api/Blog/AddBlog", formData);
+      const response = await axios.post("/api/Blog/AddBlog", formData, {
+        withCredentials: true,
+      });
 
       setLoading(false);
       setSuccess(true);

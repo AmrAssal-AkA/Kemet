@@ -113,19 +113,18 @@ export async function getServerSideProps(context) {
 
   console.log("Fetching blog with ID:", blogId);
   try {
-    const res = await axios.get("http://localhost:3000/api/Blog/getoneBlog", {
-      params: {
-        blogId: blogId,
-      },
-    });
-    console.log("Blog data fetched successfully:", res.data);
+    const res = await axios.get(`http://localhost:3000/api/Blog/getoneBlog`,
+      {
+        params: { blogId },
+      }
+    );
     return {
       props: {
         blog: res.data,
       },
     };
   } catch (error) {
-    console.error("Error fetching blog:", error);
+    console.error("Error fetching blog:", error.message);
     return {
       notFound: true,
     };

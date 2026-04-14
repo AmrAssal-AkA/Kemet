@@ -36,7 +36,7 @@ router.post("/login", authController.login);
 router.post("/refresh", authController.refresh);
 
 router.post("/logout", async (req, res) => {
-  const { refreshToken } = req.cookies["x-refresh-token"];
+  const refreshToken  = req.cookies["x-refresh-token"];
   await RefreshToken.deleteOne({ token: refreshToken });
   res.clearCookie("x-auth-token");
   res.clearCookie("x-refresh-token");

@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import {
   loginUser,
   registerUser,
-  loginWithGoogle,
   logout,
   resetPassword,
   confirmResetPassword,
@@ -19,20 +18,22 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const restoredSession =async () => {
-      try{
-        const res = await ApiCall("/api/auth/refresh", {method: "POST"});
+    const restoredSession = async () => {
+      setLoading(true);
+      try {
+        const res = await ApiCall("/api/auth/refresh", { method: "POST" });
         setUser(res.data.user);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-      }catch(error){
-          setUser(null);
-      }finally{
+      } catch (error) {
+        if (error.response?.status !== 401) {
+          console.debug("Session restore failed:", error.message);
+        }
+        setUser(null);
+      } finally {
         setLoading(false);
       }
-    }
+    };
     restoredSession();
   }, []);
-
 
   const login = async (formData) => {
     setLoading(true);
@@ -40,7 +41,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await loginUser(formData);
       setUser(data.user);
-      router.push('/');
+      router.push("/");
     } catch (error) {
       setError(error.message);
     } finally {
@@ -61,7 +62,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
 
   const logouthundler = async () => {
     setLoading(true);
@@ -121,7 +121,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-
 export const useAuth = () => {
-    return useContext(AuthContext);
-}
+  return useContext(AuthContext);
+};

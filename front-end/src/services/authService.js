@@ -122,6 +122,6 @@ export const ApiCallWithRefresh = async (url, options = {}) => {
         throw refreshError;
       }
     }
-    }
     throw error;
+    }
   }
