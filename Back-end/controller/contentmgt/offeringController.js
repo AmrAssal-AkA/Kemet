@@ -2,12 +2,25 @@ const offer = require("../../model/offeringSchema");
 
 // Create Offering Post
 const createOffers = async (req, res) => {
-    const {title, image, description, reviews, price} = req.body;
-    if (!title || !description || !image) {
+    const {title, description, reviews, price} = req.body;
+    if (!title || !description) {
         return res.status(400).json({message: "Please fill the offer"});
+    }if (!req.files || req.files.length === 0) {
+        return res.status(400).json({message: "Please upload at least one image"});
     }
     try {
-    const offering = await offer.create({title, image, description, reviews, price});
+    const imageResult = await Promise.all(req.files.map((file) => cloudinary.uploadImage(file.path, "offers_images")));
+    const offering = new offer({
+          title,
+          description,
+          reviews,
+          price,
+          images: imageResult.map((result) => ({
+            imageUrl: result.secure_url,
+            cloudinaryId: result.public_id,
+          })),
+        });
+        await offering.save();
     res.status(200).json({message: "Offer Created"});
     } catch (error) {
     console.error("Error creating offer:", error);
