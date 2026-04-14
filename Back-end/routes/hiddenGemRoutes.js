@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const hiddenGemController = require("../controller/contentmgt/TripController");
+const hiddenGemController = require("../controller/contentmgt/hiddenGemController");
 
-router.post("/addTrip", addTripController.createTrip);
-router.get("/", addTripController.getAllTrips);
-router.get("/:id", addTripController.getTripById);
-router.put("/updateTrip/:id", addTripController.updateTripById);
-router.delete("/deleteTrip/:id", addTripController.DeleteTripById);
+router.post("/", hiddenGemController.createHiddenGem);
+router.get("/", hiddenGemController.getAllHiddenGem);
+router.get("/:HiddenId", hiddenGemController.getOneHiddenGemById);
+router.put("/id", hiddenGemController.updateHiddenGemById);
+router.delete("/:hiddensId", hiddenGemController.deleteHiddenGemById);
 
 module.exports = router;
