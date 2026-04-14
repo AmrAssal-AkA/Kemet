@@ -25,18 +25,7 @@ export const AuthProvider = ({ children }) => {
         setUser(res.data.user);
         localStorage.setItem("user", JSON.stringify(res.data.user));
       }catch(error){
-        // Fallback to localStorage if refresh fails
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          try {
-            setUser(JSON.parse(storedUser));
-          } catch {
-            setUser(null);
-            localStorage.removeItem("user");
-          }
-        } else {
           setUser(null);
-        }
       }finally{
         setLoading(false);
       }
@@ -44,11 +33,6 @@ export const AuthProvider = ({ children }) => {
     restoredSession();
   }, []);
 
-  const getDashboardRoute = (role) => {
-    if (role === "admin") return "/admin-dashboard";
-    if (role === "guide") return "/guide-dashboard";
-    return "/user-dashboard";
-  };
 
   const login = async (formData) => {
     setLoading(true);
@@ -56,12 +40,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await loginUser(formData);
       setUser(data.user);
-      // Save to localStorage for persistence across page reloads
-      localStorage.setItem("user", JSON.stringify(data.user));
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-      router.push(getDashboardRoute(data.user?.role));
+      router.push('/');
     } catch (error) {
       setError(error.message);
     } finally {
@@ -75,12 +54,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await registerUser(formData);
       setUser(data.user);
-      // Save to localStorage for persistence across page reloads
-      localStorage.setItem("user", JSON.stringify(data.user));
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-      router.push(getDashboardRoute(data.user?.role));
+      router.push("/");
     } catch (error) {
       setError(error.message);
     } finally {
@@ -95,9 +69,6 @@ export const AuthProvider = ({ children }) => {
     try {
       await logout();
       setUser(null);
-      // Clear localStorage on logout
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
       router.push("/auth/auth");
     } catch (error) {
       setError(error.message);
