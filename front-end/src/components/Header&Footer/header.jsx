@@ -15,42 +15,85 @@ function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex gap-6 text-sm">
-          <Link className={pathname === "/" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"} href="/">Home</Link>
-          <Link className={pathname === "/about" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"} href="/about">About Us</Link>
-          <Link className={pathname === "/offerings" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"} href="/offerings">Offerings</Link>
-          <Link className={pathname === "/Blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"} href="/Blog">Blog</Link>
-          <Link className={pathname === "/contact" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"} href="/contact">Contact Us</Link>
+          <Link
+            href="/"
+            className={`transition ${pathname === "/" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+          >
+            Home
+          </Link>
+
+          <Link
+            href="/about"
+            className={`transition ${pathname === "/about" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+          >
+            About Us
+          </Link>
+
+          <Link
+            href="/offerings"
+            className={`transition ${pathname === "/offerings" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+          >
+            Offerings
+          </Link>
+
+          <Link
+            href="/blog"
+            className={`transition ${pathname === "/blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+          >
+            Blog
+          </Link>
+
+          <Link
+            href="/contact"
+            className={`transition ${pathname === "/contact" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+          >
+            Contact Us
+          </Link>
         </nav>
 
         {/* Buttons */}
         <div className="hidden md:flex gap-2">
           <Link href="/auth/auth">
-            <button className="px-4 py-1 border rounded-full hover:bg-[#FFCE2A]">
+            <button className="px-4 py-1 border rounded-full hover:bg-[#FFCE2A] transition">
               login
             </button>
           </Link>
 
           <Link href="/BookTrip">
-            <button className="px-4 py-1 bg-black text-white rounded-full hover:bg-[#FFCE2A] hover:text-black">
+            <button className="px-4 py-1 bg-black text-white rounded-full hover:bg-[#FFCE2A] hover:text-black transition">
               Book Now
             </button>
           </Link>
         </div>
 
-        {/* Mobile button */}
-        <button className="md:hidden text-xl" onClick={() => setOpen(!open)}>
-          ☰
+        {/* Mobile Button */}
+        <button className="md:hidden text-2xl" onClick={() => setOpen(!open)}>
+          {open ? "✕" : "☰"}
         </button>
       </div>
 
-     
+      {/* Mobile Menu */}
       {open && (
         <div className="md:hidden px-4 pb-3 flex flex-col gap-3 text-sm">
-          <Link onClick={() => setOpen(false)} className={pathname === "/" ? "text-[#FFCE2A]" : ""} href="/">Home</Link>
-          <Link onClick={() => setOpen(false)} className={pathname === "/about" ? "text-[#FFCE2A]" : ""} href="/about">About Us</Link>
-          <Link onClick={() => setOpen(false)} className={pathname === "/offerings" ? "text-[#FFCE2A]" : ""} href="/offerings">Offerings</Link>
-          <Link onClick={() => setOpen(false)} className={pathname === "/Blog" ? "text-[#FFCE2A]" : ""} href="/Blog">Blog</Link>
-          <Link onClick={() => setOpen(false)} className={pathname === "/contact" ? "text-[#FFCE2A]" : ""} href="/contact">Contact Us</Link>
+          <Link onClick={() => setOpen(false)} href="/" className={pathname === "/" ? "text-[#FFCE2A]" : ""}>
+            Home
+          </Link>
+
+          <Link onClick={() => setOpen(false)} href="/about" className={pathname === "/about" ? "text-[#FFCE2A]" : ""}>
+            About Us
+          </Link>
+
+          <Link onClick={() => setOpen(false)} href="/offerings" className={pathname === "/offerings" ? "text-[#FFCE2A]" : ""}>
+            Offerings
+          </Link>
+
+          <Link onClick={() => setOpen(false)} href="/blog" className={pathname === "/blog" ? "text-[#FFCE2A]" : ""}>
+            Blog
+          </Link>
+
+          <Link onClick={() => setOpen(false)} href="/contact" className={pathname === "/contact" ? "text-[#FFCE2A]" : ""}>
+            Contact Us
+          </Link>
         </div>
       )}
     </header>

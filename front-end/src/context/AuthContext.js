@@ -10,7 +10,7 @@ import {
 
 const AuthContext = createContext();
 
-use
+
 
 
 export const AuthProvider = ({ children }) => {
