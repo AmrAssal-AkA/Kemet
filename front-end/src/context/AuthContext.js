@@ -1,4 +1,4 @@
-import { useContext, useState, createContext, useEffect } from "react";
+import { useContext, useState, createContext, } from "react";
 import { useRouter } from "next/router";
 import {
   loginUser,
@@ -6,10 +6,12 @@ import {
   logout,
   resetPassword,
   confirmResetPassword,
-  ApiCall,
 } from "@/services/authService";
 
 const AuthContext = createContext();
+
+use
+
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
