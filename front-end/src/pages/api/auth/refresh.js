@@ -16,7 +16,8 @@ async function handler(req, res) {
       "http://localhost:8000/api/auth/refresh",
       {},
       {
-        headers: { Cookie: `x-refresh-token=${refreshToken}` },
+        headers: { Cookie: req.headers.cookie },
+        withCredentials: true,
       },
     );
     const cookies = response.headers["set-cookie"];

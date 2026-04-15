@@ -88,26 +88,6 @@ function Offerings() {
       </Head>
 
       <div className="bg-white min-h-screen font-sans text-[#111827]">
-        <header className="fixed top-0 left-0 w-full bg-white z-50 px-8 py-3 flex items-center justify-between shadow-sm">
-          <a href="#" className="flex flex-col items-center group">
-            <img src="/Logo.png" alt="EG-KEMET" className="h-12 w-auto mb-1 object-contain" />
-            <span className="font-bold text-[10px] tracking-[0.2em] text-[#111827] group-hover:text-[#FBBF24] transition-colors">EG-KEMET</span>
-          </a>
-
-          <nav className="flex items-center gap-x-10 text-sm font-bold text-[#111827]">
-            <Link href="/" className="hover:text-[#FBBF24] transition-colors">HOME</Link>
-            <Link href="/about" className="hover:text-[#FBBF24] transition-colors">ABOUT US</Link>
-            <Link href="/offerings" className="text-[#FBBF24]">OFFERING</Link>
-            <Link href="/Blog" className="hover:text-[#FBBF24] transition-colors">BLOG</Link>
-            <Link href="/contact" className="hover:text-[#FBBF24] transition-colors">CONTACT US</Link>
-          </nav>
-
-          <div className="flex items-center gap-x-3">
-            <a href="#" className="bg-[#FBBF24] text-black px-8 py-2.5 rounded-full font-bold text-sm hover:bg-[#e5a913] hover:shadow-md transition-all">Log in</a>
-            <a href="#" className="bg-black text-white px-8 py-2.5 rounded-full font-bold text-sm hover:bg-gray-800 hover:shadow-md transition-all">SEARCH TRIP</a>
-          </div>
-        </header>
-
         <main className="pt-28 pb-16 px-8 md:px-16 max-w-[1400px] mx-auto">
           <section className="relative mb-32 rounded-[100px] overflow-hidden shadow-2xl">
              <img src="/images/offerings/Rectangle 172.png" alt="Hero" className="w-full h-[600px] object-cover" />
@@ -305,56 +285,6 @@ function Offerings() {
 
         </main>
 
-        <footer className="bg-[#2a3b5c] text-white px-8 md:px-16 py-20 mt-10">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-12 max-w-[1400px] mx-auto">
-            
-            <div className="col-span-1 md:col-span-1 space-y-8">
-                <a href="#" className="flex flex-col items-start group inline-block">
-                  <img src="/Logo.png" alt="EG-KEMET" className="h-12 w-auto mb-2 object-contain" />
-                  <span className="font-bold text-[10px] tracking-[0.2em] text-white group-hover:text-[#FBBF24] transition-colors">EG-KEMET</span>
-                </a>
-                <div className="space-y-5 text-sm text-gray-300">
-                  <a href="#" className="flex items-center gap-x-4 hover:text-white transition-colors">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                      <span>123 Egypt St, Cairo</span>
-                  </a>
-                  <a href="mailto:contact@eg-kemet.com" className="flex items-center gap-x-4 hover:text-white transition-colors">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                      <span>contact@eg-kemet.com</span>
-                  </a>
-                  <a href="tel:+201234567890" className="flex items-center gap-x-4 hover:text-white transition-colors">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                      <span>+20 123 456 7890</span>
-                  </a>
-                </div>
-            </div>
-
-            <div className="space-y-4 pt-2">
-                {['About us', 'Destinations', 'Travel Experiences', 'Travel Community', 'Blog & Guides', 'Hidden Gems Guide'].map(link => <a key={link} href="#" className="block text-gray-300 text-sm hover:text-white hover:translate-x-1 transition-all">{link}</a>)}
-            </div>
-             <div className="space-y-4 pt-2">
-                {['Contact Us', 'FAQ', 'Privacy Policy', 'Terms of Service', 'Booking Policy', 'Cancellation Policy'].map(link => <a key={link} href="#" className="block text-gray-300 text-sm hover:text-white hover:translate-x-1 transition-all">{link}</a>)}
-            </div>
-
-            <div className="col-span-1 md:col-span-2 space-y-4 pt-2">
-                 <p className="text-gray-300 text-sm mb-4">Get update about new places added</p>
-                 <form className="relative max-w-sm" onSubmit={(e) => e.preventDefault()}>
-                    <input type="email" required placeholder="Email address" className="w-full bg-[#1e2a42] text-white rounded-md px-5 py-3.5 text-sm focus:outline-none border border-transparent focus:border-blue-400 transition" />
-                    <button type="submit" className="absolute right-1.5 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white font-bold px-6 py-2 text-sm rounded-md hover:bg-blue-600 transition-colors shadow-md">OK</button>
-                 </form>
-                 <div className="flex gap-x-4 pt-8">
-                    {['Instagram', 'Facebook', 'Twitter', 'TikTok', 'YouTube'].map(soc => (
-                      <a href="#" key={soc} className="w-9 h-9 rounded-full border border-gray-500 flex items-center justify-center text-[10px] text-gray-300 hover:bg-white hover:text-[#2a3b5c] transition-colors" title={soc}>
-                        {soc[0]}
-                      </a>
-                    ))}
-                 </div>
-            </div>
-          </div>
-          <div className="mt-20 pt-8 border-t border-[#3b4c6e] flex flex-col md:flex-row justify-between items-center text-gray-400 text-xs max-w-[1400px] mx-auto">
-            <span>&copy; 2026 EG-KEMET Travel Services. All Rights Reserved.</span>
-          </div>
-        </footer>
       </div>
     </>
   );

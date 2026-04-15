@@ -1,4 +1,4 @@
-import { useContext, useState, createContext, } from "react";
+import { useContext, useState, createContext, useEffect, } from "react";
 import { useRouter } from "next/router";
 import {
   loginUser,
@@ -6,11 +6,11 @@ import {
   logout,
   resetPassword,
   confirmResetPassword,
+  ApiCall,
 } from "@/services/authService";
 
+
 const AuthContext = createContext();
-
-
 
 
 export const AuthProvider = ({ children }) => {
@@ -18,6 +18,23 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const restoredSession = async () => {
+      setLoading(true);
+      try {
+        const res = await ApiCall("/api/auth/refresh" , {method: "POST"});
+        setUser(res.data.user);
+        } catch (error) {
+        setUser(null);
+      }finally{
+        setLoading(false);
+      }
+    }
+      restoredSession();
+  }, [])
+
+
 
   const login = async (formData) => {
     setLoading(true);

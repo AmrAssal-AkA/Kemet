@@ -12,6 +12,9 @@ const {
   GoogleSignInTemplate,
 } = require("../../services/miling");
 const { generateToken } = require("../../services/generateToken");
+const {verifyToken} = require("../../services/verifyToken");
+const RefreshToken = require("../../model/refreshTokenSchema");
+
 
 passport.serializeUser((user, done) => {
   done(null, user.userId);
@@ -80,6 +83,11 @@ const register = async (req, res) => {
 
     const { accessToken, refreshToken } = generateToken(Newuser);
 
+    await RefreshToken.create({
+      userId: Newuser._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
     // Set tokens in HTTP-only cookies
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
@@ -146,6 +154,12 @@ const login = async (req, res) => {
     }
     const { accessToken, refreshToken } = generateToken(user);
 
+    await RefreshToken.create({
+      userId: user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -176,7 +190,11 @@ const login = async (req, res) => {
 const googleCallback = async (req, res) => {
   try {
     const { accessToken, refreshToken } = generateToken(req.user);
-
+    await RefreshToken.create({
+      userId: req.user._id,
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -261,12 +279,20 @@ const refresh = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET,
       async (err, decoded) => {
         if (err) {
+          await RefreshToken.deleteOne({ token: refreshToken });
           return res.status(401).json({ message: "Invalid refresh token" });
         }
-
+        
+        await RefreshToken.deleteOne({ token: refreshToken });
         const user = await User.findById(decoded.id);
-        const { accessToken, refreshToken: newRefreshToken } =
-          generateToken(user);
+
+        const { accessToken, refreshToken: newRefreshToken } = generateToken(user);
+
+          await RefreshToken.create({
+            userId: user._id,
+            token: newRefreshToken,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          });
 
         res.cookie("x-auth-token", accessToken, {
           httpOnly: true,

@@ -1,42 +1,16 @@
 import axios from "axios";
 
-const axiosInstance = axios.create({
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        await axiosInstance.post("/api/auth/refresh");
-
-        return axiosInstance(originalRequest);
-      } catch (refreshError) {
-
-        window.location.href = "/auth/auth";
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  },
-);
-
 export const ApiCall = async (url, options = {}) => {
-  return axiosInstance({
+ return axios({
     url,
     ...options,
+    withCredentials: true,
+    headers:{
+      "Content-Type": "application/json",
+      ...options.headers,
+    }
   });
-};
+ }
 
 export const loginUser = async (formData) => {
   if (!formData.email || !formData.password) {
@@ -120,3 +94,32 @@ export const confirmResetPassword = async (formData) => {
     );
   }
 };
+
+
+
+
+export const refreshToken = async () => {
+    try{
+        const res = await ApiCall("/api/auth/refresh", {method: "POST"});
+        return res.data;
+      }catch(error){
+        throw new Error(error.response?.data?.message || "Session refresh failed");
+    }
+}
+
+export const ApiCallWithRefresh = async (url, options = {}) => {
+  try{
+    return await ApiCall(url, options);
+  }catch(error){
+    if(error.response?.status === 401){
+      try{
+        await refreshToken();
+        return await ApiCall(url, options);
+      }catch(refreshError){
+        window.location.href = "/auth/auth";
+        throw refreshError;
+      }
+    }
+    throw error;
+    }
+  }

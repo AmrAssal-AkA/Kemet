@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 function Header() {
   const [open, setOpen] = useState(false);
@@ -11,7 +12,9 @@ function Header() {
     <header className="w-full bg-white shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
 
-        <h1 className="font-bold text-lg">Kemet</h1>
+        <Link href="/" className="text-2xl font-bold">
+          <Image src="/logo.png" alt="Logo" width={100} height={50} className="inline-block mr-2" />
+        </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex gap-6 text-sm">
@@ -37,8 +40,8 @@ function Header() {
           </Link>
 
           <Link
-            href="/blog"
-            className={`transition ${pathname === "/blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+            href="/Blog"
+            className={`transition ${pathname === "/Blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
           >
             Blog
           </Link>
