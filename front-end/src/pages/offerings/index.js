@@ -84,7 +84,7 @@ function Offerings() {
     <>
       <Head>
         <title>Offerings | KEMET</title>
-        
+
       </Head>
 
       <div className="bg-white min-h-screen font-sans text-[#111827]">

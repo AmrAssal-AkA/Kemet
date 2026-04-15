@@ -18,7 +18,7 @@ function BlogDetailPage(props) {
 
           <div className="relative h-96 md:h-125 lg:h-150 w-full">
             <Image
-              src={blog.images[1]?.imageUrl}
+              src={blog.images[0]?.imageUrl}
               alt={blog.title}
               fill
               className="object-cover object-center"
@@ -111,7 +111,6 @@ export default BlogDetailPage;
 export async function getServerSideProps(context) {
   const blogId = context.query.blogId;
 
-  console.log("Fetching blog with ID:", blogId);
   try {
     const res = await axios.get(`http://localhost:3000/api/Blog/getoneBlog`,
       {

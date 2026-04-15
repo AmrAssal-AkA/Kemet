@@ -40,8 +40,8 @@ function Header() {
           </Link>
 
           <Link
-            href="/Blog"
-            className={`transition ${pathname === "/Blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+            href="/blog"
+            className={`transition ${pathname === "/blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
           >
             Blog
           </Link>

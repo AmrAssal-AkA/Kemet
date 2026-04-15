@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
   },
   profilePictureURL: {
-    type: String
+    type: String,
   },
   email: {
     type: String,
@@ -30,7 +30,9 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: function () { return !this.googleId; }, 
+    required: function () {
+      return !this.googleId;
+    },
     minlength: 7,
     select: false,
     validate: {
@@ -51,11 +53,13 @@ const userSchema = new mongoose.Schema({
   ],
   isVerified: {
     type: Boolean,
-    default: ()=> googleId ? true : false,
+    default: function () {
+      return !!this.googleId;
+    },
   },
   googleId: {
     type: String,
-    sparse: true, 
+    sparse: true,
     unique: true,
   },
   emailVerificationToken: {
@@ -66,10 +70,12 @@ const userSchema = new mongoose.Schema({
     type: Date,
     select: false,
   },
-  savedTrips: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Trip",
-  }]
+  savedTrips: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Trip",
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);

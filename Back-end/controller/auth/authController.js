@@ -12,9 +12,8 @@ const {
   GoogleSignInTemplate,
 } = require("../../services/miling");
 const { generateToken } = require("../../services/generateToken");
-const {verifyToken} = require("../../services/verifyToken");
+const { verifyToken } = require("../../services/verifyToken");
 const RefreshToken = require("../../model/refreshTokenSchema");
-
 
 passport.serializeUser((user, done) => {
   done(null, user.userId);
@@ -84,7 +83,7 @@ const register = async (req, res) => {
     const { accessToken, refreshToken } = generateToken(Newuser);
 
     await RefreshToken.create({
-      userId: Newuser._id,
+      userId: Newuser.userId,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
@@ -282,17 +281,22 @@ const refresh = async (req, res) => {
           await RefreshToken.deleteOne({ token: refreshToken });
           return res.status(401).json({ message: "Invalid refresh token" });
         }
-        
+
         await RefreshToken.deleteOne({ token: refreshToken });
         const user = await User.findById(decoded.id);
 
-        const { accessToken, refreshToken: newRefreshToken } = generateToken(user);
+        if (!user) {
+          return res.status(401).json({ message: "User not found" });
+        }
 
-          await RefreshToken.create({
-            userId: user._id,
-            token: newRefreshToken,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          });
+        const { accessToken, refreshToken: newRefreshToken } =
+          generateToken(user);
+
+        await RefreshToken.create({
+          userId: user._id,
+          token: newRefreshToken,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
 
         res.cookie("x-auth-token", accessToken, {
           httpOnly: true,
