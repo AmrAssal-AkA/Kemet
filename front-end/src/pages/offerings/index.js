@@ -1,6 +1,5 @@
-import React from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
+
 
 const museumData = [
   { id: 1, title: 'Grand Egyptian Museum Grounds', text: 'Discover ancient artifacts and monumental architecture seamlessly integrated into modern design.', price: '$3,150', oldPrice: '$4,200', image: '/images/offerings/image2.png' },
@@ -63,9 +62,9 @@ const OfferingCard = ({ title, text, price, oldPrice, image }) => (
     <div className="overflow-hidden h-52">
       <img src={image} alt={title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
     </div>
-    <div className="p-6 flex flex-col flex-grow">
+    <div className="p-6 flex flex-col grow">
       <h3 className="font-bold text-lg text-[#111827] mb-2 leading-tight">{title}</h3>
-      <p className="text-gray-600 text-sm mb-6 leading-relaxed flex-grow">{text}</p>
+      <p className="text-gray-600 text-sm mb-6 leading-relaxed grow">{text}</p>
       <div className="w-full h-px bg-gray-100 mb-4"></div>
       <div className="flex items-end justify-between">
         <div className="flex flex-col">
@@ -84,13 +83,14 @@ function Offerings() {
   return (
     <>
       <Head>
-        <title>Offerings | EG-KEMET</title>
+        <title>Offerings | KEMET</title>
+        
       </Head>
 
       <div className="bg-white min-h-screen font-sans text-[#111827]">
-        <main className="pt-28 pb-16 px-8 md:px-16 max-w-[1400px] mx-auto">
+        <main className="pt-28 pb-16 px-8 md:px-16 max-w-350 mx-auto">
           <section className="relative mb-32 rounded-[100px] overflow-hidden shadow-2xl">
-             <img src="/images/offerings/Rectangle 172.png" alt="Hero" className="w-full h-[600px] object-cover" />
+             <img src="/images/offerings/Rectangle 172.png" alt="Hero" className="w-full h-150 object-cover" />
 
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full px-4 z-10">
               <h1 className="text-6xl md:text-8xl font-black mb-2 tracking-tight drop-shadow-lg">
@@ -189,7 +189,7 @@ function Offerings() {
           </section>
 
           <section className="mb-32">
-            <div className="rounded-[40px] overflow-hidden shadow-2xl h-[500px] mb-8 relative group cursor-pointer">
+            <div className="rounded-[40px] overflow-hidden shadow-2xl h-125 mb-8 relative group cursor-pointer">
                <img src="/images/offerings/BIGG PICS.png" alt="Aswan Feature" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
                <div className="absolute inset-0 bg-black opacity-10 group-hover:opacity-0 transition-opacity duration-700"></div>
             </div>
@@ -274,7 +274,7 @@ function Offerings() {
                                 </svg>
                             ))}
                         </div>
-                        <p className="text-gray-600 leading-relaxed text-sm mb-6 flex-grow">{item.text}</p>
+                        <p className="text-gray-600 leading-relaxed text-sm mb-6 grow">{item.text}</p>
                         <a href="#" className="flex items-center gap-x-1 text-[#FBBF24] font-bold text-xs hover:text-[#e5a913] transition-colors w-max">
                             See more <ArrowRightIcon className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                         </a>
@@ -282,9 +282,7 @@ function Offerings() {
                 ))}
             </div>
           </section>
-
         </main>
-
       </div>
     </>
   );
