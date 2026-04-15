@@ -1,9 +1,8 @@
-
 import Link from "next/link";
 
 function Footer() {
   return (
-    <footer className="bg-[#162766] text-white mt-10">
+    <footer className="bg-[#3b4c6e] text-white mt-10">
       <div className="max-w-7xl mx-auto p-6 grid md:grid-cols-5 gap-6">
 
         <div>
@@ -26,34 +25,33 @@ function Footer() {
           <h3 className="mb-2">Company</h3>
           <Link href="/about" className="block hover:text-[#FFCE2A]">About</Link>
           <Link href="/offerings" className="block hover:text-[#FFCE2A]">Features</Link>
-          <Link href="/Blog" className="block hover:text-[#FFCE2A]">Blog</Link>
+          <Link href="/blog" className="block hover:text-[#FFCE2A]">Blog</Link>
           <Link href="/contact" className="block hover:text-[#FFCE2A]">Contact</Link>
         </div>
 
-     <div>
-  <h3 className="mb-2">Social</h3>
+        <div>
+          <h3 className="mb-2">Social</h3>
 
-  <a href="https://instagram.com" target="_blank" className="block hover:text-[#FFCE2A]">
-    Instagram
-  </a>
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="block hover:text-[#FFCE2A]">
+            Instagram
+          </a>
 
-  <a href="https://facebook.com" target="_blank" className="block hover:text-[#FFCE2A]">
-    Facebook
-  </a>
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="block hover:text-[#FFCE2A]">
+            Facebook
+          </a>
 
-  <a href="https://youtube.com" target="_blank" className="block hover:text-[#FFCE2A]">
-    YouTube
-  </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="block hover:text-[#FFCE2A]">
+            YouTube
+          </a>
 
-  <a href="https://tiktok.com" target="_blank" className="block hover:text-[#FFCE2A]">
-    TikTok
-  </a>
+          <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="block hover:text-[#FFCE2A]">
+            TikTok
+          </a>
 
-  <a href="https://x.com" target="_blank" className="block hover:text-[#FFCE2A]">
-    X
-  </a>
-</div>
-
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="block hover:text-[#FFCE2A]">
+            X
+          </a>
+        </div>
 
         <div>
           <h3 className="mb-2">Newsletter</h3>
