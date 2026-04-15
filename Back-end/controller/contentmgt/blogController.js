@@ -4,7 +4,7 @@ const cloudinary = require("../../services/cloudinary");
 // Create Blog
 const createBlog = async (req, res) => {
   const { title, content } = req.body;
-  const author = req.user.userId;
+  const author = req.user.id;
   if (!title || !content) {
     return res.status(400).json({ message: "Please fill the blog" });
   }

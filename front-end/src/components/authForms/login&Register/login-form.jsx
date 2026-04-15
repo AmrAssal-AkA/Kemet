@@ -12,7 +12,7 @@ export default function LoginForm() {
     email: "",
     password: "",
   });
-  const { loading, error, login } = useAuth();
+  const { loading, error, login  } = useAuth();
 
   const handleChange = (e) => {
     setFormData({

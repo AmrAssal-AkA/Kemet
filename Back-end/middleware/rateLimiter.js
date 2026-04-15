@@ -13,5 +13,6 @@ exports.authLimiter = rateLimiter({
 exports.apiLimiter = rateLimiter({
     windowMs: 60 * 60 * 1000,
     max: 100,
+    skipSuccessfulRequests: true,
     message: { message: "Too many requests from this IP, please try again later." },
 })
