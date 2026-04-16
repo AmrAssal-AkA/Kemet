@@ -40,8 +40,8 @@ function Header() {
           </Link>
 
           <Link
-            href="/blog"
-            className={`transition ${pathname === "/blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+            href="/Blog"
+            className={`transition ${pathname === "/Blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
           >
             Blog
           </Link>
@@ -90,7 +90,7 @@ function Header() {
             Offerings
           </Link>
 
-          <Link onClick={() => setOpen(false)} href="/blog" className={pathname === "/blog" ? "text-[#FFCE2A]" : ""}>
+          <Link onClick={() => setOpen(false)} href="/Blog" className={pathname === "/Blog" ? "text-[#FFCE2A]" : ""}>
             Blog
           </Link>
 

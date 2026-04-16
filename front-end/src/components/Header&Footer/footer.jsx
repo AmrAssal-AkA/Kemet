@@ -25,7 +25,7 @@ function Footer() {
           <h3 className="mb-2">Company</h3>
           <Link href="/about" className="block hover:text-[#FFCE2A]">About</Link>
           <Link href="/offerings" className="block hover:text-[#FFCE2A]">Features</Link>
-          <Link href="/blog" className="block hover:text-[#FFCE2A]">Blog</Link>
+          <Link href="/Blog" className="block hover:text-[#FFCE2A]">Blog</Link>
           <Link href="/contact" className="block hover:text-[#FFCE2A]">Contact</Link>
         </div>
 
