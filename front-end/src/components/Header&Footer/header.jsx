@@ -31,12 +31,18 @@ function Header() {
 
   return (
     <header className="w-full bg-white shadow-sm antialiased">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         <Link href="/" className="text-2xl font-bold">
-          <Image src="/logo.png" alt="Logo" width={100} height={50} className="inline-block mr-2" />
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            width={100}
+            height={50}
+            className="mr-2 inline-block"
+          />
         </Link>
 
-        <nav className="hidden md:flex gap-7 text-[15px] font-medium tracking-[0.01em] text-slate-700">
+        <nav className="hidden gap-7 text-[15px] font-medium tracking-[0.01em] text-slate-700 md:flex">
           <Link
             href={user ? "/user-dashboard" : "/"}
             className={`transition-colors duration-200 ${pathname === "/" || pathname === "/user-dashboard" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
@@ -53,11 +59,7 @@ function Header() {
 
           <Link
             href="/Blog"
-<<<<<<< HEAD
             className={`transition-colors duration-200 ${pathname === "/Blog" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
-=======
-            className={`transition ${pathname === "/Blog" ? "text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
->>>>>>> eb664aaeb1c3fc2d524764fdc521d263e605b83a
           >
             Blog
           </Link>
@@ -77,10 +79,10 @@ function Header() {
           </Link>
         </nav>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden items-center gap-2 md:flex">
           {!user ? (
             <Link href="/auth/auth">
-              <button className="px-4 py-1 rounded-full bg-[#FFCE2A] text-black font-medium hover:brightness-95 transition">
+              <button className="rounded-full bg-[#FFCE2A] px-4 py-1 font-medium text-black transition hover:brightness-95">
                 login
               </button>
             </Link>
@@ -96,7 +98,7 @@ function Header() {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-lg z-50">
+                <div className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
                   <Link
                     href="/account-setting"
                     className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
@@ -107,7 +109,7 @@ function Header() {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="w-full text-left rounded-lg px-3 py-2 text-sm text-rose-600 hover:bg-rose-50"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
                   >
                     Logout
                   </button>
@@ -117,19 +119,19 @@ function Header() {
           )}
 
           <Link href="/BookTrip">
-            <button className="px-4 py-1 rounded-full bg-[#FFCE2A] text-black font-medium hover:brightness-95 transition">
+            <button className="rounded-full bg-[#FFCE2A] px-4 py-1 font-medium text-black transition hover:brightness-95">
               Book Your Trip Now
             </button>
           </Link>
         </div>
 
-        <button className="md:hidden text-2xl" onClick={() => setOpen(!open)}>
+        <button className="text-2xl md:hidden" onClick={() => setOpen(!open)}>
           {open ? "✕" : "☰"}
         </button>
       </div>
 
       {open && (
-        <div className="md:hidden px-4 pb-3 flex flex-col gap-3 text-[15px] font-medium tracking-[0.01em] text-slate-700">
+        <div className="flex flex-col gap-3 px-4 pb-3 text-[15px] font-medium tracking-[0.01em] text-slate-700 md:hidden">
           <Link
             onClick={() => setOpen(false)}
             href={user ? "/user-dashboard" : "/"}
@@ -138,19 +140,35 @@ function Header() {
             Home
           </Link>
 
-          <Link onClick={() => setOpen(false)} href="/offerings" className={pathname === "/offerings" ? "text-[#FFCE2A]" : ""}>
+          <Link
+            onClick={() => setOpen(false)}
+            href="/offerings"
+            className={pathname === "/offerings" ? "text-[#FFCE2A]" : ""}
+          >
             Offerings
           </Link>
 
-          <Link onClick={() => setOpen(false)} href="/Blog" className={pathname === "/Blog" ? "text-[#FFCE2A]" : ""}>
+          <Link
+            onClick={() => setOpen(false)}
+            href="/Blog"
+            className={pathname === "/Blog" ? "text-[#FFCE2A]" : ""}
+          >
             Blog
           </Link>
 
-          <Link onClick={() => setOpen(false)} href="/about" className={pathname === "/about" ? "text-[#FFCE2A]" : ""}>
+          <Link
+            onClick={() => setOpen(false)}
+            href="/about"
+            className={pathname === "/about" ? "text-[#FFCE2A]" : ""}
+          >
             About Us
           </Link>
 
-          <Link onClick={() => setOpen(false)} href="/contact" className={pathname === "/contact" ? "text-[#FFCE2A]" : ""}>
+          <Link
+            onClick={() => setOpen(false)}
+            href="/contact"
+            className={pathname === "/contact" ? "text-[#FFCE2A]" : ""}
+          >
             Contact Us
           </Link>
 
@@ -163,11 +181,7 @@ function Header() {
               <Link onClick={() => setOpen(false)} href="/account-setting" className="text-slate-700">
                 Account Setting
               </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="text-left text-rose-600"
-              >
+              <button type="button" onClick={handleLogout} className="text-left text-rose-600">
                 Logout
               </button>
             </>

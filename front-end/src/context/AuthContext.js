@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await logout();
       setUser(null);
-      router.push("/auth/auth");
+      router.push("/");
     } catch (error) {
       setError(error.message);
     } finally {

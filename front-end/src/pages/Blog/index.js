@@ -51,13 +51,18 @@ export default function BlogPage(props) {
           </div>
 
           <div className="relative z-10 mt-8 flex w-full justify-center sm:mt-9">
-            <div className="flex w-full max-w-xl flex-col gap-3 rounded-2xl bg-white/95 p-2 shadow-xl backdrop-blur sm:flex-row sm:items-center sm:rounded-full">
-              <input
-                type="text"
-                placeholder="How to, etc."
-                className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm text-gray-700 placeholder-gray-500 outline-none transition-all duration-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 sm:border-none sm:py-2 sm:text-base"
-              />
-              <button className="rounded-full bg-yellow-500 px-6 py-3 text-sm font-bold text-black transition-all duration-300 hover:scale-[1.03] hover:bg-yellow-600 sm:py-2 sm:text-base">
+            <div className="flex w-full max-w-xl flex-col items-center gap-3 rounded-2xl bg-white p-4 shadow-xl sm:gap-4 sm:p-5">
+              <div className="w-full">
+                <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                  Search Topic
+                </span>
+                <input
+                  type="text"
+                  placeholder="How to, etc."
+                  className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
+                />
+              </div>
+              <button className="w-full rounded-full bg-yellow-500 px-6 py-3 text-sm font-bold text-black transition-all duration-300 hover:scale-[1.01] hover:bg-yellow-600 sm:text-base">
                 Search
               </button>
             </div>
