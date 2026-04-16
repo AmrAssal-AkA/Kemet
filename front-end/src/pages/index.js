@@ -57,16 +57,19 @@ export default function Home() {
       </section>
 
       {/* SEARCH */}
-      <div className="-mt-14 px-4 md:px-20 relative z-10">
-        <div className="bg-white rounded-2xl shadow-xl p-5 flex flex-col md:flex-row gap-4 items-center">
-          <input placeholder="Where to?" className="flex-1 outline-none" />
-          <input placeholder="Date" className="flex-1 outline-none" />
-          <input placeholder="Guests" className="flex-1 outline-none" />
-          <button className="bg-yellow-400 px-6 py-2 rounded-full font-semibold hover:bg-yellow-300 transition">
-            Search
-          </button>
-        </div>
-      </div>
+    <div className="-mt-14 px-4 md:px-20 relative z-10">
+  <div className="bg-white rounded-2xl shadow-xl p-5 flex flex-col md:flex-row gap-4 items-center">
+    <input placeholder="Where to?" className="flex-1 outline-none" />
+    <input placeholder="Date" className="flex-1 outline-none" />
+    <input placeholder="Guests" className="flex-1 outline-none" />
+
+    <Link href="/guide">
+      <button className="bg-yellow-400 px-6 py-2 rounded-full font-semibold hover:bg-yellow-300 transition">
+        Search
+      </button>
+    </Link>
+  </div>
+</div>
 
       {/* CITIES */}
       <section className="py-16 px-4 md:px-20">
