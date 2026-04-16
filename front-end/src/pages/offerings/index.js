@@ -132,7 +132,7 @@ function Offerings() {
                     <input type="text" placeholder="Type" className="w-full text-sm font-bold text-[#111827] bg-transparent outline-none placeholder-[#111827]" />
                   </div>
                 </div>
-                <button className="bg-[#FBBF24] text-white px-10 py-5 rounded-full font-bold text-sm tracking-widest hover:bg-[#e5a913] transition-colors ml-2 shadow-sm">FIND</button>
+                <a href="/Destination" className="bg-[#FBBF24] text-white px-10 py-5 rounded-full font-bold text-sm tracking-widest hover:bg-[#e5a913] transition-colors ml-2 shadow-sm text-center">FIND</a>
               </div>
             </div>
             <div className="absolute inset-0 bg-black opacity-20 pointer-events-none"></div>

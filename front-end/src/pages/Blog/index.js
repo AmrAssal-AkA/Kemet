@@ -32,41 +32,40 @@ export default function BlogPage(props) {
       </Head>
       <main className="w-full min-h-screen bg-gray-100">
         <section
-          className="relative w-full flex flex-col items-center justify-center p-8 text-center bg-cover bg-center"
+          className="relative flex min-h-[60vh] w-full flex-col items-center justify-center overflow-hidden bg-cover bg-center px-4 py-12 text-center sm:min-h-[68vh] sm:px-6 sm:py-16 lg:min-h-[74vh] lg:px-8"
           style={{
             backgroundImage: `url(${heroImage.src})`,
-            height: "50vh",
           }}
         >
-          <div className="absolute inset-0 bg-black opacity-50"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/55 to-black/65" />
 
-          <div className="relative z-10 text-white">
-            <h1 className="text-4xl font-bold leading-tight md:text-6xl">
+          <div className="relative z-10 mx-auto w-full max-w-4xl text-white">
+            <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
               Let&apos;s Explore
               <br />
-              <span className="text-sky-400">New Possibilities...</span>
+              <span className="text-sky-300">New Possibilities...</span>
             </h1>
-            <p className="max-w-2xl mt-4 text-lg md:text-xl">
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-100 sm:mt-5 sm:text-base md:text-lg lg:text-xl">
               Plan your smart trip to Egypt – from temples to turquoise seas
             </p>
           </div>
 
-          <div className="relative z-10 flex flex-col items-center justify-center mt-8">
-            <div className="flex items-center w-full max-w-md p-2 bg-white rounded-full shadow-lg">
+          <div className="relative z-10 mt-8 flex w-full justify-center sm:mt-9">
+            <div className="flex w-full max-w-xl flex-col gap-3 rounded-2xl bg-white/95 p-2 shadow-xl backdrop-blur sm:flex-row sm:items-center sm:rounded-full">
               <input
                 type="text"
                 placeholder="How to, etc."
-                className="w-full px-4 text-gray-700 placeholder-gray-500 bg-transparent border-none grow focus:outline-none"
+                className="w-full rounded-full border border-slate-200 px-4 py-3 text-sm text-gray-700 placeholder-gray-500 outline-none transition-all duration-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 sm:border-none sm:py-2 sm:text-base"
               />
-              <button className="px-6 py-2 font-bold text-black transition-transform duration-300 transform bg-yellow-500 rounded-full hover:bg-yellow-600 hover:scale-105">
+              <button className="rounded-full bg-yellow-500 px-6 py-3 text-sm font-bold text-black transition-all duration-300 hover:scale-[1.03] hover:bg-yellow-600 sm:py-2 sm:text-base">
                 Search
               </button>
             </div>
           </div>
 
-          <div className="relative z-10 flex justify-center mt-8">
+          <div className="relative z-10 mt-6 flex justify-center sm:mt-8">
             <button
-              className="px-8 py-3 text-lg font-bold text-black transition-transform duration-300 transform bg-yellow-500 rounded-full shadow-lg hover:bg-yellow-600 hover:scale-105"
+              className="rounded-full bg-yellow-500 px-6 py-3 text-sm font-bold text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-yellow-600 sm:px-8 sm:text-base md:text-lg"
               onClick={handleAddArticle}
             >
               Add Your Article

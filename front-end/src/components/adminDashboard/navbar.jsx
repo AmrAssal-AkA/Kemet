@@ -1,28 +1,39 @@
-import {FaBahi, FaBell} from "react-icons/fa6"
+import { FaBell, FaCog, FaPlus } from "react-icons/fa";
 
 export default function AdminNavBar() {
   return (
-    <nav className="flex items-center justify-between p-4">
-      <div className="">
-      <h1 className="text-2xl font-bold">Kemet Admin</h1>
+    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
+      <div className="w-full max-w-xl">
+        <input
+          type="text"
+          placeholder="Search destinations, bookings, or articles..."
+          className="w-full rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:bg-white"
+        />
       </div>
-        <ul className="flex space-x-4 mt-2">
-          <li>
-            <Link alt="notifications" >
-              <FaBell className="inline mr-1" />
-            </Link>
-          </li>
-          <li>
-            <Link alt="settings" >
-              <FaBahi className="inline mr-1" />
-            </Link>
-          </li>
-        </ul>
-        <div className="mt-4">
-          <button className="bg-amber-500 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded">
-            create Trip
-          </button>
-        </div>
-    </nav>
-  )
+
+      <div className="ml-auto flex items-center gap-2">
+        <button
+          type="button"
+          className="grid h-10 w-10 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          aria-label="Notifications"
+        >
+          <FaBell />
+        </button>
+        <button
+          type="button"
+          className="grid h-10 w-10 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          aria-label="Settings"
+        >
+          <FaCog />
+        </button>
+        <button
+          type="button"
+          className="ml-2 inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-300"
+        >
+          <FaPlus className="text-xs" />
+          Create Post
+        </button>
+      </div>
+    </header>
+  );
 }
