@@ -51,20 +51,57 @@ export default function BlogPage(props) {
           </div>
 
           <div className="relative z-10 mt-8 flex w-full justify-center sm:mt-9">
-            <div className="flex w-full max-w-xl flex-col items-center gap-3 rounded-2xl bg-white p-4 shadow-xl sm:gap-4 sm:p-5">
-              <div className="w-full">
-                <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  Search Topic
-                </span>
-                <input
-                  type="text"
-                  placeholder="How to, etc."
-                  className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
-                />
+            <div className="w-full max-w-7xl rounded-full border border-gray-100 bg-white p-2 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center">
+                <div className="flex-1 px-5 py-2 sm:border-r sm:border-gray-200">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Location
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="How to, etc."
+                    className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
+                  />
+                </div>
+
+                <div className="flex-1 px-5 py-2 sm:border-r sm:border-gray-200">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Date
+                  </span>
+                  <input
+                    type="date"
+                    className="w-full cursor-pointer bg-transparent text-sm font-bold text-[#111827] outline-none"
+                  />
+                </div>
+
+                <div className="flex-1 px-5 py-2 sm:border-r sm:border-gray-200">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Travelers
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Guests"
+                    className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
+                  />
+                </div>
+
+                <div className="flex-1 px-5 py-2">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Category
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Type"
+                    className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
+                  />
+                </div>
+
+                <div className="px-2 py-2">
+                  <button className="w-full rounded-full bg-[#FBBF24] px-8 py-3 text-sm font-bold tracking-wide text-white transition-colors hover:bg-[#e5a913] sm:w-auto">
+                    FIND
+                  </button>
+                </div>
               </div>
-              <button className="w-full rounded-full bg-yellow-500 px-6 py-3 text-sm font-bold text-black transition-all duration-300 hover:scale-[1.01] hover:bg-yellow-600 sm:text-base">
-                Search
-              </button>
             </div>
           </div>
 
