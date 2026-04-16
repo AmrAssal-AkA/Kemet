@@ -12,13 +12,29 @@ function Footer() {
           <p>+2 000000</p>
         </div>
 
+        {/* SERVICE - ALL LINKS UPDATED */}
         <div>
           <h3 className="mb-2">Service</h3>
-          <p className="hover:text-[#FFCE2A]">Smart Trip Planner</p>
-          <p className="hover:text-[#FFCE2A]">Destination Discovery</p>
-          <p className="hover:text-[#FFCE2A]">Local Experiences</p>
-          <p className="hover:text-[#FFCE2A]">Travel Community</p>
-          <p className="hover:text-[#FFCE2A]">Blog & Stories</p>
+
+          <Link href="/about" className="block hover:text-[#FFCE2A]">
+            Smart Trip Planner
+          </Link>
+
+          <Link href="/about" className="block hover:text-[#FFCE2A]">
+            Destination Discovery
+          </Link>
+
+          <Link href="/contact" className="block hover:text-[#FFCE2A]">
+            Local Experiences
+          </Link>
+
+          <Link href="/contact" className="block hover:text-[#FFCE2A]">
+            Travel Community
+          </Link>
+
+          <Link href="/Blog" className="block hover:text-[#FFCE2A]">
+            Blog & Stories
+          </Link>
         </div>
 
         <div>
