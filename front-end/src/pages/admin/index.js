@@ -119,8 +119,8 @@ function BookingStatus({ status }) {
   );
 }
 
-export default function AdminDashboard({ admin }) {
-  const { logout } = useAuth();
+export default function AdminDashboard() {
+  const {user: admin ,logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -129,7 +129,7 @@ export default function AdminDashboard({ admin }) {
   return (
     <AdminLayout adminName={admin?.name} onLogout={handleLogout}>
       <section className="rounded-3xl bg-[#0b1d3a] p-8 text-white shadow-sm">
-        <h1 className="text-4xl font-bold">Welcome back, Admin.</h1>
+        <h1 className="text-4xl font-bold">Welcome back, {admin?.name || "Admin"}</h1>
         <p className="mt-3 max-w-2xl text-slate-200">
           Your platform saw a <span className="font-semibold text-amber-300">+14.2%</span>{" "}
           increase in global explorer engagement this week.
@@ -248,16 +248,8 @@ export default function AdminDashboard({ admin }) {
 }
 
 export async function getServerSideProps(context) {
-  const cookie = context.req.headers.cookie || "";
-
-  if (!cookie || !cookie.includes("x-auth-token")) {
-    return {
-      redirect: {
-        destination: "/auth/auth",
-        permanent: false,
-      },
-    };
-  }
+  const { req } = context;
+  const cookie = req.headers.cookie || "";
 
   try {
     const response = await fetch("http://localhost:8000/api/auth/refresh", {
@@ -274,12 +266,10 @@ export async function getServerSideProps(context) {
 
     const data = await response.json();
 
-    // TODO: Temporary access mode enabled.
-    // Re-enable strict admin-only gate after admin roles are prepared in DB:
-    // if (data.user?.role !== "admin") redirect to /auth/auth
+
     return {
       props: {
-        admin: data.user,
+        admin: data.user && data.user.role === "admin",
       },
     };
   } catch (error) {

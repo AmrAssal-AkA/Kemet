@@ -15,6 +15,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const router = useRouter();
@@ -25,8 +26,10 @@ export const AuthProvider = ({ children }) => {
       try {
         const res = await ApiCall("/api/auth/refresh" , {method: "POST"});
         setUser(res.data.user);
-        } catch (error) {
+        setAdmin(res.data.user && res.data.user.role === "admin");
+      } catch (error) {
         setUser(null);
+        setAdmin(false);
       }finally{
         setLoading(false);
       }
@@ -42,6 +45,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await loginUser(formData);
       setUser(data.user);
+      setAdmin(data.user && data.user.role === "admin");
       router.push("/");
     } catch (error) {
       setError(error.message);
@@ -56,6 +60,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await registerUser(formData);
       setUser(data.user);
+      setAdmin(data.user && data.user.role === "admin");
       router.push("/");
     } catch (error) {
       setError(error.message);
@@ -70,6 +75,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await logout();
       setUser(null);
+      setAdmin(false);
       router.push("/");
     } catch (error) {
       setError(error.message);
@@ -108,6 +114,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        admin,
         loading,
         error,
         login,

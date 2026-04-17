@@ -1,12 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
+import Head from "next/head";
 
 function ContactUs() {
+  const { user } = useAuth();
   const [form, setForm] = useState({
-    fullName: "",
+    name: "",
     email: "",
     subject: "",
     message: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setForm((prevForm) => ({
+        ...prevForm,
+        name: user.username || "",
+        email: user.email || "",
+      }));
+    }
+  }, [user]);
 
   const [submitState, setSubmitState] = useState({
     isSubmitting: false,
@@ -25,19 +39,8 @@ function ContactUs() {
     }));
   };
 
-  const buildMailtoLink = () => {
-    const mailSubject = encodeURIComponent(
-      form.subject || `New Contact Message from ${form.fullName || "Website Visitor"}`,
-    );
-    const mailBody = encodeURIComponent(
-      `Name: ${form.fullName}\nEmail: ${form.email}\n\nMessage:\n${form.message}`,
-    );
-
-    return `mailto:${contactEmail}?subject=${mailSubject}&body=${mailBody}`;
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
     setSubmitState({
       isSubmitting: true,
@@ -46,25 +49,43 @@ function ContactUs() {
     });
 
     try {
-      const mailtoUrl = buildMailtoLink();
-      window.location.href = mailtoUrl;
+      const response = await axios.post("/api/contactus/sendContact", form);
+
+      console.log("Server response:", response.data);
 
       setSubmitState({
         isSubmitting: false,
-        success: "Your email draft has been prepared successfully.",
+        success: "Your message has been sent successfully.",
         error: "",
       });
+
+      setForm({
+        name: user ? user.username || "" : "",
+        email: user ? user.email || "" : "",
+        subject: "",
+        message: "",
+      });
     } catch (error) {
+      console.error(
+        "Submission error:",
+        error.response ? error.response.data : error.message
+      );
       setSubmitState({
         isSubmitting: false,
         success: "",
-        error: "Something went wrong while opening your email client.",
+        error: "Something went wrong. Please try again.",
       });
     }
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
+    <>
+    <Head>
+      <title>Contact Us - Kemet Travel</title>
+      <meta name="description" content="Get in touch with Kemet Travel for personalized travel recommendations and support." />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </Head>
+    <main className="min-h-screen bg-linear-to-b from-slate-50 to-white text-slate-900">
       <section className="mx-auto w-full max-w-6xl px-4 pb-16 pt-14 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-sm sm:p-8 lg:col-span-2">
@@ -115,14 +136,14 @@ function ContactUs() {
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="fullName" className="mb-2 block text-sm font-medium text-slate-700">
+                  <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700">
                     Full Name
                   </label>
                   <input
-                    id="fullName"
-                    name="fullName"
+                    id="name"
+                    name="name"
                     type="text"
-                    value={form.fullName}
+                    value={form.name}
                     onChange={handleChange}
                     required
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
@@ -138,7 +159,8 @@ function ContactUs() {
                     id="email"
                     name="email"
                     type="email"
-                    value={form.email}
+                    value={user ? user.email : form.email}
+                    disabled={user && user.email ? true : false} 
                     onChange={handleChange}
                     required
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
@@ -148,7 +170,10 @@ function ContactUs() {
               </div>
 
               <div>
-                <label htmlFor="subject" className="mb-2 block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="subject"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
                   Subject
                 </label>
                 <input
@@ -164,7 +189,10 @@ function ContactUs() {
               </div>
 
               <div>
-                <label htmlFor="message" className="mb-2 block text-sm font-medium text-slate-700">
+                <label
+                  htmlFor="message"
+                  className="mb-2 block text-sm font-medium text-slate-700"
+                >
                   Message
                 </label>
                 <textarea
@@ -203,6 +231,7 @@ function ContactUs() {
         </div>
       </section>
     </main>
+    </>
   );
 }
 

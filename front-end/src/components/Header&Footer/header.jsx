@@ -11,7 +11,7 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const menuRef = useRef(null);
-  const { user, logout } = useAuth();
+  const {admin, user, logout } = useAuth();
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -58,8 +58,8 @@ function Header() {
           </Link>
 
           <Link
-            href="/Blog"
-            className={`transition-colors duration-200 ${pathname === "/Blog" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+            href="/blogs"
+            className={`transition-colors duration-200 ${pathname === "/blogs" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
           >
             Blog
           </Link>
@@ -150,8 +150,8 @@ function Header() {
 
           <Link
             onClick={() => setOpen(false)}
-            href="/Blog"
-            className={pathname === "/Blog" ? "text-[#FFCE2A]" : ""}
+            href="/blogs"
+            className={pathname === "/blogs" ? "text-[#FFCE2A]" : ""}
           >
             Blog
           </Link>
@@ -186,6 +186,7 @@ function Header() {
               </button>
             </>
           )}
+
         </div>
       )}
     </header>
