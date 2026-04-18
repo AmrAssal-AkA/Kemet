@@ -4,7 +4,7 @@ import AdminNavBar from "./navbar";
 export default function AdminLayout({ children, adminName, onLogout }) {
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      <div className="mx-auto flex max-w-[1400px]">
+      <div className="mx-auto flex max-w-350">
         <Sidebar adminName={adminName} onLogout={onLogout} />
         <div className="flex min-h-screen flex-1 flex-col">
           <AdminNavBar />

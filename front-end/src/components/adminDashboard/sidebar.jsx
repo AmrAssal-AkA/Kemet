@@ -51,7 +51,7 @@ export default function Sidebar({ adminName = "Admin User", onLogout }) {
           </div>
           <div>
             <p className="text-sm text-slate-400">The</p>
-            <p className="text-base font-bold text-slate-900">Radiant Explorer</p>
+            <p className="text-base font-bold text-slate-900">Kemet Admin</p>
           </div>
         </div>
 

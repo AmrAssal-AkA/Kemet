@@ -16,6 +16,8 @@ router.get(
   authorize("admin"),
   adminDashboardController.getAllUsers,
 );
+
+
 router.patch("/updateRole/:_id", authenticate,authorize("admin"), async (req, res) => {
   const user = await User.findByIdAndUpdate(req.params._id, { role: req.body.role }, { new: true });
   res.status(200).json({ message: "User role updated successfully", user });

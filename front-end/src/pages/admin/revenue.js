@@ -1,5 +1,7 @@
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
+import jwt from "jsonwebtoken";
+import { parse } from "cookie";
 
 export default function AdminRevenue({ admin }) {
   const { logout } = useAuth();
@@ -9,7 +11,8 @@ export default function AdminRevenue({ admin }) {
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">Revenue</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Ready for backend integration: revenue metrics, transaction trends, and export tools.
+          Ready for backend integration: revenue metrics, transaction trends,
+          and export tools.
         </p>
       </section>
     </AdminLayout>
@@ -17,9 +20,11 @@ export default function AdminRevenue({ admin }) {
 }
 
 export async function getServerSideProps(context) {
-  const cookie = context.req.headers.cookie || "";
+  const { req } = context;
+  const cookie = parse(req.headers.cookie || "");
+  const token = cookie["x-auth-token"];
 
-  if (!cookie || !cookie.includes("x-auth-token")) {
+  if (!token) {
     return {
       redirect: {
         destination: "/auth/auth",
@@ -29,23 +34,19 @@ export async function getServerSideProps(context) {
   }
 
   try {
-    const response = await fetch("http://localhost:8000/api/auth/refresh", {
-      method: "POST",
-      headers: {
-        Cookie: cookie,
-      },
-      credentials: "include",
-    });
+    const user = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (!response.ok) {
-      throw new Error("Session verification failed");
+    if (user.role !== "admin") {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
     }
-
-    const data = await response.json();
-
     return {
       props: {
-        admin: data.user,
+        admin: user,
       },
     };
   } catch (error) {

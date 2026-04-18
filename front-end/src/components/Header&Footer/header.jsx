@@ -29,6 +29,10 @@ function Header() {
     await logout();
   };
 
+  if(pathname.startsWith("/admin")){
+    return null;
+  }
+
   return (
     <header className="w-full bg-white shadow-sm antialiased">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
@@ -99,13 +103,28 @@ function Header() {
 
               {menuOpen && (
                 <div className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-                  <Link
-                    href="/account-setting"
-                    className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Account Setting
-                  </Link>
+                  {admin ? (
+                    <Link
+                      href="/admin/"
+                      className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Admin Panel
+                    </Link>
+                  ) : (
+                    <>
+                      <Link href="/user-dashboard" className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100" onClick={() => setMenuOpen(false)}>
+                        My Account
+                      </Link>
+                      <Link
+                        href="/account-setting"
+                        className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Account Setting
+                      </Link>
+                    </>
+                  )}
                   <button
                     type="button"
                     onClick={handleLogout}

@@ -1,5 +1,8 @@
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
+import  jwt  from "jsonwebtoken";
+import axios from "axios";
+import { parse } from "cookie";
 
 const statCards = [
   {
@@ -47,20 +50,20 @@ const bookings = [
   },
 ];
 
-const articles = [
-  {
-    title: "The Hidden Courtyards of Marrakech",
-    reads: "14.2k views",
-  },
-  {
-    title: "Vietnam’s Northern Highlands: A Journey",
-    reads: "9.8k views",
-  },
-  {
-    title: "Beyond Santorini: The Quiet Cyclades",
-    reads: "22.1k views",
-  },
-];
+// const articles = [
+//   {
+//     title: "The Hidden Courtyards of Marrakech",
+//     reads: "14.2k views",
+//   },
+//   {
+//     title: "Vietnam’s Northern Highlands: A Journey",
+//     reads: "9.8k views",
+//   },
+//   {
+//     title: "Beyond Santorini: The Quiet Cyclades",
+//     reads: "22.1k views",
+//   },
+// ];
 
 function StatCard({ card }) {
   return (
@@ -119,8 +122,8 @@ function BookingStatus({ status }) {
   );
 }
 
-export default function AdminDashboard() {
-  const {user: admin ,logout } = useAuth();
+export default function AdminDashboard({ admin, Blogs }) {
+  const {logout } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -129,7 +132,7 @@ export default function AdminDashboard() {
   return (
     <AdminLayout adminName={admin?.name} onLogout={handleLogout}>
       <section className="rounded-3xl bg-[#0b1d3a] p-8 text-white shadow-sm">
-        <h1 className="text-4xl font-bold">Welcome back, {admin?.name || "Admin"}</h1>
+        <h1 className="text-4xl font-bold">Welcome back, {admin?.name}</h1>
         <p className="mt-3 max-w-2xl text-slate-200">
           Your platform saw a <span className="font-semibold text-amber-300">+14.2%</span>{" "}
           increase in global explorer engagement this week.
@@ -166,7 +169,7 @@ export default function AdminDashboard() {
           {trendBars.map((value, index) => (
             <span
               key={`trend-${index}`}
-              className="flex-1 rounded-t-full bg-gradient-to-t from-amber-200 to-amber-400"
+              className="flex-1 rounded-t-full bg-linear-to-t from-amber-200 to-amber-400"
               style={{ height: `${value * 7}%` }}
             />
           ))}
@@ -183,7 +186,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px]">
+            <table className="w-full min-w-140">
               <thead>
                 <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-[0.14em] text-slate-400">
                   <th className="pb-3">Customer</th>
@@ -211,11 +214,11 @@ export default function AdminDashboard() {
         <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-xl font-bold text-slate-900">Latest Articles</h3>
           <div className="mt-4 space-y-4">
-            {articles.map((article) => (
-              <article key={article.title} className="rounded-2xl bg-slate-50 p-3">
-                <h4 className="text-sm font-semibold text-slate-800">{article.title}</h4>
-                <p className="mt-1 text-xs text-slate-500">{article.reads}</p>
-              </article>
+            {Blogs.map((blog) => (
+              <div key={blog.id} className="rounded-lg bg-slate-50 p-4">
+                <p className="font-semibold text-slate-800">{blog.title}</p>
+                <p className="text-sm text-slate-500">{blog.content}</p>
+              </div>
             ))}
           </div>
         </aside>
@@ -247,33 +250,13 @@ export default function AdminDashboard() {
   );
 }
 
+
 export async function getServerSideProps(context) {
-  const { req } = context;
-  const cookie = req.headers.cookie || "";
+  const {req} = context;
+  const cookie = parse(req.headers.cookie || "");
+  const token = cookie["x-auth-token"];
 
-  try {
-    const response = await fetch("http://localhost:8000/api/auth/refresh", {
-      method: "POST",
-      headers: {
-        Cookie: cookie,
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Session verification failed");
-    }
-
-    const data = await response.json();
-
-
-    return {
-      props: {
-        admin: data.user && data.user.role === "admin",
-      },
-    };
-  } catch (error) {
-    console.error("Admin verification error:", error.message);
+  if (!token) {
     return {
       redirect: {
         destination: "/auth/auth",
@@ -281,4 +264,37 @@ export async function getServerSideProps(context) {
       },
     };
   }
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (user.role !== "admin") {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        },
+      };
+    }
+
+    const response = await axios.get("http://localhost:3000/api/Blog/GetBlogs");
+    const Blogs = response.data.blogs || [];
+
+    return {
+      props: {
+        admin: user,
+        Blogs
+      }
+
+       };
+  } catch (error) {
+    console.error("Admin verification error:", error.message);
+    return {
+      redirect: {
+        destination: "/auth/auth",
+        permanent: false,
+      },
+    }
+  }
+
 }

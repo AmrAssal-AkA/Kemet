@@ -443,6 +443,15 @@ export async function getServerSideProps(context) {
     const userName = response.data.user?.name;
     const userRole = response.data.user?.role;
 
+    if(userRole !== "user") {
+      return {
+        redirect: {
+          destination: "/",
+          permanent: false,
+        }
+      }
+    }
+
     return {
       props: {
         userName,

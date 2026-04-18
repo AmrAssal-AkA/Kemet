@@ -5,12 +5,12 @@ const generateToken = (user) => {
     throw new Error("User is required to generate token");
   }
   const accessToken = jwt.sign(
-    { id: user._id, role: user.role },
+    { id: user._id, name: user.name, role: user.role },
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: "15m" },
   );
   const refreshToken = jwt.sign(
-    { id: user._id, role: user.role },
+    { id: user._id, name: user.name, role: user.role },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: "7d" },
   );
