@@ -1,9 +1,8 @@
 const amadeusAPI = require("../../services/amadeus");
 
-
 const SearchHotel = async (req, res) => {
   const { cityCode, checkInDate, checkOutDate, NumberOfGuests, NumberOfrooms } =
-    req.body;
+    req.query;
   if (
     !cityCode ||
     !checkInDate ||
@@ -63,11 +62,12 @@ const SearchHotel = async (req, res) => {
 
 const getHotelOffers = async (req, res) => {
   try {
-    const { hotelId, checkInDate, checkOutDate, adults } = req.body;
+    const { hotelId, checkInDate, checkOutDate, adults } = req.query;
 
-    if(!hotelId || !checkInDate || !checkOutDate || !adults) {
+    if (!hotelId || !checkInDate || !checkOutDate || !adults) {
       return res.status(400).json({
-        error: "Missing required query parameters. Please provide hotelId, checkInDate, checkOutDate, and adults.",
+        error:
+          "Missing required query parameters. Please provide hotelId, checkInDate, checkOutDate, and adults.",
       });
     }
 
@@ -85,11 +85,9 @@ const getHotelOffers = async (req, res) => {
       .status(500)
       .json({ error: "Failed to fetch hotel offers from the server" });
   }
-}
-
-
+};
 
 module.exports = {
   SearchHotel,
-  getHotelOffers,
+  getHotelOffers
 };

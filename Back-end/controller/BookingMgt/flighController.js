@@ -7,16 +7,16 @@ const searchFlights = async (req, res) => {
     origin,
     destination,
     departureDate,
-    returnDate,
-    adults,
+    returnDate = null,
+    adults = 1,
     children = 0,
     infants = 0,
     travelClass = "ECONOMY",
+    currencyCode = "EGP",
+    max = 20,
   } = req.body;
 
-
   try {
-
     if (!origin || !destination || !departureDate || !adults) {
       return res.status(400).json({
         error: "Missing required parameters",
@@ -28,9 +28,10 @@ const searchFlights = async (req, res) => {
     const searchParams = {
       originLocationCode: origin.toUpperCase(),
       destinationLocationCode: destination.toUpperCase(),
-      departureDate: departureDate,
+      departureDate,
       adults: parseInt(adults),
-      currencyCode: "EGP",
+      currencyCode: currencyCode.toUpperCase(),
+      max: Math.min(Math.max(parseInt(max) || 20, 1), 50),
     };
 
     if (returnDate) searchParams.returnDate = returnDate;
@@ -41,7 +42,8 @@ const searchFlights = async (req, res) => {
 
     console.log("Search parameters:", JSON.stringify(searchParams, null, 2));
 
-    const response = await amadeus.shopping.flightOffersSearch.get(searchParams);
+    const response =
+      await amadeus.shopping.flightOffersSearch.get(searchParams);
 
     console.log(` API Response received. Status: ${response.status}`);
     console.log(`Found ${response.data?.length || 0} flight offers`);
@@ -59,11 +61,11 @@ const searchFlights = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      data: response.data || [],
+      data: response.data,
       meta: {
         count: response.data?.length || 0,
         searchParams: {
-          route: `${origin} → ${destination}`,
+          route: `${origin.toUpperCase()} → ${destination.toUpperCase()}`,
           date: returnDate ? `${departureDate} → ${returnDate}` : departureDate,
           passengers: {
             adults: parseInt(adults),
@@ -84,19 +86,37 @@ const searchFlights = async (req, res) => {
       "Flight search error:",
       error.response?.data || error.message,
     );
-    
-    const errorMessage =
-      error.response?.data?.errors?.[0]?.detail ||
-      error.response?.data?.error_description ||
-      error.message ||
-      "An error occurred while searching for flights";
 
-    const statusCode = error.response?.status || 500;
+    const providerError = error.response?.data?.errors?.[0];
+    const isAmadeusInternalError =
+      error.response?.status === 500 && providerError?.code === 38189;
+
+    const errorMessage = isAmadeusInternalError
+      ? "Flight search is temporarily unavailable from the upstream provider. Please try again shortly or use another route/date."
+      : providerError?.detail ||
+        error.response?.data?.error_description ||
+        error.message ||
+        "An error occurred while searching for flights";
+
+    const statusCode = isAmadeusInternalError
+      ? 502
+      : error.response?.status || 500;
 
     res.status(statusCode).json({
       success: false,
       error: errorMessage,
-      details: error.response?.data?.errors || null,
+      details: isAmadeusInternalError
+        ? null
+        : error.response?.data?.errors || null,
+      provider: providerError
+        ? {
+            name: "Amadeus",
+            status: error.response?.status,
+            code: providerError.code,
+            title: providerError.title,
+          }
+        : null,
+      retryable: isAmadeusInternalError,
       searchParams: req.body,
       timestamp: new Date().toISOString(),
     });
@@ -109,21 +129,24 @@ const priceFlight = async (req, res) => {
   try {
     const flightOffer = req.body.flightOffer || req.body.flightOffers;
     if (!flightOffer) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Missing flightOffer in request body" 
+      return res.status(400).json({
+        success: false,
+        error: "Missing flightOffer in request body",
       });
     }
 
     const pricedFlight = await FlightService.priceFlightOffers(flightOffer);
-    
+
     // 3. Return success
     res.status(200).json({
       success: true,
       data: pricedFlight,
     });
   } catch (error) {
-    console.error("Error pricing flight offer:", error.response?.data || error.message);
+    console.error(
+      "Error pricing flight offer:",
+      error.response?.data || error.message,
+    );
 
     const errorMessage =
       error.response?.data?.errors?.[0]?.detail ||
@@ -132,10 +155,10 @@ const priceFlight = async (req, res) => {
 
     const statusCode = error.response?.status || 500;
 
-    res.status(statusCode).json({ 
+    res.status(statusCode).json({
       success: false,
       error: errorMessage,
-      details: error.response?.data?.errors || null
+      details: error.response?.data?.errors || null,
     });
   }
 };

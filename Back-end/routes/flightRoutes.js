@@ -5,10 +5,9 @@ const FlightDestinationMW = require("../middleware/FlightDestinationMW");
 const authenticate = require("../middleware/authenticate");
 const authorize = require("../middleware/authorize");
 
-router.get(
+router.post(
   "/search",
-  authenticate,
-  authorize("user"),
+
   FlightDestinationMW,
   flightController.searchFlights,
 );
