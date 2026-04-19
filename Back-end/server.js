@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const app = express();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 dotenv.config();
 
 // Importing routes
@@ -25,6 +26,7 @@ const morganMiddleware = require("./middleware/morganMW");
 const passport = require("passport");
 const port = process.env.PORT;
 const userRoutes = require("./routes/userdashboardRoutes");
+const paymentRoute = require("./routes/paymentRoutes");
 
 // Connect to database
 connectDB();
@@ -58,6 +60,7 @@ app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
 app.use("/api/newsletter", newsletterRoute);
 app.use("/api/userdashboard", userRoutes);
+app.use("/api/payment", paymentRoute);
 
 
 app.get("/", (req, res) => {
