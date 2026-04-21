@@ -23,6 +23,8 @@ const definition = {
     { name: "Hotels", description: "Hotel search and offer endpoints" },
     { name: "Contact", description: "Contact form endpoints" },
     { name: "Blogs", description: "Blog management endpoints" },
+    { name: "Hidden Gems", description: "Hidden gem management endpoints" },
+    { name: "Offerings", description: "Offering management endpoints" },
     { name: "Bookings", description: "Unified booking endpoints" },
     { name: "Payments", description: "Payment processing endpoints" },
     { name: "Admin", description: "Admin dashboard endpoints" },
@@ -180,6 +182,22 @@ const definition = {
             type: "array",
             items: { type: "string", format: "binary" },
           },
+        },
+      },
+      HiddenGem: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          name: { type: "string" },
+          description: { type: "string" },
+        },
+      },
+      Offering: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          name: { type: "string" },
+          description: { type: "string" },
         },
       },
       FlightSearchRequest: {
@@ -1195,38 +1213,6 @@ const definition = {
         },
       },
     },
-    "/api/newsletter/subscribe": {
-      post: {
-        tags: ["Newsletter"],
-        summary: "Subscribe to the newsletter",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/NewsletterRequest" },
-            },
-          },
-        },
-        responses: {
-          201: { description: "Subscription successful" },
-          400: { description: "Email missing or already exists" },
-          500: { description: "Internal server error" },
-        },
-      },
-    },
-    "/api/newsletter/subscribers": {
-      get: {
-        tags: ["Newsletter"],
-        summary: "List newsletter subscribers",
-        security: [{ cookieAuth: [] }],
-        responses: {
-          200: { description: "Subscribers returned" },
-          401: { description: "Unauthorized" },
-          403: { description: "Forbidden" },
-          500: { description: "Internal server error" },
-        },
-      },
-    },
     "/api/userdashboard/BookedTrips": {
       get: {
         tags: ["User Dashboard"],
@@ -1296,6 +1282,214 @@ const definition = {
           200: { description: "Trip removed" },
           401: { description: "Unauthorized" },
           500: { description: "Error removing trip from saved trips" },
+        },
+      },
+    },
+    "/api/hiddenGem": {
+      post: {
+        tags: ["Hidden Gems"],
+        summary: "Create a hidden gem",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["name", "description"],
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Hidden gem created" },
+          400: { description: "Validation failed" },
+          500: { description: "Server error" },
+        },
+      },
+      get: {
+        tags: ["Hidden Gems"],
+        summary: "Get all hidden gems",
+        responses: {
+          200: { description: "Hidden gems returned" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/hiddenGem/{HiddenId}": {
+      get: {
+        tags: ["Hidden Gems"],
+        summary: "Get a hidden gem by id",
+        parameters: [
+          {
+            in: "path",
+            name: "HiddenId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Hidden gem returned" },
+          404: { description: "Hidden gem not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/hiddenGem/id": {
+      put: {
+        tags: ["Hidden Gems"],
+        summary: "Update a hidden gem",
+        parameters: [
+          {
+            in: "query",
+            name: "id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Hidden gem updated" },
+          404: { description: "Hidden gem not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/hiddenGem/{hiddensId}": {
+      delete: {
+        tags: ["Hidden Gems"],
+        summary: "Delete a hidden gem by id",
+        parameters: [
+          {
+            in: "path",
+            name: "hiddensId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Hidden gem deleted" },
+          404: { description: "Hidden gem not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/offerings": {
+      post: {
+        tags: ["Offerings"],
+        summary: "Create an offering",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["name", "description"],
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Offering created" },
+          400: { description: "Validation failed" },
+          500: { description: "Server error" },
+        },
+      },
+      get: {
+        tags: ["Offerings"],
+        summary: "Get all offerings",
+        responses: {
+          200: { description: "Offerings returned" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/offerings/{Offerings}": {
+      get: {
+        tags: ["Offerings"],
+        summary: "Get an offering by id",
+        parameters: [
+          {
+            in: "path",
+            name: "Offerings",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Offering returned" },
+          404: { description: "Offering not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/offerings/{id}": {
+      put: {
+        tags: ["Offerings"],
+        summary: "Update an offering by id",
+        parameters: [
+          {
+            in: "path",
+            name: "id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Offering updated" },
+          404: { description: "Offering not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/offerings/{offeringg}": {
+      delete: {
+        tags: ["Offerings"],
+        summary: "Delete an offering by id",
+        parameters: [
+          {
+            in: "path",
+            name: "offeringg",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Offering deleted" },
+          404: { description: "Offering not found" },
+          500: { description: "Server error" },
         },
       },
     },

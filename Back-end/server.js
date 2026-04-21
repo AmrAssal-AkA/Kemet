@@ -20,7 +20,6 @@ const blogRoute = require("./routes/blogRoutes");
 const BookingRoute = require("./routes/BookingRoutes");
 const authRoute = require("./routes/authRoutes");
 const adminRoute = require("./routes/adminRoute");
-const newsletterRoute = require("./routes/newsletterRoutes");
 const { authLimiter, apiLimiter } = require("./middleware/rateLimiter");
 const Logger = require("./services/logger");
 const morganMiddleware = require("./middleware/morganMW");
@@ -65,7 +64,6 @@ app.use("/api/blog", blogRoute);
 app.use("/api/booking", BookingRoute);
 app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
-app.use("/api/newsletter", newsletterRoute);
 app.use("/api/userdashboard", userRoutes);
 app.use("/api/payment", paymentRoute);
 
