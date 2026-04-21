@@ -107,7 +107,7 @@ const register = async (req, res) => {
       emailVerificationToken: verifyToken,
       emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
-    const verifyURL = `http://localhost:8000/auth/verify-email?token=${verifyToken}`;
+    const verifyURL = `http://localhost:3000/auth/verifyaccount?token=${verifyToken}`;
     const emailResult = await verifyEmailTemplate(name, verifyURL);
     await sendEmail({
       to: email,
@@ -236,7 +236,7 @@ const verifyEmail = async (req, res) => {
     if (!token) {
       return res
         .status(400)
-        .json({ message: "Verification token is missing." });
+        .json({ success: false, message: "Verification token is missing." });
     }
 
     const user = await User.findOne({
@@ -245,24 +245,31 @@ const verifyEmail = async (req, res) => {
     });
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User not found for verification." });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification link.",
+      });
     }
 
     if (user.isVerified) {
-      return res.status(200).send("<h1>Email has already been verified.</h1>");
+      return res.status(200).json({
+        success: true,
+        message: "Email has already been verified.",
+      });
     }
 
     user.isVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationTokenExpires = undefined;
     await user.save();
 
-    res
-      .status(200)
-      .send("<h1>Email verified successfully! You can now log in.</h1>");
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully! You can now log in.",
+    });
   } catch (error) {
     console.error("Email verification error:", error);
-    res.status(400).send("<h1>Invalid or expired verification link.</h1>");
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 

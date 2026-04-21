@@ -40,7 +40,7 @@ function Header() {
           <Image
             src="/logo.png"
             alt="Logo"
-            width={100}
+            width={120}
             height={50}
             className="mr-2 inline-block"
           />

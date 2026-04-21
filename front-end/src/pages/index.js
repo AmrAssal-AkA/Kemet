@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Head from "next/head";
 
 export default function Home() {
   const cities = [
@@ -13,8 +14,13 @@ export default function Home() {
   ];
 
   return (
-    <div className="font-sans bg-[#f9fafb]">
-
+    <>
+   <Head>
+    <title>Kemet Travel - Discover Egypt through Egyptian Eyes</title>
+    <meta name="description" content="Plan your smart trip to Egypt with Kemet Travel. Explore temples, beaches, and hidden gems through Egyptian eyes." />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+   </Head>
+    <main className="font-sans bg-[#f9fafb]">
       {/* HERO */}
       <section className="relative">
         <img
@@ -242,6 +248,7 @@ export default function Home() {
         </div>
       </section>
 
-    </div>
+    </main> 
+    </>
   );
 }

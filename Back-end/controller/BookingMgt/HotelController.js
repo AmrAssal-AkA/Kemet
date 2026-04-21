@@ -2,7 +2,7 @@ const amadeusAPI = require("../../services/amadeus");
 
 const SearchHotel = async (req, res) => {
   const { cityCode, checkInDate, checkOutDate, NumberOfGuests, NumberOfrooms } =
-    req.query;
+    req.body;
   if (
     !cityCode ||
     !checkInDate ||
@@ -16,12 +16,55 @@ const SearchHotel = async (req, res) => {
     });
   }
   try {
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+    const now = new Date();
+
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+      return res.status(400).json({
+        error: "Invalid date format. Please use YYYY-MM-DD format.",
+      });
+    }
+
+    if (checkIn < now) {
+      return res.status(400).json({
+        error: "Check-in date must be in the future.",
+      });
+    }
+
+    if (checkOut <= checkIn) {
+      return res.status(400).json({
+        error: "Check-out date must be after check-in date.",
+      });
+    }
+  } catch (error) {
+    return res.status(400).json({
+      error: "Invalid date format. Please use YYYY-MM-DD format.",
+    });
+  }
+
+  try {
+    console.log(`[SearchHotel] Searching hotels for cityCode: ${cityCode}`);
     const HotelResponse =
       await amadeusAPI.referenceData.locations.hotels.byCity.get({
         cityCode,
       });
 
-    const egyptianHotels = HotelResponse.data.filter((hotel) => {
+    // HotelResponse is already the data from API, not wrapped in .data
+    const hotelData = Array.isArray(HotelResponse)
+      ? HotelResponse
+      : HotelResponse?.data || [];
+
+    if (!hotelData || hotelData.length === 0) {
+      console.log(
+        `[SearchHotel] No hotels found for cityCode: ${cityCode}`,
+      );
+      return res.status(404).json({
+        error: `No hotels found for city code: ${cityCode}`,
+      });
+    }
+
+    const egyptianHotels = hotelData.filter((hotel) => {
       return (
         hotel.iataCode === cityCode &&
         (hotel.address?.countryCode === "EG" ||
@@ -37,6 +80,9 @@ const SearchHotel = async (req, res) => {
       });
     }
 
+    console.log(
+      `[SearchHotel] Found ${hotelIds.length} hotels, fetching offers...`,
+    );
     const Response = await amadeusAPI.shopping.hotelOffersSearch.get({
       hotelIds: hotelIds.join(","),
       checkInDate,
@@ -46,17 +92,26 @@ const SearchHotel = async (req, res) => {
       currency: "EGP",
     });
 
-    if (!Response.data || Response.data.length === 0) {
+    const hotelOffers = Array.isArray(Response)
+      ? Response
+      : Response?.data || [];
+
+    if (!hotelOffers || hotelOffers.length === 0) {
       return res.status(404).json({
         error: "No hotel offers found for the specified criteria.",
       });
     }
-    res.status(201).json(Response.data);
+    console.log(`[SearchHotel] Found ${hotelOffers.length} hotel offers`);
+    res.status(201).json(hotelOffers);
   } catch (error) {
-    console.error("Error fetching hotels data:", error);
-    res
-      .status(500)
-      .json({ error: "failed to fetch hotels data from the server" });
+    console.error(
+      "Error fetching hotels data:",
+      error.response?.data || error.message,
+    );
+    res.status(500).json({
+      error: "Failed to fetch hotels data from the server",
+      details: error.response?.data?.errors || error.message,
+    });
   }
 };
 
@@ -78,12 +133,19 @@ const getHotelOffers = async (req, res) => {
       adults: parseInt(adults) || 1,
       currency: "EGP",
     });
-    res.status(200).json(response.data);
+    const hotelOffers = Array.isArray(response)
+      ? response
+      : response?.data || [];
+    res.status(200).json(hotelOffers);
   } catch (error) {
-    console.error("Error fetching hotel offers:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to fetch hotel offers from the server" });
+    console.error(
+      "Error fetching hotel offers:",
+      error.response?.data || error.message,
+    );
+    res.status(500).json({
+      error: "Failed to fetch hotel offers from the server",
+      details: error.response?.data?.errors || error.message,
+    });
   }
 };
 
