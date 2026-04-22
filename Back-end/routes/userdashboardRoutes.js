@@ -28,7 +28,7 @@ router.get("/savedTrips",async (req, res) => {
     if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
     }
-            const user = await User.findById(userId).populate("savedTrips");
+            const user = await User.findById(userId).populate("savedTrips.trips");
             res.json(user.savedTrips);
         }catch(error){
                 res.status(500).json({ message: "Error fetching saved trips" });

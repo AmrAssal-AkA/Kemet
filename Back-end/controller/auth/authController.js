@@ -103,7 +103,7 @@ const register = async (req, res) => {
     });
 
     const verifyToken = crypto.randomBytes(32).toString("hex");
-    await User.findByIdAndUpdate(Newuser.userId, {
+    await User.findByIdAndUpdate(Newuser._id, {
       emailVerificationToken: verifyToken,
       emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
@@ -239,10 +239,18 @@ const verifyEmail = async (req, res) => {
         .json({ success: false, message: "Verification token is missing." });
     }
 
-    const user = await User.findOne({
-      emailVerificationToken: token,
-      emailVerificationTokenExpires: { $gt: Date.now() },
-    });
+    const user = await User.findOneAndUpdate(
+      { 
+        emailVerificationToken: token, 
+        emailVerificationTokenExpires: { $gt: Date.now() } 
+      },
+      { 
+        isVerified: true, 
+        emailVerificationToken: undefined, 
+        emailVerificationTokenExpires: undefined 
+      },
+      { new: true }
+    );
 
     if (!user) {
       return res.status(400).json({
@@ -250,18 +258,6 @@ const verifyEmail = async (req, res) => {
         message: "Invalid or expired verification link.",
       });
     }
-
-    if (user.isVerified) {
-      return res.status(200).json({
-        success: true,
-        message: "Email has already been verified.",
-      });
-    }
-
-    user.isVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationTokenExpires = undefined;
-    await user.save();
 
     res.status(200).json({
       success: true,

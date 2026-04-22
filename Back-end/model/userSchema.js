@@ -72,8 +72,14 @@ const userSchema = new mongoose.Schema({
   },
   savedTrips: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Trip",
+      trips: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Trip",
+      },
+      savedAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
   ],
 });

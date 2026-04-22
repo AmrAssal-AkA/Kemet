@@ -40,7 +40,7 @@ export async function getServerSideProps(context) {
     const response = await axios.get(
       "http://localhost:8000/api/auth/verify-email",
       {
-        params: { token },
+        params: { token },  
       },
     );
 

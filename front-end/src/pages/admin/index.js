@@ -50,20 +50,6 @@ const bookings = [
   },
 ];
 
-// const articles = [
-//   {
-//     title: "The Hidden Courtyards of Marrakech",
-//     reads: "14.2k views",
-//   },
-//   {
-//     title: "Vietnam’s Northern Highlands: A Journey",
-//     reads: "9.8k views",
-//   },
-//   {
-//     title: "Beyond Santorini: The Quiet Cyclades",
-//     reads: "22.1k views",
-//   },
-// ];
 
 function StatCard({ card }) {
   return (
@@ -122,7 +108,7 @@ function BookingStatus({ status }) {
   );
 }
 
-export default function AdminDashboard({ admin, Blogs }) {
+export default function AdminDashboard({ admin, contacts }) {
   const {logout } = useAuth();
 
   const handleLogout = () => {
@@ -211,13 +197,13 @@ export default function AdminDashboard({ admin, Blogs }) {
           </div>
         </div>
 
-        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-xl font-bold text-slate-900">Latest Articles</h3>
+        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ">
+          <h3 className="text-xl font-bold text-slate-900">customer contact</h3>
           <div className="mt-4 space-y-4">
-            {Blogs.map((blog) => (
-              <div key={blog.id} className="rounded-lg bg-slate-50 p-4">
-                <p className="font-semibold text-slate-800">{blog.title}</p>
-                <p className="text-sm text-slate-500">{blog.content}</p>
+            {contacts.map((contact) => (
+              <div key={contact.id} className="rounded-lg bg-slate-50 p-4">
+                <p className="font-semibold text-slate-800">{contact.name}</p>
+                <p className="text-sm text-slate-500">{contact.subject}</p>
               </div>
             ))}
           </div>
@@ -277,13 +263,17 @@ export async function getServerSideProps(context) {
       };
     }
 
-    const response = await axios.get("http://localhost:3000/api/Blog/GetBlogs");
-    const Blogs = response.data.blogs || [];
+    const response = await axios.get("http://localhost:3000/api/admin/getContactus", {
+      headers: {
+        Cookie: req.headers.cookie || "",
+      },
+    });
+    const contacts = response.data;
 
     return {
       props: {
         admin: user,
-        Blogs
+        contacts
       }
 
        };

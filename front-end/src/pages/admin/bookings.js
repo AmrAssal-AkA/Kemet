@@ -1,55 +1,53 @@
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
 
-export default function AdminBookings({ admin }) {
-  const { logout } = useAuth();
+export default function AdminBookings({ bookingData }) {
+  const {user, logout } = useAuth();
 
   return (
-    <AdminLayout adminName={admin?.name} onLogout={logout}>
+    <AdminLayout adminName={user?.name} onLogout={logout}>
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">Bookings</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Ready for backend integration: booking list, filters, status updates, and pagination.
-        </p>
+        <div>
+          {bookingData.length > 0 ? (
+            <ul className="mt-4 space-y-4">
+              {bookingData.map((booking) => (
+                <li key={booking.id} className="border border-slate-200 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold text-slate-900">{booking.user}</h3>
+                  <h2 className="text-lg font-semibold text-slate-900">{booking.title}</h2>
+                  <p className="text-sm text-slate-500">Status: {booking.status}</p>
+                  <p className="text-slate-600">{booking.details}</p>
+                  <p className="text-sm text-slate-500">Status: {booking.status}</p>
+                  <p className="text-sm text-slate-500">Created At: {new Date(booking.createdAt).toLocaleString()}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-slate-600 text-center">No bookings found.</p>
+          )}
+        </div>
       </section>
     </AdminLayout>
   );
 }
 
 export async function getServerSideProps(context) {
-  const cookie = context.req.headers.cookie || "";
+  const { req } = context;
 
-  if (!cookie || !cookie.includes("x-auth-token")) {
-    return {
-      redirect: {
-        destination: "/auth/auth",
-        permanent: false,
-      },
-    };
-  }
-
-  try {
-    const response = await fetch("http://localhost:8000/api/auth/refresh", {
-      method: "POST",
+  try{
+    const response = await fetch("http://localhost:3000/api/admin/getBookingDetails", {
       headers: {
-        Cookie: cookie,
+        Cookie: req.headers.cookie || "",
       },
-      credentials: "include",
     });
-
-    if (!response.ok) {
-      throw new Error("Session verification failed");
-    }
-
     const data = await response.json();
-
     return {
       props: {
-        admin: data.user,
+        bookingData: data.bookings || [], 
       },
     };
   } catch (error) {
-    console.error("Admin verification error:", error.message);
+    console.error("Error fetching booking details:", error);
     return {
       redirect: {
         destination: "/auth/auth",
