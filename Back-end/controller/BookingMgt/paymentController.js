@@ -1,72 +1,53 @@
-const paymentServices = require("../../services/paymentServices");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const domain = process.env.DOMAIN;
 
-// Create Payment
-const createPayment = async (req, res) => {
-  try {
-    const {bookingId, amount, currency, metadata} = req.body;
-    const result = await paymentServices.createPayment({
-      userId: req.user.userId,
-      bookingId,
-      amount,
-      currency,
-      metadata,
-    });
-    res.status(201).json({success: true, message: "Payment created successfully", data: result});
-    } catch (error) {
-    console.error("Payment creation error:", error);
-    res.status(400).json({success: false, message: "Failed to create payment"});
-  }
-};
+const stripeCheckout = async (req, res) => {
+    try {
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            mode: "payment",
+            success_url: `${domain}/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${domain}/checkout?payment_fail=true`,
+            metadata: {order: JSON.stringify(req.body)},
+            line_items: req.body.items.map(item => ({
+                price_data: {
+                    currency: "egp",
+                    product_data: {
+                        name: item.name,
+                        description: item.description,
+                        images: [item.image]
+                    },
+                    unit_amount: item.price
+                },
+                quantity: item.quantity
+            }))
+        });
+        res.json(session.url);
 
-// Confirm Payment
-const confirmPayment = async (req, res) => {
-  try {
-    const {paymentId} = req.params;
-    const payment = await paymentServices.confirmPayment(paymentId);
-    res.status(200).json({success: true, message: "Payment confirmed", data: payment});
-  } catch (error) {
-    console.error("Payment confirmation error:", error);
-    res.status(400).json({success: false, message: "Failed to confirm payment",});
-  }
-};
-
-// Refund Payment
-const refundPayment = async (req, res) => {
-  try {
-    const {paymentId} = req.params;
-    const {amount} = req.body;
-    const payment = await paymentServices.refundPayment(paymentId, amount);
-    res.status(200).json({success: true, message: "Payment refunded successfully", data: payment});
-  } catch (error) {
-    console.error("Refund error:", error);
-    res.status(400).json({success: false, message: "Failed to process refund"});
-  }
-};
-
-// Get user payments
-const getUserPayments = async (req, res) => {
-  try {
-    const payments = await paymentServices.getUserPayments(req.user.userId);
-    res.status(200).json({success: true, message: "Payments retrieved successfully", data: payments});
-  } catch (error) {
-    console.error("Get payments error:", error);
-    res.status(400).json({success: false, message: "Failed to retrieve payments"});
-  }
-};
-
-// Get user payments by id
-const getPaymentById = async (req, res) => {
-  try {
-    const {paymentId} = req.params;
-    const payment = await paymentServices.getPaymentById(paymentId);
-    if (!payment) {
-      return res.status(404).json({success: false, message: "Payment not found"});
+    } catch (err) {
+        console.error("Stripe checkout error:", err.message);
+        res.status(500).json({error: err.message});
     }
-    res.status(200).json({success: true, message: "Payment retrieved successfully", data: payment});
-  } catch (error) {
-    console.error("Get payment error:", error);
-    res.status(400).json({success: false, message: "Failed to retrieve payment"});
-  }
 };
 
-module.exports = {createPayment, confirmPayment, refundPayment, getUserPayments, getPaymentById};
+const success = async (req, res) => {
+    const {session_id} = req.query;
+
+    try {
+        const session = await stripe.checkout.sessions.retrieve(session_id);
+        const customerEmail = session.customer_details.email;
+        const order = JSON.parse(session.metadata.order);
+        const date = new Date();
+        const orders_collection = collection(db, "orders");
+        const docName = `${customerEmail}-order-${date.getTime()}`;
+
+        await setDoc(doc(orders_collection, docName), order);
+        res.redirect('/checkout?payment=done');
+
+    } catch (err) {
+        console.log(err);
+        res.status(400).json({error: "Failed to retrieve payment session"});
+    }
+};
+
+module.exports = {stripeCheckout, success};

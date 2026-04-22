@@ -1,11 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const paymentController = require("../controller/BookingMgt/paymentController");
-
-router.post("/",paymentController.createPayment);
-router.get("/", paymentController.confirmPayment);
-router.post("/", paymentController.refundPayment);
-router.get("/", paymentController.getUserPayments);
-router.get("/", paymentController.getPaymentById);
-
+const payment = require("../controller/BookingMgt/paymentController");
+ 
+router.post("/stripe-checkout", payment.stripeCheckout);
+router.get("/success", payment.success);
+ 
 module.exports = router;

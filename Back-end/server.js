@@ -27,7 +27,7 @@ const swaggerSpec = require("./docs/swagger");
 const passport = require("passport");
 const port = process.env.PORT;
 const userRoutes = require("./routes/userdashboardRoutes");
-const paymentRoute = require("./routes/paymentRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 // Connect to database
 connectDB();
@@ -65,7 +65,7 @@ app.use("/api/booking", BookingRoute);
 app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
 app.use("/api/userdashboard", userRoutes);
-app.use("/api/payment", paymentRoute);
+app.use("/api/payments", paymentRoutes);
 
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");

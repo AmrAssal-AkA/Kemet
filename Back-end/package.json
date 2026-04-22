@@ -25,6 +25,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
     "express-session": "^1.19.0",
+    "firebase": "^12.12.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.1",
