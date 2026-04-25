@@ -188,16 +188,38 @@ const definition = {
         type: "object",
         properties: {
           _id: { type: "string" },
-          name: { type: "string" },
-          description: { type: "string" },
+          location: { type: "string" },
+          reviews: { type: "string" },
+          images: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                imageUrl: { type: "string" },
+                cloudinaryId: { type: "string" },
+              },
+            },
+          },
         },
       },
       Offering: {
         type: "object",
         properties: {
           _id: { type: "string" },
-          name: { type: "string" },
+          title: { type: "string" },
           description: { type: "string" },
+          reviews: { type: "string" },
+          price: { type: "number" },
+          images: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                imageUrl: { type: "string" },
+                cloudinaryId: { type: "string" },
+              },
+            },
+          },
         },
       },
       FlightSearchRequest: {
@@ -408,13 +430,6 @@ const definition = {
           },
         },
       },
-      NewsletterRequest: {
-        type: "object",
-        required: ["email"],
-        properties: {
-          email: { type: "string", format: "email" },
-        },
-      },
       PaymentRequest: {
         type: "object",
         required: ["bookingId", "amount", "currency"],
@@ -455,7 +470,7 @@ const definition = {
           },
           paymentMethod: { type: "string" },
           receiptUrl: { type: "string" },
-          refundId: { type: "string" },
+          refundId: { type: "string"},
           metadata: { type: "object" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
@@ -466,6 +481,40 @@ const definition = {
         required: ["amount"],
         properties: {
           amount: { type: "number", description: "Amount to refund" },
+        },
+      },
+      StripeCheckoutRequest: {
+        type: "object",
+        required: ["items"],
+        properties: {
+          items: {
+            type: "array",
+            description: "Array of items to checkout",
+            items: {
+              type: "object",
+              required: ["name", "price", "quantity"],
+              properties: {
+                name: { type: "string", description: "Item name" },
+                description: {
+                  type: "string",
+                  description: "Item description",
+                },
+                image: {
+                  type: "string",
+                  description: "Item image URL",
+                },
+                price: {
+                  type: "number",
+                  description: "Item price in cents",
+                },
+                quantity: {
+                  type: "integer",
+                  minimum: 1,
+                  description: "Item quantity",
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -586,21 +635,10 @@ const definition = {
         },
       },
     },
-    "/api/auth/reset-password/confirm/{token}": {
+    "/api/auth/reset-password-confirm": {
       post: {
         tags: ["Auth"],
         summary: "Reset password using token",
-        description:
-          "The route includes `{token}` in the path, but the controller currently reads `token` from the JSON request body.",
-        parameters: [
-          {
-            in: "path",
-            name: "token",
-            required: true,
-            schema: { type: "string" },
-            description: "Path token declared by the route.",
-          },
-        ],
         requestBody: {
           required: true,
           content: {
@@ -1015,108 +1053,60 @@ const definition = {
         },
       },
     },
-    "/api/payment": {
+    "/api/payments/stripe-checkout": {
       post: {
         tags: ["Payments"],
-        summary: "Create a new payment",
-        security: [{ cookieAuth: [] }],
+        summary: "Create a Stripe checkout session",
         description:
-          "Initiates a payment for a booking using Stripe. Creates a payment record with the provided booking, amount, and currency.",
+          "Initiates a Stripe checkout session for payment processing. Returns the checkout URL.",
         requestBody: {
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/PaymentRequest" },
+              schema: { $ref: "#/components/schemas/StripeCheckoutRequest" },
             },
           },
         },
         responses: {
-          201: { description: "Payment created successfully" },
-          400: { description: "Missing or invalid payment details" },
-          401: { description: "Unauthorized" },
-          500: { description: "Payment creation failed" },
-        },
-      },
-      get: {
-        tags: ["Payments"],
-        summary: "Get all payments for the current user",
-        security: [{ cookieAuth: [] }],
-        responses: {
-          200: { description: "Payments retrieved successfully" },
-          401: { description: "Unauthorized" },
-          400: { description: "Failed to retrieve payments" },
-        },
-      },
-    },
-    "/api/payment/{paymentId}": {
-      get: {
-        tags: ["Payments"],
-        summary: "Get payment by ID",
-        security: [{ cookieAuth: [] }],
-        parameters: [
-          {
-            in: "path",
-            name: "paymentId",
-            required: true,
-            schema: { type: "string" },
-            description: "Payment ID",
-          },
-        ],
-        responses: {
-          200: { description: "Payment retrieved successfully" },
-          401: { description: "Unauthorized" },
-          404: { description: "Payment not found" },
-          400: { description: "Failed to retrieve payment" },
-        },
-      },
-    },
-    "/api/payment/{paymentId}/confirm": {
-      get: {
-        tags: ["Payments"],
-        summary: "Confirm a payment",
-        security: [{ cookieAuth: [] }],
-        parameters: [
-          {
-            in: "path",
-            name: "paymentId",
-            required: true,
-            schema: { type: "string" },
-            description: "Payment ID to confirm",
-          },
-        ],
-        responses: {
-          200: { description: "Payment confirmed successfully" },
-          400: { description: "Failed to confirm payment" },
-          401: { description: "Unauthorized" },
-        },
-      },
-    },
-    "/api/payment/{paymentId}/refund": {
-      post: {
-        tags: ["Payments"],
-        summary: "Refund a payment",
-        security: [{ cookieAuth: [] }],
-        parameters: [
-          {
-            in: "path",
-            name: "paymentId",
-            required: true,
-            schema: { type: "string" },
-            description: "Payment ID to refund",
-          },
-        ],
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/RefundRequest" },
+          200: {
+            description: "Checkout session created successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    url: {
+                      type: "string",
+                      description: "Stripe checkout URL",
+                    },
+                  },
+                },
+              },
             },
           },
+          400: { description: "Invalid checkout request" },
+          500: { description: "Stripe checkout creation failed" },
         },
+      },
+    },
+    "/api/payments/success": {
+      get: {
+        tags: ["Payments"],
+        summary: "Handle successful payment",
+        description:
+          "Processes a successful payment and stores the order. Redirects to checkout success page.",
+        parameters: [
+          {
+            in: "query",
+            name: "session_id",
+            required: true,
+            schema: { type: "string" },
+            description: "Stripe checkout session ID",
+          },
+        ],
         responses: {
-          200: { description: "Payment refunded successfully" },
-          400: { description: "Failed to process refund" },
-          401: { description: "Unauthorized" },
+          302: { description: "Redirect to checkout success page" },
+          400: { description: "Failed to retrieve payment session" },
         },
       },
     },
@@ -1289,16 +1279,21 @@ const definition = {
       post: {
         tags: ["Hidden Gems"],
         summary: "Create a hidden gem",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
-            "application/json": {
+            "multipart/form-data": {
               schema: {
                 type: "object",
-                required: ["name", "description"],
+                required: ["location", "reviews", "images"],
                 properties: {
-                  name: { type: "string" },
-                  description: { type: "string" },
+                  location: { type: "string" },
+                  reviews: { type: "string" },
+                  images: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                  },
                 },
               },
             },
@@ -1307,6 +1302,7 @@ const definition = {
         responses: {
           201: { description: "Hidden gem created" },
           400: { description: "Validation failed" },
+          401: { description: "Unauthorized" },
           500: { description: "Server error" },
         },
       },
@@ -1319,14 +1315,14 @@ const definition = {
         },
       },
     },
-    "/api/hiddenGem/{HiddenId}": {
+    "/api/hiddenGem/{id}": {
       get: {
         tags: ["Hidden Gems"],
         summary: "Get a hidden gem by id",
         parameters: [
           {
             in: "path",
-            name: "HiddenId",
+            name: "id",
             required: true,
             schema: { type: "string" },
           },
@@ -1337,14 +1333,13 @@ const definition = {
           500: { description: "Server error" },
         },
       },
-    },
-    "/api/hiddenGem/id": {
       put: {
         tags: ["Hidden Gems"],
         summary: "Update a hidden gem",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
-            in: "query",
+            in: "path",
             name: "id",
             required: true,
             schema: { type: "string" },
@@ -1356,8 +1351,12 @@ const definition = {
               schema: {
                 type: "object",
                 properties: {
-                  name: { type: "string" },
-                  description: { type: "string" },
+                  location: { type: "string" },
+                  reviews: { type: "string" },
+                  images: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
                 },
               },
             },
@@ -1365,25 +1364,26 @@ const definition = {
         },
         responses: {
           200: { description: "Hidden gem updated" },
+          401: { description: "Unauthorized" },
           404: { description: "Hidden gem not found" },
           500: { description: "Server error" },
         },
       },
-    },
-    "/api/hiddenGem/{hiddensId}": {
       delete: {
         tags: ["Hidden Gems"],
         summary: "Delete a hidden gem by id",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
             in: "path",
-            name: "hiddensId",
+            name: "id",
             required: true,
             schema: { type: "string" },
           },
         ],
         responses: {
           200: { description: "Hidden gem deleted" },
+          401: { description: "Unauthorized" },
           404: { description: "Hidden gem not found" },
           500: { description: "Server error" },
         },
@@ -1393,16 +1393,29 @@ const definition = {
       post: {
         tags: ["Offerings"],
         summary: "Create an offering",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
-            "application/json": {
+            "multipart/form-data": {
               schema: {
                 type: "object",
-                required: ["name", "description"],
+                required: [
+                  "title",
+                  "description",
+                  "reviews",
+                  "price",
+                  "images",
+                ],
                 properties: {
-                  name: { type: "string" },
+                  title: { type: "string" },
                   description: { type: "string" },
+                  reviews: { type: "string" },
+                  price: { type: "number" },
+                  images: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                  },
                 },
               },
             },
@@ -1411,6 +1424,7 @@ const definition = {
         responses: {
           201: { description: "Offering created" },
           400: { description: "Validation failed" },
+          401: { description: "Unauthorized" },
           500: { description: "Server error" },
         },
       },
@@ -1423,14 +1437,14 @@ const definition = {
         },
       },
     },
-    "/api/offerings/{Offerings}": {
+    "/api/offerings/{id}": {
       get: {
         tags: ["Offerings"],
         summary: "Get an offering by id",
         parameters: [
           {
             in: "path",
-            name: "Offerings",
+            name: "id",
             required: true,
             schema: { type: "string" },
           },
@@ -1441,11 +1455,10 @@ const definition = {
           500: { description: "Server error" },
         },
       },
-    },
-    "/api/offerings/{id}": {
       put: {
         tags: ["Offerings"],
         summary: "Update an offering by id",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
             in: "path",
@@ -1460,8 +1473,11 @@ const definition = {
               schema: {
                 type: "object",
                 properties: {
-                  name: { type: "string" },
+                  title: { type: "string" },
                   description: { type: "string" },
+                  reviews: { type: "string" },
+                  price: { type: "number" },
+                  image: { type: "string" },
                 },
               },
             },
@@ -1469,25 +1485,26 @@ const definition = {
         },
         responses: {
           200: { description: "Offering updated" },
+          401: { description: "Unauthorized" },
           404: { description: "Offering not found" },
           500: { description: "Server error" },
         },
       },
-    },
-    "/api/offerings/{offeringg}": {
       delete: {
         tags: ["Offerings"],
         summary: "Delete an offering by id",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
             in: "path",
-            name: "offeringg",
+            name: "id",
             required: true,
             schema: { type: "string" },
           },
         ],
         responses: {
           200: { description: "Offering deleted" },
+          401: { description: "Unauthorized" },
           404: { description: "Offering not found" },
           500: { description: "Server error" },
         },

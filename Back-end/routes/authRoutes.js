@@ -13,7 +13,7 @@ router.get("/verify-email", authController.verifyEmail);
 
 // Password reset routes
 router.post("/reset-password", generateResetToken);
-router.post("/reset-password/confirm/:token", resetPassword);
+router.post("/reset-password-confirm", resetPassword);
 
 // Continue with Google 
 router.get(
