@@ -28,6 +28,7 @@ const passport = require("passport");
 const port = process.env.PORT;
 const userRoutes = require("./routes/userdashboardRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const guideDashboardRoute = require("./routes/guideDashboardRoute");
 
 // Connect to database
 connectDB();
@@ -66,6 +67,7 @@ app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
 app.use("/api/userdashboard", userRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/guideDashboard", guideDashboardRoute);
 
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");

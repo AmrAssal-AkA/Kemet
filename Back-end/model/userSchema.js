@@ -14,9 +14,16 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
-  profilePictureURL: {
-    type: String,
-  },
+  profilePictureURL: [
+    {
+      imageUrl: {
+        type: String,
+      },
+      cloudinaryId: {
+        type: String,
+      },
+    },
+  ],
   email: {
     type: String,
     required: true,
@@ -24,8 +31,10 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
     validate: {
-      validator: (v) => validator.isEmail(v),
-      message: "Invalid email format",
+      validator: (v) => {
+        return /^(?=(?:[^A-Z]*[A-Z]){1}[^A-Z]*$)[a-zA-Z0-9_]+@[a-zA-Z0-9_]+$/.test(v);
+      },
+      message: "Email must contain exactly one uppercase letter and only letters, numbers, '_' and '@', with no spaces, and must end with a valid domain.",
     },
   },
   password: {
@@ -36,8 +45,10 @@ const userSchema = new mongoose.Schema({
     minlength: 7,
     select: false,
     validate: {
-      validator: (v) => !v.toLowerCase().includes("password"),
-      message: "Password should not contain 'password'",
+      validator: (v) => {
+         return /^(?=(?:[^A-Z]*[A-Z]){1}[^A-Z]*$)(?=.*[a-z])(?=.*\d)[a-zA-Z0-9_]{8,}$/.test(v);
+      },
+      message: "Password must contain exactly one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long.",
     },
   },
   role: {

@@ -1,6 +1,7 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const domain = process.env.DOMAIN;
 
+
 const stripeCheckout = async (req, res) => {
     try {
         const session = await stripe.checkout.sessions.create({

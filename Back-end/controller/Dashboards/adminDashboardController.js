@@ -22,7 +22,30 @@ const getBookingsDetails = async (req, res) => {
     }
 }
 
+const upgradeUser = async (req, res) => {
+  const userId = req.params.userId;
+  const newRole = req.body.role; 
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const changeRole = newRole;
+    if (!["user", "admin", "guide"].includes(changeRole)) {
+      return res.status(400).json({ message: "Invalid role specified" });
+    }
+    user.role = changeRole;
+    await user.save();
+    res.status(200).json({ message: `User role updated to ${newRole}` });
+  }catch (error) {
+    res.status(500).json({ error: "Server Error" });
+  }
+}
+
+
 module.exports = {
   getAllUsers,
-  getBookingsDetails
+  getBookingsDetails,
+  upgradeUser
+
 };

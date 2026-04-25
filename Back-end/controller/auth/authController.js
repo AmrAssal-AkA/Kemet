@@ -74,6 +74,18 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    if(!validator.isEmail(email)){
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+    const custonEmailReges = /^(?=(?:[^A-Z]*[A-Z]){1}[^A-Z]*$)[a-zA-Z0-9_]+@[a-zA-Z0-9_]+$/;
+    if(!custonEmailReges.test(email)){
+      return res.status(400).json({ message: "Email must contain exactly one uppercase letter and only letters, numbers, '_' and '@', with no spaces, and must end with a valid domain." });
+    }
+    const customPasswordRegex = /^(?=(?:[^A-Z]*[A-Z]){1}[^A-Z]*$)(?=.*[a-z])(?=.*\d)[a-zA-Z0-9_]{8,}$/;
+    if(!customPasswordRegex.test(password)){
+      return res.status(400).json({ message: "Password must contain exactly one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long." });
+    }
+
     const Newuser = await User.create({
       name,
       email,
