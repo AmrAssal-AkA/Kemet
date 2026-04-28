@@ -6,7 +6,7 @@ module.exports = (req, res, nxt) => {
     "HRG", // Hurghada
     "LXR", // Luxor
     "ASW", // Aswan
-    "PSD", // Port Said
+    "PSD", // Port Said 
     "SKV", // St. Catherine
     "TCP", // Taba
     "ELT", // El-Tor

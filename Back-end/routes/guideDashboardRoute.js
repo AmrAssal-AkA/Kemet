@@ -4,6 +4,7 @@ const guideController = require("../controller/Dashboards/guideDashboardControll
 const authenticate = require("../middleware/authenticate");
 const authorize = require("../middleware/authorize");
 
+
 router.post("/setGuideSchedule", authenticate, authorize("guide"), guideController.setGuideSchedule);
 
 

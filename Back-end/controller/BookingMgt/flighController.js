@@ -1,169 +1,80 @@
-const amadeus = require("../../services/amadeus");
-const FlightService = require("../../services/flight.services");
+const FlightServices = require("../../services/flightServices");
 
-// search for flights
-const searchFlights = async (req, res) => {
-  const {
-    origin,
-    destination,
-    departureDate,
-    returnDate = null,
-    adults = 1,
-    children = 0,
-    infants = 0,
-    travelClass = "ECONOMY",
-    currencyCode = "EGP",
-    max = 20,
-  } = req.body;
 
+exports.searchFlights = async (req, res) => {
   try {
-    if (!origin || !destination || !departureDate || !adults) {
-      return res.status(400).json({
-        error: "Missing required parameters",
-        required: ["origin", "destination", "departureDate", "adults"],
-        received: { origin, destination, departureDate, adults },
-      });
-    }
+    const provider = req.query.provider || "all";
+    const searchParams = { ...req.body, provider };
 
-    const searchParams = {
-      originLocationCode: origin.toUpperCase(),
-      destinationLocationCode: destination.toUpperCase(),
-      departureDate,
-      adults: parseInt(adults),
-      currencyCode: currencyCode.toUpperCase(),
-      max: Math.min(Math.max(parseInt(max) || 20, 1), 50),
-    };
 
-    if (returnDate) searchParams.returnDate = returnDate;
-    if (children > 0) searchParams.children = parseInt(children);
-    if (infants > 0) searchParams.infants = parseInt(infants);
-    if (travelClass && travelClass !== "ECONOMY")
-      searchParams.travelClass = travelClass;
+    const searchResults = await FlightServices.searchFlights(searchParams);
 
-    console.log("Search parameters:", JSON.stringify(searchParams, null, 2));
-
-    const response =
-      await amadeus.shopping.flightOffersSearch.get(searchParams);
-
-    console.log(` API Response received. Status: ${response.status}`);
-    console.log(`Found ${response.data?.length || 0} flight offers`);
-
-    if (response.data && response.data.length > 0) {
-      console.log(
-        ` First flight: ${response.data[0].itineraries[0].segments[0].departure.iataCode} → ${response.data[0].itineraries[0].segments[0].arrival.iataCode}`,
-      );
-      console.log(
-        ` Price: ${response.data[0].price.total} ${response.data[0].price.currency}`,
-      );
-    } else {
-      console.log(" No flights found - empty response.data array");
-    }
-
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      data: response.data,
-      meta: {
-        count: response.data?.length || 0,
-        searchParams: {
-          route: `${origin.toUpperCase()} → ${destination.toUpperCase()}`,
-          date: returnDate ? `${departureDate} → ${returnDate}` : departureDate,
-          passengers: {
-            adults: parseInt(adults),
-            children: parseInt(children),
-            infants: parseInt(infants),
-          },
-          flight:
-            response.data?.length > 0
-              ? response.data[0].itineraries[0].segments[0].carrierCode
-              : "N/A",
-          class: travelClass,
-        },
-        timestamp: new Date().toISOString(),
-      },
+      ...searchResults,
     });
   } catch (error) {
-    console.error(
-      "Flight search error:",
-      error.response?.data || error.message,
-    );
-
-    const providerError = error.response?.data?.errors?.[0];
-    const isAmadeusInternalError =
-      error.response?.status === 500 && providerError?.code === 38189;
-
-    const errorMessage = isAmadeusInternalError
-      ? "Flight search is temporarily unavailable from the upstream provider. Please try again shortly or use another route/date."
-      : providerError?.detail ||
-        error.response?.data?.error_description ||
-        error.message ||
-        "An error occurred while searching for flights";
-
-    const statusCode = isAmadeusInternalError
-      ? 502
-      : error.response?.status || 500;
-
-    res.status(statusCode).json({
+    console.error("Flight Search Error:", error);
+    res.status(error.status || 500).json({
       success: false,
-      error: errorMessage,
-      details: isAmadeusInternalError
-        ? null
-        : error.response?.data?.errors || null,
-      provider: providerError
-        ? {
-            name: "Amadeus",
-            status: error.response?.status,
-            code: providerError.code,
-            title: providerError.title,
-          }
-        : null,
-      retryable: isAmadeusInternalError,
-      searchParams: req.body,
-      timestamp: new Date().toISOString(),
+      message: error.message || "An error occurred while searching for flights",
+      data: error.data || null,
     });
   }
 };
 
-// price a flight offer
 
-const priceFlight = async (req, res) => {
+exports.getFlightDetails = async (req, res) => {
   try {
-    const flightOffer = req.body.flightOffer || req.body.flightOffers;
+    const { flightOffer } = req.body;
+
     if (!flightOffer) {
       return res.status(400).json({
         success: false,
-        error: "Missing flightOffer in request body",
+        message: "flightOffer object is required in the request body",
       });
     }
 
-    const pricedFlight = await FlightService.priceFlightOffers(flightOffer);
+    const details = await FlightServices.getFlightDetails(flightOffer);
 
-    // 3. Return success
     res.status(200).json({
       success: true,
-      data: pricedFlight,
+      ...details,
     });
   } catch (error) {
-    console.error(
-      "Error pricing flight offer:",
-      error.response?.data || error.message,
-    );
-
-    const errorMessage =
-      error.response?.data?.errors?.[0]?.detail ||
-      error.message ||
-      "An error occurred while pricing the flight offer.";
-
-    const statusCode = error.response?.status || 500;
-
-    res.status(statusCode).json({
+    console.error("Flight Details Error:", error);
+    res.status(error.status || 500).json({
       success: false,
-      error: errorMessage,
-      details: error.response?.data?.errors || null,
+      message: error.message || "Failed to get flight details",
+      data: error.data || null,
     });
   }
 };
 
-module.exports = {
-  searchFlights,
-  priceFlight,
+
+exports.priceFlightOffer = async (req, res) => {
+  try {
+    const { flightOffer } = req.body;
+
+    if (!flightOffer) {
+      return res.status(400).json({
+        success: false,
+        message: "flightOffer object is required in the request body",
+      });
+    }
+
+    const pricingResult = await FlightServices.priceFlightOffer(flightOffer);
+
+    res.status(200).json({
+      success: true,
+      ...pricingResult,
+    });
+  } catch (error) {
+    console.error("Flight Pricing Error:", error);
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Failed to confirm flight pricing",
+      data: error.data || null,
+    });
+  }
 };

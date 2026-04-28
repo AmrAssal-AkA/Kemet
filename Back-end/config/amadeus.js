@@ -66,7 +66,7 @@ const makeAuthenticatedRequest = async (
   params = {},
   data = null,
   retries = 0,
-  maxRetries = 3,
+  maxRetries = 1, // Amadeus 5xx errors (e.g. 38189) are usually persistent — 1 retry is enough
 ) => {
   const token = await getAccessToken();
 
@@ -156,6 +156,39 @@ const amadeus = {
           "GET",
           "/v2/shopping/flight-offers",
           params,
+        );
+        return response.data;
+      },
+      post: async (data) => {
+        const response = await makeAuthenticatedRequest(
+          "POST",
+          "/v2/shopping/flight-offers",
+          {},
+          data,
+        );
+        return response.data;
+      },
+    },
+    flightOffersPrice: {
+      post: async (data) => {
+        const response = await makeAuthenticatedRequest(
+          "POST",
+          "/v1/shopping/flight-offers/pricing",
+          {},
+          data,
+        );
+        return response.data;
+      },
+    },
+  },
+  booking: {
+    flightOrders: {
+      post: async (data) => {
+        const response = await makeAuthenticatedRequest(
+          "POST",
+          "/v1/booking/flight-orders",
+          {},
+          data,
         );
         return response.data;
       },

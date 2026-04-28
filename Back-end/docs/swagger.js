@@ -33,6 +33,10 @@ const definition = {
       name: "User Dashboard",
       description: "Saved and booked trip endpoints for users",
     },
+    {
+      name: "Guide Dashboard",
+      description: "Endpoints for tour guides",
+    },
   ],
   components: {
     securitySchemes: {
@@ -800,8 +804,31 @@ const definition = {
         },
       },
     },
+    "/api/flight/details": {
+      post: {
+        tags: ["Flights"],
+        summary: "Get flight details",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  flightOffer: { type: "object" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Flight details returned" },
+          500: { description: "Server error" },
+        },
+      },
+    },
     "/api/flight/price": {
-      get: {
+      post: {
         tags: ["Flights"],
         summary: "Price a flight offer",
         security: [{ cookieAuth: [] }],
@@ -1031,7 +1058,7 @@ const definition = {
         },
       },
     },
-    "/api/booking/confirm": {
+    "/api/booking/create": {
       post: {
         tags: ["Bookings"],
         summary: "Create a unified booking",
@@ -1050,6 +1077,78 @@ const definition = {
           401: { description: "Unauthorized" },
           403: { description: "Forbidden" },
           500: { description: "Booking creation failed" },
+        },
+      },
+    },
+    "/api/booking/success": {
+      get: {
+        tags: ["Bookings"],
+        summary: "Confirm a successful payment for a booking",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "query",
+            name: "session_id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Payment confirmed and booking activated" },
+          400: { description: "Session id missing or payment confirmation failed" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/api/booking/my": {
+      get: {
+        tags: ["Bookings"],
+        summary: "List the current user's bookings",
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: "Bookings returned successfully" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/api/booking/{id}": {
+      get: {
+        tags: ["Bookings"],
+        summary: "Get a booking by id",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Booking returned successfully" },
+          401: { description: "Unauthorized" },
+          404: { description: "Booking not found" },
+        },
+      },
+    },
+    "/api/booking/{id}/cancel": {
+      patch: {
+        tags: ["Bookings"],
+        summary: "Cancel a booking",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "id",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Booking cancelled successfully" },
+          400: { description: "Booking cannot be cancelled" },
+          401: { description: "Unauthorized" },
+          404: { description: "Booking not found" },
         },
       },
     },
@@ -1122,7 +1221,7 @@ const definition = {
         },
       },
     },
-    "/api/adminDashboard/updateRole/{_id}": {
+    "/api/adminDashboard/upgradeUser/{userId}": {
       patch: {
         tags: ["Admin"],
         summary: "Update a user's role",
@@ -1130,7 +1229,7 @@ const definition = {
         parameters: [
           {
             in: "path",
-            name: "_id",
+            name: "userId",
             required: true,
             schema: { type: "string" },
           },
@@ -1231,7 +1330,7 @@ const definition = {
         },
       },
     },
-    "/api/userdashboard/saveTrip/{tripId}": {
+    "/api/userdashboard/saveTrips/{tripId}": {
       post: {
         tags: ["User Dashboard"],
         summary: "Save a trip for the current user",
@@ -1250,6 +1349,31 @@ const definition = {
           200: { description: "Trip saved" },
           401: { description: "Unauthorized" },
           500: { description: "Error saving trip" },
+        },
+      },
+    },
+    "/api/userdashboard/AddProfilePicture": {
+      patch: {
+        tags: ["User Dashboard"],
+        summary: "Update user profile picture",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  profilePicture: { type: "string", format: "binary" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Profile picture updated" },
+          401: { description: "Unauthorized" },
+          500: { description: "Server error" },
         },
       },
     },
@@ -1506,6 +1630,34 @@ const definition = {
           200: { description: "Offering deleted" },
           401: { description: "Unauthorized" },
           404: { description: "Offering not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/guideDashboard/setGuideSchedule": {
+      post: {
+        tags: ["Guide Dashboard"],
+        summary: "Set guide schedule availability",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  dayofweek: { type: "string" },
+                  startTime: { type: "string" },
+                  endTime: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Guide schedule updated successfully" },
+          401: { description: "Unauthorized" },
+          404: { description: "Guide not found" },
           500: { description: "Server error" },
         },
       },

@@ -1,10 +1,9 @@
 const trip = require("../../model/tripSchema");
-const cloudinary = require("../../services/cloudinary");
+const cloudinary = require("../../config/cloudinary");
 
 // create trip
 const createTrip = async (req, res) => {
-  const { name, city, category, description, price, duration, location } =
-    req.body;
+  const { name, city, category, description, price, duration, location } = req.body;
 
   if (!req.file) {
     return res.status(400).json({ message: "Please upload an image" });
@@ -43,7 +42,7 @@ const createTrip = async (req, res) => {
       trip: newTrip,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server Error" , error: error.message   });
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
@@ -53,7 +52,7 @@ const getAllTrips = async (req, res) => {
     const allTrips = await trip.find();
     res.status(201).json(allTrips);
   } catch (error) {
-    res.status(500).json({ message: "Server Error " , error: error.message   });
+    res.status(500).json({ message: "Server Error ", error: error.message });
   }
 };
 
@@ -67,7 +66,7 @@ const getTripById = async (req, res) => {
     }
     res.status(201).json(tripById);
   } catch (error) {
-    res.status(500).json({ message: "Server Error " , error: error.message   });
+    res.status(500).json({ message: "Server Error ", error: error.message });
   }
 };
 
@@ -81,7 +80,7 @@ const DeleteTripById = async (req, res) => {
     }
     res.status(201).json({ message: "Trip deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server Error " , error: error.message   });
+    res.status(500).json({ message: "Server Error ", error: error.message });
   }
 };
 
@@ -106,11 +105,9 @@ const updateTripById = async (req, res) => {
     updateData.imageUrl = result.secure_url;
     updateData.cloudinaryId = result.public_id;
 
-    const tripById = await trip.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true },
-    );
+    const tripById = await trip.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    });
 
     if (!tripById) {
       return res.status(404).json({ message: "Trip not found" });
@@ -120,7 +117,7 @@ const updateTripById = async (req, res) => {
       trip: tripById,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message   });
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 

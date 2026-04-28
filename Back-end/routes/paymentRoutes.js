@@ -6,6 +6,8 @@ const authorize = require("../middleware/authorize");
 
 
 router.post("/stripe-checkout", authenticate, authorize("user"), payment.stripeCheckout);
+
+
 router.get("/success", authenticate, authorize("user"), payment.success);
  
 module.exports = router;

@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
-const BookingSchema = new mongoose.Schema(
+const bookingSchema = new mongoose.Schema(
   {
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -18,8 +18,7 @@ const BookingSchema = new mongoose.Schema(
     trip: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "trip",
-        required: true,
+        ref: "Trip",
       },
     ],
     status: {
@@ -29,22 +28,31 @@ const BookingSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed"],
+      enum: ["Pending", "Paid", "Failed", "Refunded"],
       default: "Pending",
+    },
+    stripeSessionId: {
+      type: String,
+      default: null,
+    },
+    stripePaymentIntentId: {
+      type: String,
+      default: null,
     },
     totalPrice: {
       type: Number,
-    },
-    details: {
-      type: mongoose.Schema.Types.Mixed,
+      required: true,
     },
     currency: {
       type: String,
       default: "EGP",
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    details: {
+      bookingType: {
+        type: String,
+        enum: ["Flight", "Hotel", "Trip", "FlightAndHotel", "Mixed"],
+        default: "Trip",
+      },
     },
   },
   {
@@ -52,5 +60,4 @@ const BookingSchema = new mongoose.Schema(
   },
 );
 
-module.exports =
-  mongoose.models.Booking || mongoose.model("Booking", BookingSchema);
+module.exports = mongoose.model("Booking", bookingSchema);

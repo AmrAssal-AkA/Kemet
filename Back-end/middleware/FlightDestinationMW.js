@@ -1,3 +1,4 @@
+
 module.exports = (req,res, nxt) =>{
     const flightDestination = ["CAI", "ALY", "HRG", "LXR", "ASW", "HBE", "PSD", "SKV", "TCP", "ELT", "MUH", "SPX", "TCP", "ASW", "HBE", "PSD", "SKV", "ELT", "MUH", "SPX"];
     const {destination} = req.body;

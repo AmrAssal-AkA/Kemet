@@ -11,7 +11,7 @@ const app = express();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 // Importing routes
-const connectDB = require("./services/db");
+const connectDB = require("./config/db");
 const addTripRoute = require("./routes/AddTripRoutes");
 const FlightRoute = require("./routes/flightRoutes");
 const HotelRoute = require("./routes/HotelRoutes");
@@ -69,6 +69,16 @@ app.use("/api/userdashboard", userRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
 
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     tags: [System]
+ *     summary: API root endpoint
+ *     responses:
+ *       200:
+ *         description: Welcome message for the API root.
+ */
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");
   res.send("Welcome to the Travel Agency API");

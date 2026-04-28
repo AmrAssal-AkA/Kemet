@@ -1,7 +1,6 @@
 const User = require("../../model/userSchema");
-const Booking = require("../../model/bookingSchema");
-const cloudinary = require("../../services/cloudinary");
-const bookingSchema = require("../../model/BookingSchema");
+const Booking = require("../../model/BookingSchema");
+const cloudinary = require("../../config/cloudinary");
 
 const updateProfilePicture = async (req, res) => {
   try {
@@ -66,42 +65,41 @@ const getSavedTrips = async (req, res) => {
 };
 
 const removeSavedTrip = async (req, res) => {
-    try{
-        const userId = req.cookies["userId"];
-        const tripId = req.params.tripId;
+  try {
+    const userId = req.cookies["userId"];
+    const tripId = req.params.tripId;
 
-        await User.findByIdAndUpdate(
-            userId,
-            { $pull: { savedTrips: tripId } },
-            { new: true },
-        )
-        res.status(200).json({ message: "Trip removed from saved trips" });
-    }catch(error){
-        return res.status(500).json({ message: "Error removing saved trip" });
-    }
-}
+    await User.findByIdAndUpdate(
+      userId,
+      { $pull: { savedTrips: tripId } },
+      { new: true },
+    );
+    res.status(200).json({ message: "Trip removed from saved trips" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error removing saved trip" });
+  }
+};
 
 const getBookedTrips = async (req, res) => {
-      const userId = req.cookies["userId"];
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const getBookedTrips = async () => {
-        try {
-          const bookedTrips = await bookingSchema.find({ userId: userId });
-          res.json(bookedTrips);
-        } catch (error) {
-          res.status(500).json({ message: "Error fetching booked trips" });
-        }
-      };
-      getBookedTrips();
-}
-
+  const userId = req.cookies["userId"];
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const getBookedTrips = async () => {
+    try {
+      const bookedTrips = await Booking.find({ userId: userId });
+      res.json(bookedTrips);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching booked trips" });
+    }
+  };
+  getBookedTrips();
+};
 
 module.exports = {
   updateProfilePicture,
   saveTrip,
   getSavedTrips,
   removeSavedTrip,
-  getBookedTrips
+  getBookedTrips,
 };

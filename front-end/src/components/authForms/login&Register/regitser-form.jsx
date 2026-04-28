@@ -32,19 +32,19 @@ export default function RegisterForm() {
     <form onSubmit={handleRegister}>
       <div className="mb-4">
         <label htmlFor="name" className="block text-gray-700 font-bold mb-2">
-          Full Name
+          Name
         </label>
         <input
           type="text"
           id="name"
           name="name"
-          placeholder="Enter your full name"
+          placeholder="Enter your name"
           value={formData.name}
           onChange={handleChange}
           required
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 error:border-red-500"
         />
-        {error && <p className="text-red-600 text-xl">{error}</p>}
+
       </div>
       <div className="mb-4">
         <label htmlFor="email" className="block text-gray-700 font-bold mb-2">

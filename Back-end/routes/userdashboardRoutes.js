@@ -9,11 +9,15 @@ const authorize = require("../middleware/authorize");
 
 router.get("/BookedTrips",authenticate, authorize("user"), userDashboardController.getBookedTrips);
 
+
 router.post("/saveTrips/:tripId", authenticate, authorize("user"), userDashboardController.saveTrip);
+
 
 router.get("/savedTrips", authenticate, authorize("user"), userDashboardController.getSavedTrips);
 
+
 router.delete("/removeSavedTrip/:tripId", authenticate, authorize("user"), userDashboardController.removeSavedTrip);
+
 
 router.patch("/AddProfilePicture",authenticate, authorize("user"),upload.single("profilePicture"), userDashboardController.updateProfilePicture);
 

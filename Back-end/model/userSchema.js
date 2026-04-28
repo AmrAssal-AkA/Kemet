@@ -32,9 +32,9 @@ const userSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: (v) => {
-        return /^(?=(?:[^A-Z]*[A-Z]){1}[^A-Z]*$)[a-zA-Z0-9_]+@[a-zA-Z0-9_]+$/.test(v);
+        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v);
       },
-      message: "Email must contain exactly one uppercase letter and only letters, numbers, '_' and '@', with no spaces, and must end with a valid domain.",
+      message: "Please provide a valid email address.",
     },
   },
   password: {
@@ -46,9 +46,9 @@ const userSchema = new mongoose.Schema({
     select: false,
     validate: {
       validator: (v) => {
-         return /^(?=(?:[^A-Z]*[A-Z]){1}[^A-Z]*$)(?=.*[a-z])(?=.*\d)[a-zA-Z0-9_]{8,}$/.test(v);
+         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);
       },
-      message: "Password must contain exactly one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long.",
+      message: "Password must contain at least one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long.",
     },
   },
   role: {

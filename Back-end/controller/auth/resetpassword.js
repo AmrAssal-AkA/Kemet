@@ -37,7 +37,6 @@ const generateResetToken = async (req, res) => {
     });
     res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
-    console.error("Reset password error:", error);
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
@@ -91,7 +90,6 @@ const resetPassword = async (req, res) => {
 
     return res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
-    console.error("Reset password confirmation error:", error);
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });

@@ -5,12 +5,13 @@ const FlightDestinationMW = require("../middleware/FlightDestinationMW");
 const authenticate = require("../middleware/authenticate");
 const authorize = require("../middleware/authorize");
 
-router.post(
-  "/search",
 
-  FlightDestinationMW,
-  flightController.searchFlights,
-);
-router.get("/price", authenticate, authorize("user"), FlightDestinationMW, flightController.priceFlight);
+router.post("/search", FlightDestinationMW, flightController.searchFlights);
+
+
+router.post("/details", flightController.getFlightDetails);
+
+
+router.post("/price", flightController.priceFlightOffer);
 
 module.exports = router;
