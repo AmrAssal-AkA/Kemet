@@ -30,10 +30,11 @@ router.get(
 
 
 router.get("/stats/trips", authenticate,authorize("admin"), async (req, res) => {
-   const [totalUsers, totalBookings, totalTrips] = await Promise.all([
-    User.countDocuments(),
+   const [totalUsers, totalBookings, totalTrips, totalBlogs] = await Promise.all([
+    User.countDocuments({ role: { $in: ["user", "guide"] } }),
     Booking.countDocuments(),
-    trip.countDocuments()
+    trip.countDocuments(),
+    blog.countDocuments()
    ]);
    res.status(200).json({
     totalUsers,

@@ -1,4 +1,4 @@
-import { resetPassword } from "@/services/authService";
+import { resetPassword } from "@/services/authServices";
 import { useState } from "react";
 
 function ResetPassword() {

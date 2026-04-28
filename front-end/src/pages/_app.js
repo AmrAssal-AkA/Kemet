@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useRouter } from "next/router";
 
 
 import "@/styles/globals.css";
@@ -9,6 +10,10 @@ import { AuthProvider } from "@/context/AuthContext";
 
 
 export default function App({ Component, pageProps }) {
+  const router = useRouter();
+  const dashboardLayout =
+    router.pathname.startsWith("/admin") || router.pathname === "/guide/dashboard";
+
   return (
     <>
       <Head>
@@ -22,9 +27,9 @@ export default function App({ Component, pageProps }) {
       </Head>
 
       <AuthProvider>
-        <Header />
+        {!dashboardLayout && <Header />}
         <Component {...pageProps} />
-        <Footer />
+        {!dashboardLayout && <Footer />}
       </AuthProvider>
     </>
   );

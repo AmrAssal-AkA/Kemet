@@ -1,55 +1,17 @@
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
-import  jwt  from "jsonwebtoken";
-import axios from "axios";
+import jwt from "jsonwebtoken";
 import { parse } from "cookie";
-
-const statCards = [
-  {
-    title: "Total Bookings",
-    value: "4,821",
-    growth: "+8%",
-    bars: ["h-4", "h-6", "h-5", "h-8", "h-10"],
-    color: "bg-emerald-400",
-  },
-  {
-    title: "Revenue",
-    value: "$124.5k",
-    growth: "+12%",
-    bars: ["h-3", "h-5", "h-7", "h-6", "h-9"],
-    color: "bg-amber-400",
-  },
-  {
-    title: "Active Users",
-    value: "18.2k",
-    growth: "Last 30d",
-    avatars: ["JC", "EG", "MR"],
-  },
-];
+import {
+  getAdminBookings,
+  getAdminContacts,
+  getAdminUsers,
+  getBlogStats,
+  getRevenueStats,
+  getTripStats,
+} from "@/services/adminService";
 
 const trendBars = [5, 7, 6, 10, 12, 9, 13, 11, 8, 12];
-
-const bookings = [
-  {
-    customer: "Julian Casablancas",
-    destination: "Amalfi Coast, IT",
-    date: "Oct 12, 2024",
-    status: "Confirmed",
-  },
-  {
-    customer: "Elena Gilbert",
-    destination: "Kyoto Temples, JP",
-    date: "Oct 14, 2024",
-    status: "Pending",
-  },
-  {
-    customer: "Mark Ronson",
-    destination: "Serengeti Safari, TZ",
-    date: "Oct 15, 2024",
-    status: "Confirmed",
-  },
-];
-
 
 function StatCard({ card }) {
   return (
@@ -65,7 +27,6 @@ function StatCard({ card }) {
           {card.growth}
         </span>
       </div>
-
       {card.avatars ? (
         <div className="mt-6 flex items-center">
           <div className="flex -space-x-2">
@@ -78,7 +39,7 @@ function StatCard({ card }) {
               </span>
             ))}
           </div>
-          <span className="ml-3 text-xs text-slate-500">+12%</span>
+          <span className="ml-3 text-xs text-slate-500">Live</span>
         </div>
       ) : (
         <div className="mt-6 flex items-end gap-2">
@@ -109,35 +70,31 @@ function BookingStatus({ status }) {
 }
 
 export default function AdminDashboard({ admin, contacts }) {
-  const {logout } = useAuth();
-
-  const handleLogout = () => {
-    logout();
-  };
+  const { logout } = useAuth();
 
   return (
-    <AdminLayout adminName={admin?.name} onLogout={handleLogout}>
+    <AdminLayout adminName={admin?.name} onLogout={logout}>
       <section className="rounded-3xl bg-[#0b1d3a] p-8 text-white shadow-sm">
         <h1 className="text-4xl font-bold">Welcome back, {admin?.name}</h1>
         <p className="mt-3 max-w-2xl text-slate-200">
-          Your platform saw a <span className="font-semibold text-amber-300">+14.2%</span>{" "}
-          increase in global explorer engagement this week.
+          Live KEMET admin overview from your current trips, users, bookings,
+          and revenue APIs.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
           <div className="rounded-2xl bg-white/10 px-5 py-3">
-            <p className="text-xs uppercase tracking-[0.14em] text-slate-300">Live users</p>
-            <p className="mt-1 text-3xl font-bold">1,284</p>
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-300">Users and guides</p>
+            <p className="mt-1 text-3xl font-bold">{admin.metrics.users.toLocaleString()}</p>
           </div>
           <div className="rounded-2xl bg-white/10 px-5 py-3">
             <p className="text-xs uppercase tracking-[0.14em] text-slate-300">Pending inquiries</p>
-            <p className="mt-1 text-3xl font-bold">28</p>
+            <p className="mt-1 text-3xl font-bold">{contacts.length.toLocaleString()}</p>
           </div>
         </div>
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
-        {statCards.map((card) => (
+        {admin.statCards.map((card) => (
           <StatCard key={card.title} card={card} />
         ))}
       </section>
@@ -166,11 +123,7 @@ export default function AdminDashboard({ admin, contacts }) {
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-xl font-bold text-slate-900">Recent Bookings</h3>
-            <button type="button" className="text-sm font-semibold text-amber-600">
-              View All
-            </button>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full min-w-140">
               <thead>
@@ -182,8 +135,8 @@ export default function AdminDashboard({ admin, contacts }) {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((booking) => (
-                  <tr key={`${booking.customer}-${booking.date}`} className="border-b border-slate-100">
+                {admin.recentBookings.map((booking) => (
+                  <tr key={booking.id} className="border-b border-slate-100">
                     <td className="py-4 pr-3 font-semibold text-slate-800">{booking.customer}</td>
                     <td className="py-4 pr-3 text-slate-600">{booking.destination}</td>
                     <td className="py-4 pr-3 text-slate-600">{booking.date}</td>
@@ -192,99 +145,148 @@ export default function AdminDashboard({ admin, contacts }) {
                     </td>
                   </tr>
                 ))}
+                {admin.recentBookings.length === 0 && (
+                  <tr>
+                    <td className="py-5 text-sm text-slate-500" colSpan={4}>
+                      No bookings found yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ">
-          <h3 className="text-xl font-bold text-slate-900">customer contact</h3>
+        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-bold text-slate-900">Customer Contact</h3>
           <div className="mt-4 space-y-4">
-            {contacts.map((contact) => (
-              <div key={contact.id} className="rounded-lg bg-slate-50 p-4">
+            {contacts.slice(0, 5).map((contact) => (
+              <div key={contact._id || contact.id || contact.email} className="rounded-lg bg-slate-50 p-4">
                 <p className="font-semibold text-slate-800">{contact.name}</p>
                 <p className="text-sm text-slate-500">{contact.subject}</p>
               </div>
             ))}
+            {contacts.length === 0 && (
+              <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
+                No customer contacts found.
+              </p>
+            )}
           </div>
         </aside>
       </section>
-
-      <footer className="mt-6 rounded-3xl bg-[#0b1d3a] p-6 text-slate-300">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div>
-            <p className="text-lg font-bold text-white">The Radiant Explorer</p>
-            <p className="mt-2 text-sm">Defining the next generation of luxury travel.</p>
-          </div>
-          <div>
-            <p className="font-semibold text-amber-300">Platform</p>
-            <p className="mt-2 text-sm">Analytics Engine</p>
-            <p className="text-sm">Editorial Suite</p>
-          </div>
-          <div>
-            <p className="font-semibold text-amber-300">Legal</p>
-            <p className="mt-2 text-sm">Privacy Policy</p>
-            <p className="text-sm">Terms of Service</p>
-          </div>
-          <div>
-            <p className="font-semibold text-amber-300">Contact</p>
-            <p className="mt-2 text-sm">concierge@radiantexplorer.com</p>
-          </div>
-        </div>
-      </footer>
     </AdminLayout>
   );
 }
 
+function formatDate(value) {
+  if (!value) return "N/A";
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function mapBooking(booking) {
+  const trip = Array.isArray(booking.trip) ? booking.trip[0] : booking.trip;
+
+  return {
+    id: booking._id || booking.id,
+    customer: booking.user?.name || "Guest",
+    destination: trip?.name || trip?.city || booking.details?.bookingType || "KEMET Experience",
+    date: formatDate(booking.createdAt),
+    status: booking.status || "Pending",
+  };
+}
+
+function buildStatCards(metrics) {
+  return [
+    {
+      title: "Total Bookings",
+      value: metrics.bookings.toLocaleString(),
+      growth: "Live",
+      bars: ["h-4", "h-6", "h-5", "h-8", "h-10"],
+      color: "bg-emerald-400",
+    },
+    {
+      title: "Revenue",
+      value: `EGP ${metrics.revenue.toLocaleString()}`,
+      growth: "Live",
+      bars: ["h-3", "h-5", "h-7", "h-6", "h-9"],
+      color: "bg-amber-400",
+    },
+    {
+      title: "Active Users",
+      value: metrics.users.toLocaleString(),
+      growth: `${metrics.trips.toLocaleString()} trips`,
+      avatars: ["KM", "EG", "TR"],
+    },
+  ];
+}
 
 export async function getServerSideProps(context) {
-  const {req} = context;
+  const { req } = context;
   const cookie = parse(req.headers.cookie || "");
   const token = cookie["x-auth-token"];
 
   if (!token) {
     return {
-      redirect: {
-        destination: "/auth/auth",
-        permanent: false,
-      },
+      redirect: { destination: "/auth/auth", permanent: false },
     };
   }
 
   try {
-    const user = jwt.verify(token, process.env.JWT_SECRET);
+    const user = jwt.verify(
+      token,
+      process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
+    );
 
     if (user.role !== "admin") {
       return {
-        redirect: {
-          destination: "/",
-          permanent: false,
-        },
+        redirect: { destination: "/", permanent: false },
       };
     }
 
-    const response = await axios.get("http://localhost:3000/api/admin/getContactus", {
-      headers: {
-        Cookie: req.headers.cookie || "",
-      },
-    });
-    const contacts = response.data;
+    const cookieHeader = req.headers.cookie || "";
+    const results = await Promise.allSettled([
+      getAdminContacts(cookieHeader),
+      getAdminUsers(cookieHeader),
+      getAdminBookings(cookieHeader),
+      getTripStats(cookieHeader),
+      getBlogStats(cookieHeader),
+      getRevenueStats(cookieHeader),
+    ]);
+
+    const contacts = results[0].status === "fulfilled" ? results[0].value : [];
+    const users = results[1].status === "fulfilled" ? results[1].value : [];
+    const bookings = results[2].status === "fulfilled" ? results[2].value : [];
+    const tripStats = results[3].status === "fulfilled" ? results[3].value : {};
+    const blogStats = results[4].status === "fulfilled" ? results[4].value : {};
+    const revenueStats = results[5].status === "fulfilled" ? results[5].value : {};
+
+    const metrics = {
+      bookings: Number(tripStats.totalBookings || bookings.length || 0),
+      trips: Number(tripStats.totalTrips || 0),
+      users: Number(tripStats.totalUsers || users.length || 0),
+      blogs: Number(blogStats.totalBlogs || 0),
+      revenue: Number(revenueStats.totalRevenue || 0),
+    };
 
     return {
       props: {
-        admin: user,
-        contacts
-      }
-
-       };
+        admin: {
+          ...user,
+          metrics,
+          statCards: buildStatCards(metrics),
+          recentBookings: bookings.slice(0, 5).map(mapBooking),
+        },
+        contacts,
+      },
+    };
   } catch (error) {
     console.error("Admin verification error:", error.message);
     return {
-      redirect: {
-        destination: "/auth/auth",
-        permanent: false,
-      },
-    }
+      redirect: { destination: "/auth/auth", permanent: false },
+    };
   }
-
 }

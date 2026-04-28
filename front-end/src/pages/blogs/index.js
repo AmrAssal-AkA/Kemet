@@ -3,16 +3,26 @@ import BlogGrid from "@/components/BlogCards/Blog-Grid";
 import axios from "axios";
 import Head from "next/head";
 import { useState } from "react";
+import { useRouter } from "next/router";
 
 import AddBlogForm from "@/components/BlogCards/AddBlogForm";
 import {VscChromeClose} from "react-icons/vsc";
 
 export default function BlogPage(props) {
   const { blogs } = props;
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const showAddArticleForm = isOpen || router.query.addArticle === "1";
 
   function handleAddArticle() {
     setIsOpen(true);
+  }
+
+  function handleCloseAddArticle() {
+    setIsOpen(false);
+    if (router.query.addArticle) {
+      router.replace("/blogs", undefined, { shallow: true });
+    }
   }
 
   return (
@@ -137,11 +147,11 @@ export default function BlogPage(props) {
         </section>
       </main>
 
-      {isOpen && (
+      {showAddArticleForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 ">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 relative max-h-[90vh] overflow-y-auto">
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={handleCloseAddArticle}
               className="absolute top-4 right-4 text-gray-600 hover:text-gray-800"
             >
               <VscChromeClose className="text-2xl" />
@@ -149,7 +159,7 @@ export default function BlogPage(props) {
             <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">
               Add Your Blog Post
             </h1>
-            <AddBlogForm onSuccess={() => setIsOpen(false)} />
+            <AddBlogForm onSuccess={handleCloseAddArticle} />
           </div>
         </div>
       )}

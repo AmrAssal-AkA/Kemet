@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 
 import { useAuth } from "@/context/AuthContext";
-import {  loginWithGoogle } from "@/services/authService";
+import { loginWithGoogle } from "@/services/authServices";
 import { FaGoogle } from "react-icons/fa";
 
 export default function LoginForm() {

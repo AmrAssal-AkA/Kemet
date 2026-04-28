@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 
-import { confirmResetPassword } from "@/services/authService";
+import { confirmResetPassword } from "@/services/authServices";
 
 function ResetPasswordConfirm({ token }) {
   const router = useRouter();

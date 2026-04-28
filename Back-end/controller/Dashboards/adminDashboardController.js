@@ -3,7 +3,7 @@ const Booking = require("../../model/BookingSchema");
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({role: "user"}).select('-password');
+    const users = await User.find({ role: { $in: ["user", "guide"] } }).select("-password");
     res.status(200).json({users});
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -26,18 +26,24 @@ const upgradeUser = async (req, res) => {
   const userId = req.params.userId;
   const newRole = req.body.role; 
   try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
     const changeRole = newRole;
     if (!["user", "admin", "guide"].includes(changeRole)) {
       return res.status(400).json({ message: "Invalid role specified" });
     }
-    user.role = changeRole;
-    await user.save();
-    res.status(200).json({ message: `User role updated to ${newRole}` });
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { role: changeRole } },
+      { new: true, runValidators: true, context: "query" },
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: `User role updated to ${newRole}`, user });
   }catch (error) {
+    console.error("Error updating user role:", error);
     res.status(500).json({ error: "Server Error" });
   }
 }

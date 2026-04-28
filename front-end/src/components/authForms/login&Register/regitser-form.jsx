@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FaGoogle } from "react-icons/fa";
 
-import { loginWithGoogle } from "@/services/authService";
+import { loginWithGoogle } from "@/services/authServices";
 import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterForm() {

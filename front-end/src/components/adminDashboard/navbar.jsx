@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FaBell, FaCog, FaPlus } from "react-icons/fa";
 
 export default function AdminNavBar() {
@@ -26,13 +27,20 @@ export default function AdminNavBar() {
         >
           <FaCog />
         </button>
-        <button
-          type="button"
+        <Link
+          href="/admin/trips"
           className="ml-2 inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-300"
         >
           <FaPlus className="text-xs" />
+          Create Trip
+        </Link>
+        <Link
+          href="/blogs?addArticle=1"
+          className="inline-flex items-center gap-2 rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-50"
+        >
+          <FaPlus className="text-xs" />
           Create Post
-        </button>
+        </Link>
       </div>
     </header>
   );
