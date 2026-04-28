@@ -28,7 +28,6 @@ const definition = {
     { name: "Bookings", description: "Unified booking endpoints" },
     { name: "Payments", description: "Payment processing endpoints" },
     { name: "Admin", description: "Admin dashboard endpoints" },
-    { name: "Newsletter", description: "Newsletter subscription endpoints" },
     {
       name: "User Dashboard",
       description: "Saved and booked trip endpoints for users",
@@ -143,6 +142,9 @@ const definition = {
           duration: { type: "number" },
           location: { type: "string" },
           image: { type: "string", format: "binary" },
+          guideAvailable: { type: "boolean", default: false },
+          guidefees: { type: "number", default: 0 },
+          guestCapacity: { type: "number", default: 0 },
         },
       },
       ContactRequest: {
@@ -474,7 +476,7 @@ const definition = {
           },
           paymentMethod: { type: "string" },
           receiptUrl: { type: "string" },
-          refundId: { type: "string"},
+          refundId: { type: "string" },
           metadata: { type: "object" },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
@@ -1095,7 +1097,9 @@ const definition = {
         ],
         responses: {
           200: { description: "Payment confirmed and booking activated" },
-          400: { description: "Session id missing or payment confirmation failed" },
+          400: {
+            description: "Session id missing or payment confirmation failed",
+          },
           401: { description: "Unauthorized" },
         },
       },

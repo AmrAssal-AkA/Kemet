@@ -36,6 +36,18 @@ const tripSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  guideAvailable: {
+    type: Boolean,
+    default: false,
+  },
+  guidefees: {
+    type: Number,
+    default: 0,
+  },
+    guestCapacity: {
+    type: Number,
+    default: 0,
+  },
   image: [
     {
       imageUrl: {

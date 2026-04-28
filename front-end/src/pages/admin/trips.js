@@ -116,7 +116,7 @@ export default function AdminTrips({ admin }) {
               <input name="duration" type="number" min="1" value={form.duration} onChange={handleChange} required className={inputClass} />
             </Field>
             <Field label="Image URL">
-              <input name="imageUrl" value={form.imageUrl} onChange={handleChange} required className={inputClass} />
+              <input type="file" name="imageUrl" onChange={handleChange} required className={inputClass} />
             </Field>
             <Field label="Rating optional">
               <input name="rating" type="number" min="0" max="5" step="0.1" value={form.rating} onChange={handleChange} className={inputClass} />

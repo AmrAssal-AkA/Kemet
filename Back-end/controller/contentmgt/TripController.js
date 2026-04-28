@@ -3,7 +3,18 @@ const cloudinary = require("../../config/cloudinary");
 
 // create trip
 const createTrip = async (req, res) => {
-  const { name, city, category, description, price, duration, location } = req.body;
+  const {
+    name,
+    city,
+    category,
+    description,
+    price,
+    duration,
+    location,
+    guideAvailable = false,
+    guidefees = 0,
+    guestCapacity = 0,
+  } = req.body;
 
   if (!req.file) {
     return res.status(400).json({ message: "Please upload an image" });
@@ -17,7 +28,11 @@ const createTrip = async (req, res) => {
     !description ||
     !price ||
     !duration ||
-    !location
+    !location ||
+    !imagepath ||
+    !guideAvailable ||
+    !guidefees ||
+    !guestCapacity
   ) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
@@ -34,6 +49,9 @@ const createTrip = async (req, res) => {
       location,
       imageUrl: result.secure_url || null,
       cloudinaryId: result.public_id,
+      guideAvailable,
+      guidefees,
+      guestCapacity,
     });
     await newTrip.save();
 
@@ -95,6 +113,9 @@ const updateTripById = async (req, res) => {
       price: req.body.price,
       duration: req.body.duration,
       location: req.body.location,
+      guideAvailable: req.body.guideAvailable,
+      guidefees: req.body.guidefees,
+      guestCapacity: req.body.guestCapacity,
     };
     if (!req.file) {
       return res.status(400).json({ message: "Please upload an image" });
