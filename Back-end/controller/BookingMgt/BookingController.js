@@ -6,6 +6,7 @@ const createBooking = async (req, res) => {
   try {
     const {
       userId,
+      guests,
       flight,
       hotel,
       trip,
@@ -16,6 +17,7 @@ const createBooking = async (req, res) => {
 
     const newBooking = new Booking({
       userId,
+      guests,
       flight,
       hotel,
       trip,

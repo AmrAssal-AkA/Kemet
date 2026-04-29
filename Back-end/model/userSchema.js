@@ -101,6 +101,12 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
-});
+}, {_id: false, timestamps: true});
+
+userSchema.virtual('Bookings', {
+  rel: 'Booking',
+  localField: 'userId',
+  foreignField: 'userId',
+})
 
 module.exports = mongoose.model("User", userSchema);

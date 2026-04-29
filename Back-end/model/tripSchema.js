@@ -60,6 +60,7 @@ const tripSchema = new mongoose.Schema({
       },
     },
   ],
-});
+}, {_id: false, timestamps: true});
+
 
 module.exports = mongoose.models.trips || mongoose.model("trips", tripSchema);

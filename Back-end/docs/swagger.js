@@ -456,6 +456,11 @@ const definition = {
         properties: {
           _id: { type: "string" },
           userId: { type: "string", description: "Reference to User" },
+          guests: {
+            type: "array",
+            items: { $ref: "#/components/schemas/Guest" },
+            description: "Array of guests with passport information",
+          },
           flight: {
             type: "object",
             properties: {
@@ -474,7 +479,6 @@ const definition = {
             type: "array",
             items: { type: "string", description: "Reference to Trip" },
           },
-          PassportNumber: { type: "string" },
           totalPrice: { type: "number" },
           currency: { type: "string", default: "EGP" },
           status: {
@@ -509,20 +513,76 @@ const definition = {
           updatedAt: { type: "string", format: "date-time" },
         },
       },
+      Guest: {
+        type: "object",
+        required: [
+          "firstName",
+          "lastName",
+          "passportNumber",
+          "expiryDate",
+          "type",
+        ],
+        properties: {
+          firstName: {
+            type: "string",
+            description: "Guest's first name (will be converted to uppercase)",
+          },
+          lastName: {
+            type: "string",
+            description: "Guest's last name (will be converted to uppercase)",
+          },
+          passportNumber: {
+            type: "string",
+            pattern: "^[A-Z0-9]{6,9}$",
+            description: "Passport number (6-9 alphanumeric characters)",
+          },
+          expiryDate: {
+            type: "string",
+            format: "date",
+            description:
+              "Passport expiry date. Must be valid (not expired) and valid for at least 6 months from today",
+          },
+          type: {
+            type: "string",
+            enum: ["adult", "infant"],
+            description: "Guest type. Each infant must have at least one adult",
+          },
+        },
+      },
       BookingRequest: {
         type: "object",
-        required: ["userId", "PassportNumber", "totalPrice"],
+        required: ["guests", "flight", "hotel", "trip", "totalPrice"],
         properties: {
-          userId: { type: "string" },
-          flight: { type: "object" },
-          hotel: { type: "object" },
+          guests: {
+            type: "array",
+            minItems: 1,
+            items: { $ref: "#/components/schemas/Guest" },
+            description:
+              "Array of guests with passport details. Each infant must have an adult",
+          },
+          flight: {
+            type: "object",
+            description: "Flight booking details",
+          },
+          hotel: {
+            type: "object",
+            description: "Hotel booking details",
+          },
           trip: {
             type: "array",
             items: { type: "string" },
+            description: "Trip IDs",
           },
-          PassportNumber: { type: "string" },
-          totalPrice: { type: "number" },
-          currency: { type: "string", default: "EGP" },
+          totalPrice: {
+            type: "number",
+            minimum: 0.01,
+            description: "Total booking price (must be greater than 0)",
+          },
+          currency: {
+            type: "string",
+            default: "EGP",
+            description: "Currency code",
+          },
           items: {
             type: "array",
             description: "Items for Stripe checkout",
@@ -1120,7 +1180,7 @@ const definition = {
         tags: ["Bookings"],
         summary: "Create a unified booking and initiate Stripe checkout",
         description:
-          "Creates a new booking and automatically initiates Stripe checkout. Returns booking ID and checkout URL. Booking is created with 'Pending' status until payment succeeds.",
+          "Creates a new booking with guest passport validation and automatically initiates Stripe checkout. Returns booking ID and checkout URL. Booking is created with 'Pending' status until payment succeeds. Validates: (1) at least one booking type (flight, hotel, trip), (2) all guests have valid passport details, (3) passport format (6-9 alphanumeric chars), (4) no duplicate passports in same booking, (5) passports not expired, (6) passports valid for minimum 6 months, (7) each infant has at least one adult",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -1147,8 +1207,11 @@ const definition = {
               },
             },
           },
-          400: { description: "Booking request invalid or missing fields" },
-          401: { description: "Unauthorized" },
+          400: {
+            description:
+              "Booking validation failed. Possible errors: missing booking type, missing/invalid guest fields, invalid passport format, duplicate passport numbers, expired passport, passport not valid for 6+ months, invalid total price, infant without adult, or missing guests array",
+          },
+          401: { description: "Unauthorized - User not authenticated" },
           403: { description: "Forbidden" },
           500: { description: "Booking creation or checkout failed" },
         },
