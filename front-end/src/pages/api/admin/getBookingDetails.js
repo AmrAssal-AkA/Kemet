@@ -24,8 +24,7 @@ async function handler(req, res) {
   const refreshToken = cookies["x-refresh-token"];
 
   if (!token) {
-    res.status(401).json({ message: "Unauthorized - No token" });
-    return;
+    return res.status(401).json({ message: "Unauthorized - No token" });
   }
 
   try {
@@ -67,9 +66,9 @@ async function handler(req, res) {
           .json({ message: "Unauthorized - Invalid token" });
       }
     }
-    return res
-      .status(error.response?.status || 500)
-      .json({ message: "Server error" });
+    const status = error.response?.status || 500;
+    const message = error.response?.data?.message || "Server error";
+    return res.status(status).json({ message });
   }
 }
 

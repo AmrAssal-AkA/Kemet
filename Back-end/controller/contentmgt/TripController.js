@@ -30,7 +30,6 @@ const createTrip = async (req, res) => {
     !duration ||
     !location ||
     !imagepath ||
-    !guideAvailable ||
     !guidefees ||
     !guestCapacity
   ) {
@@ -38,7 +37,9 @@ const createTrip = async (req, res) => {
   }
 
   try {
-    const result = await cloudinary.uploadImage(imagepath, "trip_images");
+    const imageResult = await Promise.all(
+      req.files.map((file) => cloudinary.uploadImage(file.path, "trip_images")),
+    );
     const newTrip = new trip({
       name,
       city,
@@ -47,8 +48,10 @@ const createTrip = async (req, res) => {
       price,
       duration,
       location,
-      imageUrl: result.secure_url || null,
-      cloudinaryId: result.public_id,
+      images: imageResult.map((result) => ({
+        imageUrl: result.secure_url,
+        cloudinaryId: result.public_id,
+      })),
       guideAvailable,
       guidefees,
       guestCapacity,
@@ -123,8 +126,12 @@ const updateTripById = async (req, res) => {
     const imagepath = req.file.path;
 
     const result = await cloudinary.uploadImage(imagepath, "trip_images");
-    updateData.imageUrl = result.secure_url;
-    updateData.cloudinaryId = result.public_id;
+    updateData.images = [
+      {
+        imageUrl: result.secure_url,
+        cloudinaryId: result.public_id,
+      },
+    ];
 
     const tripById = await trip.findByIdAndUpdate(req.params.id, updateData, {
       new: true,

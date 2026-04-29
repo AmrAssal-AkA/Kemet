@@ -388,44 +388,6 @@ const definition = {
           adults: { type: "integer", minimum: 1 },
         },
       },
-      BookingRequest: {
-        type: "object",
-        properties: {
-          flightOffer: {
-            type: "object",
-            additionalProperties: true,
-          },
-          hotelOffer: {
-            type: "object",
-            additionalProperties: true,
-          },
-          travelers: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: true,
-            },
-          },
-          guests: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: true,
-            },
-          },
-          payments: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: true,
-            },
-          },
-          tripIds: {
-            type: "array",
-            items: { type: "string" },
-          },
-        },
-      },
       RoleUpdateRequest: {
         type: "object",
         required: ["role"],
@@ -489,10 +451,102 @@ const definition = {
           amount: { type: "number", description: "Amount to refund" },
         },
       },
+      Booking: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          userId: { type: "string", description: "Reference to User" },
+          flight: {
+            type: "object",
+            properties: {
+              orderId: { type: "string" },
+              data: { type: "object" },
+            },
+          },
+          hotel: {
+            type: "object",
+            properties: {
+              orderId: { type: "string" },
+              data: { type: "object" },
+            },
+          },
+          trip: {
+            type: "array",
+            items: { type: "string", description: "Reference to Trip" },
+          },
+          PassportNumber: { type: "string" },
+          totalPrice: { type: "number" },
+          currency: { type: "string", default: "EGP" },
+          status: {
+            type: "string",
+            enum: ["Pending", "Confirmed", "Cancelled"],
+            default: "Pending",
+          },
+          paymentStatus: {
+            type: "string",
+            enum: ["Pending", "Paid", "Failed", "Refunded"],
+            default: "Pending",
+          },
+          stripeSessionId: { type: "string" },
+          stripePaymentIntentId: { type: "string" },
+          details: {
+            type: "object",
+            properties: {
+              bookingType: {
+                type: "string",
+                enum: [
+                  "Flight",
+                  "Hotel",
+                  "Trip",
+                  "FlightAndHotel",
+                  "Package",
+                  "Mixed",
+                ],
+              },
+            },
+          },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      BookingRequest: {
+        type: "object",
+        required: ["userId", "PassportNumber", "totalPrice"],
+        properties: {
+          userId: { type: "string" },
+          flight: { type: "object" },
+          hotel: { type: "object" },
+          trip: {
+            type: "array",
+            items: { type: "string" },
+          },
+          PassportNumber: { type: "string" },
+          totalPrice: { type: "number" },
+          currency: { type: "string", default: "EGP" },
+          items: {
+            type: "array",
+            description: "Items for Stripe checkout",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                description: { type: "string" },
+                price: { type: "number" },
+                quantity: { type: "number" },
+                image: { type: "string" },
+              },
+            },
+          },
+        },
+      },
       StripeCheckoutRequest: {
         type: "object",
-        required: ["items"],
+        required: ["items", "bookingId"],
         properties: {
+          bookingId: {
+            type: "string",
+            description: "MongoDB ObjectId of the booking being checked out",
+          },
           items: {
             type: "array",
             description: "Array of items to checkout",
@@ -511,7 +565,8 @@ const definition = {
                 },
                 price: {
                   type: "number",
-                  description: "Item price in cents",
+                  description:
+                    "Item price in EGP (will be multiplied by 100 for Stripe)",
                 },
                 quantity: {
                   type: "integer",
@@ -1063,7 +1118,9 @@ const definition = {
     "/api/booking/create": {
       post: {
         tags: ["Bookings"],
-        summary: "Create a unified booking",
+        summary: "Create a unified booking and initiate Stripe checkout",
+        description:
+          "Creates a new booking and automatically initiates Stripe checkout. Returns booking ID and checkout URL. Booking is created with 'Pending' status until payment succeeds.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -1074,33 +1131,26 @@ const definition = {
           },
         },
         responses: {
-          201: { description: "Booking created successfully" },
-          400: { description: "Booking request invalid" },
+          201: {
+            description: "Booking created successfully with checkout URL",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string" },
+                    status: { type: "string" },
+                    bookingId: { type: "string" },
+                    checkoutUrl: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+          400: { description: "Booking request invalid or missing fields" },
           401: { description: "Unauthorized" },
           403: { description: "Forbidden" },
-          500: { description: "Booking creation failed" },
-        },
-      },
-    },
-    "/api/booking/success": {
-      get: {
-        tags: ["Bookings"],
-        summary: "Confirm a successful payment for a booking",
-        security: [{ cookieAuth: [] }],
-        parameters: [
-          {
-            in: "query",
-            name: "session_id",
-            required: true,
-            schema: { type: "string" },
-          },
-        ],
-        responses: {
-          200: { description: "Payment confirmed and booking activated" },
-          400: {
-            description: "Session id missing or payment confirmation failed",
-          },
-          401: { description: "Unauthorized" },
+          500: { description: "Booking creation or checkout failed" },
         },
       },
     },
@@ -1135,24 +1185,28 @@ const definition = {
         },
       },
     },
-    "/api/booking/{id}/cancel": {
-      patch: {
+    "/api/booking/{bookingId}": {
+      delete: {
         tags: ["Bookings"],
-        summary: "Cancel a booking",
+        summary: "Cancel a booking and process refund if applicable",
         security: [{ cookieAuth: [] }],
         parameters: [
           {
             in: "path",
-            name: "id",
+            name: "bookingId",
             required: true,
             schema: { type: "string" },
+            description: "MongoDB ObjectId of the booking to cancel",
           },
         ],
         responses: {
           200: { description: "Booking cancelled successfully" },
-          400: { description: "Booking cannot be cancelled" },
+          400: {
+            description: "Booking is already cancelled or cannot be cancelled",
+          },
           401: { description: "Unauthorized" },
           404: { description: "Booking not found" },
+          500: { description: "Failed to cancel booking or process refund" },
         },
       },
     },
@@ -1161,7 +1215,7 @@ const definition = {
         tags: ["Payments"],
         summary: "Create a Stripe checkout session",
         description:
-          "Initiates a Stripe checkout session for payment processing. Returns the checkout URL.",
+          "Initiates a Stripe checkout session for booking payment. Accepts items array with pricing in EGP. Amounts will be converted to fils (multiply by 100) for Stripe processing. Returns checkout URL and booking ID.",
         requestBody: {
           required: true,
           content: {
@@ -1171,14 +1225,20 @@ const definition = {
           },
         },
         responses: {
-          200: {
+          201: {
             description: "Checkout session created successfully",
             content: {
               "application/json": {
                 schema: {
                   type: "object",
                   properties: {
-                    url: {
+                    message: { type: "string" },
+                    status: { type: "string" },
+                    bookingId: {
+                      type: "string",
+                      description: "MongoDB ObjectId of the booking",
+                    },
+                    checkoutUrl: {
                       type: "string",
                       description: "Stripe checkout URL",
                     },
@@ -1195,21 +1255,22 @@ const definition = {
     "/api/payments/success": {
       get: {
         tags: ["Payments"],
-        summary: "Handle successful payment",
+        summary: "Handle successful Stripe payment",
         description:
-          "Processes a successful payment and stores the order. Redirects to checkout success page.",
+          "Stripe redirects to this endpoint after successful checkout. Updates booking status to 'Confirmed' and payment status to 'Paid'. Redirects to frontend success page.",
         parameters: [
           {
             in: "query",
             name: "session_id",
             required: true,
             schema: { type: "string" },
-            description: "Stripe checkout session ID",
+            description: "Stripe checkout session ID returned by Stripe",
           },
         ],
         responses: {
           302: { description: "Redirect to checkout success page" },
           400: { description: "Failed to retrieve payment session" },
+          500: { description: "Failed to confirm payment" },
         },
       },
     },

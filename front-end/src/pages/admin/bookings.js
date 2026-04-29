@@ -43,7 +43,7 @@ export async function getServerSideProps(context) {
     const data = await response.json();
     return {
       props: {
-        bookingData: data.bookings || [], 
+        bookingData: data.bookings || [],
       },
     };
   } catch (error) {
