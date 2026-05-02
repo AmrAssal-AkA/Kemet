@@ -480,7 +480,12 @@ const definition = {
             items: { type: "string", description: "Reference to Trip" },
           },
           totalPrice: { type: "number" },
-          currency: { type: "string", default: "EGP" },
+          currency: {
+            type: "string",
+            default: "USD",
+            description:
+              "Currency code. Automatically set to USD if any guest has USA nationality, otherwise defaults to USD",
+          },
           status: {
             type: "string",
             enum: ["Pending", "Confirmed", "Cancelled"],
@@ -531,10 +536,22 @@ const definition = {
             type: "string",
             description: "Guest's last name (will be converted to uppercase)",
           },
+          nationality: {
+            type: "string",
+            example: "EG",
+            description:
+              "Guest nationality code used by booking creation to derive the checkout currency (for example: EG -> EGP, USA -> USD, EURO -> EUR).",
+          },
           passportNumber: {
             type: "string",
-            pattern: "^[A-Z0-9]{6,9}$",
-            description: "Passport number (6-9 alphanumeric characters)",
+            description:
+              "Passport number in one of the supported formats: Egypt (2 letters + 7 digits), USA (9 digits), Saudi Arabia (1 letter + 7 digits), or Europe (1 letter + 8 digits).",
+            oneOf: [
+              { pattern: "^[A-Z]{2}[0-9]{7}$" },
+              { pattern: "^[0-9]{9}$" },
+              { pattern: "^[A-Z]{1}[0-9]{7}$" },
+              { pattern: "^[A-Z]{1}[0-9]{8}$" },
+            ],
           },
           expiryDate: {
             type: "string",
@@ -551,7 +568,7 @@ const definition = {
       },
       BookingRequest: {
         type: "object",
-        required: ["guests", "flight", "hotel", "trip", "totalPrice"],
+        required: ["guests", "totalPrice"],
         properties: {
           guests: {
             type: "array",
@@ -562,16 +579,19 @@ const definition = {
           },
           flight: {
             type: "object",
-            description: "Flight booking details",
+            description:
+              "Optional flight booking details. At least one of `flight`, `hotel`, or `trip` must be supplied.",
           },
           hotel: {
             type: "object",
-            description: "Hotel booking details",
+            description:
+              "Optional hotel booking details. At least one of `flight`, `hotel`, or `trip` must be supplied.",
           },
           trip: {
             type: "array",
             items: { type: "string" },
-            description: "Trip IDs",
+            description:
+              "Optional trip IDs. At least one of `flight`, `hotel`, or `trip` must be supplied.",
           },
           totalPrice: {
             type: "number",
@@ -581,7 +601,8 @@ const definition = {
           currency: {
             type: "string",
             default: "EGP",
-            description: "Currency code",
+            description:
+              "Currency code. Automatically mapped based on guest nationality (USA → USD, Egypt → EGP, Euro → EUR). Defaults to EGP if not matched.",
           },
           items: {
             type: "array",
@@ -1180,7 +1201,7 @@ const definition = {
         tags: ["Bookings"],
         summary: "Create a unified booking and initiate Stripe checkout",
         description:
-          "Creates a new booking with guest passport validation and automatically initiates Stripe checkout. Returns booking ID and checkout URL. Booking is created with 'Pending' status until payment succeeds. Validates: (1) at least one booking type (flight, hotel, trip), (2) all guests have valid passport details, (3) passport format (6-9 alphanumeric chars), (4) no duplicate passports in same booking, (5) passports not expired, (6) passports valid for minimum 6 months, (7) each infant has at least one adult",
+          "Creates a new booking with guest passport validation and automatically initiates Stripe checkout. Returns the booking ID and checkout URL. Booking is created with `Pending` status until payment succeeds. Validation includes: at least one booking type (`flight`, `hotel`, or `trip`), valid guest fields, supported passport formats, no duplicate passport numbers in the same booking, passports not expired, passports valid for at least 6 months, and no more infants than adults.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -1209,7 +1230,7 @@ const definition = {
           },
           400: {
             description:
-              "Booking validation failed. Possible errors: missing booking type, missing/invalid guest fields, invalid passport format, duplicate passport numbers, expired passport, passport not valid for 6+ months, invalid total price, infant without adult, or missing guests array",
+              "Booking validation failed. Possible errors include missing booking type, missing or invalid guest fields, invalid passport format, duplicate passport numbers, expired passport, passport not valid for 6+ months, invalid total price, or more infants than adults.",
           },
           401: { description: "Unauthorized - User not authenticated" },
           403: { description: "Forbidden" },
@@ -1217,39 +1238,8 @@ const definition = {
         },
       },
     },
-    "/api/booking/my": {
+    "/api/booking/refund/{bookingId}": {
       get: {
-        tags: ["Bookings"],
-        summary: "List the current user's bookings",
-        security: [{ cookieAuth: [] }],
-        responses: {
-          200: { description: "Bookings returned successfully" },
-          401: { description: "Unauthorized" },
-        },
-      },
-    },
-    "/api/booking/{id}": {
-      get: {
-        tags: ["Bookings"],
-        summary: "Get a booking by id",
-        security: [{ cookieAuth: [] }],
-        parameters: [
-          {
-            in: "path",
-            name: "id",
-            required: true,
-            schema: { type: "string" },
-          },
-        ],
-        responses: {
-          200: { description: "Booking returned successfully" },
-          401: { description: "Unauthorized" },
-          404: { description: "Booking not found" },
-        },
-      },
-    },
-    "/api/booking/{bookingId}": {
-      delete: {
         tags: ["Bookings"],
         summary: "Cancel a booking and process refund if applicable",
         security: [{ cookieAuth: [] }],
@@ -1652,19 +1642,13 @@ const definition = {
             "multipart/form-data": {
               schema: {
                 type: "object",
-                required: [
-                  "title",
-                  "description",
-                  "reviews",
-                  "price",
-                  "images",
-                ],
+                required: ["title", "description", "image"],
                 properties: {
                   title: { type: "string" },
                   description: { type: "string" },
                   reviews: { type: "string" },
                   price: { type: "number" },
-                  images: {
+                  image: {
                     type: "array",
                     items: { type: "string", format: "binary" },
                   },
@@ -1674,7 +1658,7 @@ const definition = {
           },
         },
         responses: {
-          201: { description: "Offering created" },
+          200: { description: "Offering created" },
           400: { description: "Validation failed" },
           401: { description: "Unauthorized" },
           500: { description: "Server error" },

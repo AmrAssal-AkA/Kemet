@@ -16,6 +16,9 @@ const createTrip = async (req, res) => {
     guestCapacity = 0,
   } = req.body;
 
+  const StartPrice = guideAvailable ? parseFloat(price) + parseFloat(guidefees) : parseFloat(price); 
+  const finalPrice = StartPrice * parseFloat("1.14"); // final price with 14% tax
+
   if (!req.file) {
     return res.status(400).json({ message: "Please upload an image" });
   }
@@ -45,7 +48,8 @@ const createTrip = async (req, res) => {
       city,
       category,
       description,
-      price,
+      basePrice: price,
+      finalPrice: finalPrice,
       duration,
       location,
       images: imageResult.map((result) => ({
@@ -113,7 +117,8 @@ const updateTripById = async (req, res) => {
       city: req.body.city,
       category: req.body.category,
       description: req.body.description,
-      price: req.body.price,
+      basePrice: req.body.price,
+      finalPrice: finalPrice,
       duration: req.body.duration,
       location: req.body.location,
       guideAvailable: req.body.guideAvailable,

@@ -28,13 +28,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    lowercase: true,
     trim: true,
     validate: {
       validator: (v) => {
-        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v);
+        return /^[a-z0-9_]*[A-Z][a-z0-9_]*@[a-z0-9]+\.[a-z]{2,}$/.test(v);
       },
-      message: "Please provide a valid email address.",
+      message: "email must be valid and contain at least one uppercase letter and only _ and @ special characters.",
     },
   },
   password: {
@@ -55,6 +54,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["user", "admin", "guide"],
     default: "user",
+  },
+  Nationality: {
+    type: String,
+    trim: true,
+    enum: ["EG", "USA", "UK", "FR", "DE", "IT", "ES", "CN", "JP", "IN", "BR", "RU", "CA", "AU", "MX", "KR", "SA", "ZA", "NG", "AR", "CL" , "EUR"],
   },
   bookings: [
     {

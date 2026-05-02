@@ -24,7 +24,11 @@ const tripSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  price: {
+  basePrice: {
+    type: Number,
+    required: true,
+  },
+  finalProce: {
     type: Number,
     required: true,
   },

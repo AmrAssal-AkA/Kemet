@@ -3,70 +3,68 @@ const mongoose = require("mongoose");
 
 const passportRegex = /^[A-Z0-9]{6,9}$/;
 
-const guestSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    required: true,
-    enum: ["adult", "child", "infant"],
-  },
+const guestSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      required: true,
+      enum: ["adult", "child", "infant"],
+    },
 
-  firstName: {
-    type: String,
-    required: true,
-    trim: true,
-    uppercase: true,
-  },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+    },
 
-  lastName: {
-    type: String,
-    required: true,
-    trim: true,
-    uppercase: true,
-  },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+    },
 
-  passportNumber: {
-    type: String,
-    required: true,
-    uppercase: true,
-    trim: true,
-    validate: {
-      validator: (v) => passportRegex.test(v),
-      message: "Invalid passport number (6-9 A-Z0-9)",
+    passportNumber: {
+      type: String,
+      required: true,
+      uppercase: true,
+      trim: true,
+      validate: {
+        validator: (v) => passportRegex.test(v),
+        message: "Invalid passport number (6-9 A-Z0-9)",
+      },
+    },
+
+    nationality: {
+      type: String,
+      required: true,
+      uppercase: true,
+      trim: true,
+      enum: ["USA", "EG", "EURO"],
+      minlength: 2,
+      maxlength: 4,
+    },
+
+    dateOfBirth: {
+      type: Date,
+      required: true,
+    },
+
+    expiryDate: {
+      type: Date,
+      required: true,
     },
   },
-
-  nationality: {
-    type: String,
-    required: true,
-    uppercase: true,
-    trim: true,
-    minlength: 2,
-    maxlength: 3,
-  },
-
-  dateOfBirth: {
-    type: Date,
-    required: true,
-  },
-
-  expiryDate: {
-    type: Date,
-    required: true,
-  },
-
-}, { _id: false });
+  { _id: false },
+);
 
 
-guestSchema.pre("validate", function (next) {
+guestSchema.pre("validate", async function () {
 
   this.firstName = this.firstName?.trim().toUpperCase();
   this.lastName = this.lastName?.trim().toUpperCase();
   this.passportNumber = this.passportNumber?.trim().toUpperCase();
-
-
-  if (this.expiryDate <= new Date()) {
-    return next(new Error("Passport expired"));
-  }
 
 
   const minDate = new Date();
@@ -78,7 +76,7 @@ guestSchema.pre("validate", function (next) {
 
   const age =
     (new Date() - new Date(this.dateOfBirth)) /
-    (1000 * 60 * 60 * 24 * 365);
+     (1000 * 60 * 60 * 24 * 365.25);
 
   if (this.type === "adult" && age < 12) {
     return next(new Error("Adult must be at least 12 years old"));
@@ -91,8 +89,9 @@ guestSchema.pre("validate", function (next) {
   if (this.type === "infant" && age >= 2) {
     return next(new Error("Infant must be under 2 years old"));
   }
-
-  next();
 });
+
+
+
 
 module.exports = guestSchema;

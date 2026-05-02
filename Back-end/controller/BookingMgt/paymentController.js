@@ -1,4 +1,4 @@
-const { booking } = require("../../config/amadeus");
+
 const { checkout } = require("../../routes/AddTripRoutes");
 const Booking = require("../../model/BookingSchema");
 
@@ -8,15 +8,25 @@ const domain = process.env.DOMAIN;
 
 const stripeCheckout = async (req) => {
     try {
+        const bookingId = req.body.bookingId;
+        if (!bookingId) {
+            throw new Error("Missing booking ID for payment session");
+        }
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            throw new Error("Booking not found for payment session");
+        }
+
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "payment",
             success_url: `${domain}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${domain}/api/payments/cancel?payment_fail=true`,
-            metadata: {BookingId: req.body.bookingId},
+            metadata: {BookingId: bookingId},
             line_items: req.body.items.map(item => ({
                 price_data: {
-                    currency: "egp",
+                    currency: booking.currency,
                     product_data: {
                         name: item.name,
                         description: item.description,
@@ -31,7 +41,7 @@ const stripeCheckout = async (req) => {
 
     } catch (err) {
         console.error("Stripe checkout error:", err.message);
-        res.status(500).json({error: err.message});
+        throw err;
     }
 };
 
@@ -41,7 +51,7 @@ const success = async (req, res) => {
     try {
         const session = await stripe.checkout.sessions.retrieve(session_id);
         const customerEmail = session.customer_details.email;
-        const {bookingId} = session.metadata;
+        const { BookingId: bookingId } = session.metadata;
         const date = new Date();
 
         if(bookingId){

@@ -64,7 +64,7 @@ passport.use(
 // Registration (Sign Up)
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, Nationality } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -88,6 +88,7 @@ const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      Nationality,
     });
 
     const { accessToken, refreshToken } = generateToken(Newuser);
@@ -113,7 +114,7 @@ const register = async (req, res) => {
     });
 
     const verifyToken = crypto.randomBytes(32).toString("hex");
-    await User.findByIdAndUpdate(Newuser._id, {
+    await User.findByIdAndUpdate(Newuser.userId, {
       emailVerificationToken: verifyToken,
       emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
@@ -164,7 +165,7 @@ const login = async (req, res) => {
     const { accessToken, refreshToken } = generateToken(user);
 
     await RefreshToken.create({
-      userId: user._id,
+      userId: user.userId,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
@@ -192,6 +193,8 @@ const login = async (req, res) => {
       message: `Login successful, welcome back ${user.name}`,
     });
   } catch (error) {
+    console.error("Login Error:", error.message);
+    console.error("Login Error Stack:", error.stack);
     res.status(500).json({ message: "An internal server error occurred" });
   }
 };
@@ -200,7 +203,7 @@ const googleCallback = async (req, res) => {
   try {
     const { accessToken, refreshToken } = generateToken(req.user);
     await RefreshToken.create({
-      userId: req.user._id,
+      userId: req.user.userId,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
@@ -294,11 +297,12 @@ const refresh = async (req, res) => {
           await RefreshToken.deleteOne({ token: refreshToken });
           return res.status(401).json({ message: "Invalid refresh token" });
         }
-
         await RefreshToken.deleteOne({ token: refreshToken });
-        const user = await User.findById(decoded.id);
 
+
+        const user = await User.findOne({ userId: decoded.userId });
         if (!user) {
+          await RefreshToken.deleteOne({ token: refreshToken });
           return res.status(401).json({ message: "User not found" });
         }
 
@@ -306,7 +310,7 @@ const refresh = async (req, res) => {
           generateToken(user);
 
         await RefreshToken.create({
-          userId: user._id,
+          userId: user.userId,
           token: newRefreshToken,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         });

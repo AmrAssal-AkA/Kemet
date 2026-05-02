@@ -161,7 +161,7 @@ export default function AdminTrips({ admin }) {
                 <strong>EGP {pricePreview.guideFee.toLocaleString()}</strong>
               </p>
               <p className="flex justify-between border-t border-slate-200 pt-3 text-base">
-                <span className="font-bold">Final Trip Price</span>
+                <span className="font-bold">Final Trip Price</span> <span className="text-slate-500 text-xs"> (including 14% tax)</span>
                 <strong>EGP {pricePreview.finalPrice.toLocaleString()}</strong>
               </p>
             </div>

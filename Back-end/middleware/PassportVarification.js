@@ -1,4 +1,11 @@
-const passportRegex = /^[A-Z0-9]{6,9}$/;
+const EgyptianPassportRegex = "^[A-Z]{2}[0-9]{7}$";
+const AmaricanPassportRegex = "^[0-9]{9}$";
+const SuadiPassportRegex = "^[A-Z]{1}[0-9]{7}$";
+const EuropeanPassportRegex = "^[A-Z]{1}[0-9]{8}$";
+
+const passportRegex = new RegExp(
+  `(${EgyptianPassportRegex})|(${AmaricanPassportRegex})|(${SuadiPassportRegex})|(${EuropeanPassportRegex})`
+);
 
 const validateBooking = (req, res, next) => {
   const { guests, flight, hotel, trip, totalPrice } = req.body;
