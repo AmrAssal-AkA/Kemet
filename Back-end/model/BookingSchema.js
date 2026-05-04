@@ -1,27 +1,52 @@
 const mongoose = require("mongoose");
+const guestSchema = require("./guestSchema");
 
-const BookingSchema = new mongoose.Schema(
+const bookingSchema = new mongoose.Schema(
   {
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    guests: {
+      type: [guestSchema],
+      required: true,
+    },
     flight: {
       orderId: String,
-      data: mongoose.Schema.Types.Mixed,
+      data: {
+        from: String,
+        to: String,
+        departureDate: Date,
+        returnDate: Date,
+        airline: String,
+        flightNumber: String,
+      },
     },
     hotel: {
       orderId: String,
-      data: mongoose.Schema.Types.Mixed,
+      data: {
+        name: String,
+        location: String,
+        checkInDate: Date,
+        checkOutDate: Date,
+      },
     },
     trip: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "trip",
-        required: true,
+        ref: "Trip",
       },
     ],
+    PassportNumber: {
+      type: String,
+      required: true,
+      validate: {
+        validator: function (v) {
+          return /^[A-Z0-9]{5,9}$/.test(v);
+        },
+      },
+    },
     status: {
       type: String,
       enum: ["Pending", "Confirmed", "Cancelled"],
@@ -29,22 +54,31 @@ const BookingSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed"],
+      enum: ["Pending", "Paid", "Failed", "Refunded"],
       default: "Pending",
+    },
+    stripeSessionId: {
+      type: String,
+      default: null,
+    },
+    stripePaymentIntentId: {
+      type: String,
+      default: null,
     },
     totalPrice: {
       type: Number,
-    },
-    details: {
-      type: mongoose.Schema.Types.Mixed,
+      required: true,
     },
     currency: {
       type: String,
       default: "EGP",
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    details: {
+      bookingType: {
+        type: String,
+        enum: ["Flight", "Hotel", "Trip", "FlightAndHotel", "Mixed"],
+        default: "Trip",
+      },
     },
   },
   {
@@ -52,5 +86,4 @@ const BookingSchema = new mongoose.Schema(
   },
 );
 
-module.exports =
-  mongoose.models.Booking || mongoose.model("Booking", BookingSchema);
+module.exports = mongoose.model("Booking", bookingSchema);

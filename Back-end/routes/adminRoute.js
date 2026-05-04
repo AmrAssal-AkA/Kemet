@@ -10,18 +10,83 @@ const blog = require("../model/blogSchema");
 const trip = require("../model/tripSchema");
 
 // Admin Dashboard Routes
+/**
+ * @swagger
+ * /api/adminDashboard/AllUsers:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List all users
+ *     description: Requires an authenticated admin user.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Users returned successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ */
 router.get(
   "/AllUsers",
   authenticate,
   authorize("admin"),
   adminDashboardController.getAllUsers,
 );
-router.patch("/updateRole/:_id", authenticate,authorize("admin"), async (req, res) => {
-  const user = await User.findByIdAndUpdate(req.params._id, { role: req.body.role }, { new: true });
-  res.status(200).json({ message: "User role updated successfully", user });
-});
+
+/**
+ * @swagger
+ * /api/adminDashboard/upgradeUser/{userId}:
+ *   patch:
+ *     tags: [Admin]
+ *     summary: Update a user's role
+ *     description: Requires an authenticated admin user.
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RoleUpdateRequest'
+ *     responses:
+ *       200:
+ *         description: User role updated successfully.
+ *       400:
+ *         description: Invalid role payload.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ *       404:
+ *         description: User not found.
+ */
+router.patch("/upgradeUser/:userId", authenticate, authorize("admin"), adminDashboardController.upgradeUser);
 
 // View Booking Details Route for Admin
+/**
+ * @swagger
+ * /api/adminDashboard/bookingDetails:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List booking details for admins
+ *     description: Requires an authenticated admin user.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Booking details returned successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ */
 router.get(
   "/bookingDetails",
   authenticate,
@@ -29,13 +94,29 @@ router.get(
   adminDashboardController.getBookingsDetails,
 );
 
-
-
+/**
+ * @swagger
+ * /api/adminDashboard/stats/trips:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get trip dashboard statistics
+ *     description: Requires an authenticated admin user.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Trip statistics returned successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ */
 router.get("/stats/trips", authenticate,authorize("admin"), async (req, res) => {
-   const [totalUsers, totalBookings, totalTrips] = await Promise.all([
-    User.countDocuments(),
+   const [totalUsers, totalBookings, totalTrips, totalBlogs] = await Promise.all([
+    User.countDocuments({ role: { $in: ["user", "guide"] } }),
     Booking.countDocuments(),
-    trip.countDocuments()
+    trip.countDocuments(),
+    blog.countDocuments()
    ]);
    res.status(200).json({
     totalUsers,
@@ -45,6 +126,23 @@ router.get("/stats/trips", authenticate,authorize("admin"), async (req, res) => 
    });
 });
 
+/**
+ * @swagger
+ * /api/adminDashboard/stats/blogs:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get blog dashboard statistics
+ *     description: Requires an authenticated admin user.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Blog statistics returned successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ */
 router.get("/stats/blogs", authenticate,authorize("admin"), async (req, res) => {
   const [totalBlogs, publishedBlogs, BlogDuration] = await Promise.all([
     blog.countDocuments(),
@@ -58,6 +156,23 @@ router.get("/stats/blogs", authenticate,authorize("admin"), async (req, res) => 
   });
 });
 
+/**
+ * @swagger
+ * /api/adminDashboard/stats/revenue:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get revenue statistics
+ *     description: Requires an authenticated admin user.
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Revenue statistics returned successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ */
 router.get("/stats/revenue", authenticate,authorize("admin"), async (req, res) => {
   const totalRevenue = await Booking.aggregate([
     { $group: { _id: null, total: { $sum: "$totalPrice" } } }

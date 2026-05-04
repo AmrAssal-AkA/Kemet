@@ -20,7 +20,7 @@ function BlogCard({ title, content, image, id , index}) {
       </div>
       <button
         className="bg-yellow-500 text-black font-bold py-2 px-4 rounded-full m-4 hover:bg-yellow-600 transform hover:scale-105 transition-transform duration-300"
-        onClick={() => router.push(`/blog/${id}`)}
+        onClick={() => router.push(`/blogs/${id}`)}
       >
         Read More
       </button>

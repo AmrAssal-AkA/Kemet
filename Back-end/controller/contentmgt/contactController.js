@@ -2,15 +2,14 @@ const contact = require("../../model/contactSchema");
 
 // Create Contact
 const createContact = async (req, res) => {
-    const {name, email, phone, subject, message} = req.body;
-    if(!name || !email || !phone || !subject || !message){
+    const {name, email, subject, message} = req.body;
+    if(!name || !email || !subject || !message){
         return res.status(400).json({message: "Please fill all the fields"});
     }
     try {
         const Newcontacts = new contact({
         name : name,
         email: email,
-        phone: parseInt(phone),
         subject : subject,
         message: message ,
     });

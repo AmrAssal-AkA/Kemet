@@ -1,77 +1,292 @@
+import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
+import jwt from "jsonwebtoken";
+import { parse } from "cookie";
+import {
+  getAdminBookings,
+  getAdminContacts,
+  getAdminUsers,
+  getBlogStats,
+  getRevenueStats,
+  getTripStats,
+} from "@/services/adminService";
 
-export default function AdminDashboard({ admin }) {
-  const { logout } = useAuth();
+const trendBars = [5, 7, 6, 10, 12, 9, 13, 11, 8, 12];
 
-  const handleLogout = () => {
-    logout();
-  };
-
+function StatCard({ card }) {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-4">Welcome, {admin.name}</h1>
-        <p className="mb-6">This is the admin dashboard.</p>
-        <button
-          onClick={handleLogout}
-          className="w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-200"
-        >
-          Logout
-        </button>
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+            {card.title}
+          </p>
+          <p className="mt-2 text-4xl font-bold text-slate-900">{card.value}</p>
+        </div>
+        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+          {card.growth}
+        </span>
       </div>
-    </main>
+      {card.avatars ? (
+        <div className="mt-6 flex items-center">
+          <div className="flex -space-x-2">
+            {card.avatars.map((avatar) => (
+              <span
+                key={avatar}
+                className="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-slate-200 text-xs font-semibold text-slate-700"
+              >
+                {avatar}
+              </span>
+            ))}
+          </div>
+          <span className="ml-3 text-xs text-slate-500">Live</span>
+        </div>
+      ) : (
+        <div className="mt-6 flex items-end gap-2">
+          {card.bars.map((height, index) => (
+            <span
+              key={`${card.title}-${index}`}
+              className={`w-8 rounded-md ${height} ${card.color} opacity-${index === 4 ? "100" : "50"}`}
+            />
+          ))}
+        </div>
+      )}
+    </article>
   );
 }
 
-export async function getServerSideProps(context) {
-  const cookie = context.req.headers.cookie || "";
+function BookingStatus({ status }) {
+  const isConfirmed = status === "Confirmed";
 
-  if (!cookie || !cookie.includes("x-auth-token")) {
+  return (
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+        isConfirmed ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
+
+export default function AdminDashboard({ admin, contacts }) {
+  const { logout } = useAuth();
+
+  return (
+    <AdminLayout adminName={admin?.name} onLogout={logout}>
+      <section className="rounded-3xl bg-[#0b1d3a] p-8 text-white shadow-sm">
+        <h1 className="text-4xl font-bold">Welcome back, {admin?.name}</h1>
+        <p className="mt-3 max-w-2xl text-slate-200">
+          Live KEMET admin overview from your current trips, users, bookings,
+          and revenue APIs.
+        </p>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+          <div className="rounded-2xl bg-white/10 px-5 py-3">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-300">Users and guides</p>
+            <p className="mt-1 text-3xl font-bold">{admin.metrics.users.toLocaleString()}</p>
+          </div>
+          <div className="rounded-2xl bg-white/10 px-5 py-3">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-300">Pending inquiries</p>
+            <p className="mt-1 text-3xl font-bold">{contacts.length.toLocaleString()}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {admin.statCards.map((card) => (
+          <StatCard key={card.title} card={card} />
+        ))}
+      </section>
+
+      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Engagement Trends</h2>
+            <p className="text-sm text-slate-500">Explorer activity across all channels</p>
+          </div>
+          <div className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">30d</div>
+        </div>
+
+        <div className="mt-8 flex h-60 items-end gap-3 overflow-hidden">
+          {trendBars.map((value, index) => (
+            <span
+              key={`trend-${index}`}
+              className="flex-1 rounded-t-full bg-linear-to-t from-amber-200 to-amber-400"
+              style={{ height: `${value * 7}%` }}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-xl font-bold text-slate-900">Recent Bookings</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-140">
+              <thead>
+                <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-[0.14em] text-slate-400">
+                  <th className="pb-3">Customer</th>
+                  <th className="pb-3">Destination</th>
+                  <th className="pb-3">Date</th>
+                  <th className="pb-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {admin.recentBookings.map((booking) => (
+                  <tr key={booking.id} className="border-b border-slate-100">
+                    <td className="py-4 pr-3 font-semibold text-slate-800">{booking.customer}</td>
+                    <td className="py-4 pr-3 text-slate-600">{booking.destination}</td>
+                    <td className="py-4 pr-3 text-slate-600">{booking.date}</td>
+                    <td className="py-4">
+                      <BookingStatus status={booking.status} />
+                    </td>
+                  </tr>
+                ))}
+                {admin.recentBookings.length === 0 && (
+                  <tr>
+                    <td className="py-5 text-sm text-slate-500" colSpan={4}>
+                      No bookings found yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-bold text-slate-900">Customer Contact</h3>
+          <div className="mt-4 space-y-4">
+            {contacts.slice(0, 5).map((contact) => (
+              <div key={contact._id || contact.id || contact.email} className="rounded-lg bg-slate-50 p-4">
+                <p className="font-semibold text-slate-800">{contact.name}</p>
+                <p className="text-sm text-slate-500">{contact.subject}</p>
+              </div>
+            ))}
+            {contacts.length === 0 && (
+              <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
+                No customer contacts found.
+              </p>
+            )}
+          </div>
+        </aside>
+      </section>
+    </AdminLayout>
+  );
+}
+
+function formatDate(value) {
+  if (!value) return "N/A";
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function mapBooking(booking) {
+  const trip = Array.isArray(booking.trip) ? booking.trip[0] : booking.trip;
+
+  return {
+    id: booking._id || booking.id,
+    customer: booking.user?.name || "Guest",
+    destination: trip?.name || trip?.city || booking.details?.bookingType || "KEMET Experience",
+    date: formatDate(booking.createdAt),
+    status: booking.status || "Pending",
+  };
+}
+
+function buildStatCards(metrics) {
+  return [
+    {
+      title: "Total Bookings",
+      value: metrics.bookings.toLocaleString(),
+      growth: "Live",
+      bars: ["h-4", "h-6", "h-5", "h-8", "h-10"],
+      color: "bg-emerald-400",
+    },
+    {
+      title: "Revenue",
+      value: `EGP ${metrics.revenue.toLocaleString()}`,
+      growth: "Live",
+      bars: ["h-3", "h-5", "h-7", "h-6", "h-9"],
+      color: "bg-amber-400",
+    },
+    {
+      title: "Active Users",
+      value: metrics.users.toLocaleString(),
+      growth: `${metrics.trips.toLocaleString()} trips`,
+      avatars: ["KM", "EG", "TR"],
+    },
+  ];
+}
+
+export async function getServerSideProps(context) {
+  const { req } = context;
+  const cookie = parse(req.headers.cookie || "");
+  const token = cookie["x-auth-token"];
+
+  if (!token) {
     return {
-      redirect: {
-        destination: "/auth/auth",
-        permanent: false,
-      },
+      redirect: { destination: "/auth/auth", permanent: false },
     };
   }
 
   try {
+    const user = jwt.verify(
+      token,
+      process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
+    );
 
-    const response = await fetch("http://localhost:8000/api/auth/refresh", {
-      method: "POST",
-      headers: {
-        Cookie: cookie,
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Session verification failed");
-    }
-
-    const data = await response.json();
-
-    if (data.user?.role !== "admin") {
+    if (user.role !== "admin") {
       return {
-        redirect: {
-          destination: "/auth/auth",
-          permanent: false,
-        },
+        redirect: { destination: "/", permanent: false },
       };
     }
 
+    const cookieHeader = req.headers.cookie || "";
+    const results = await Promise.allSettled([
+      getAdminContacts(cookieHeader),
+      getAdminUsers(cookieHeader),
+      getAdminBookings(cookieHeader),
+      getTripStats(cookieHeader),
+      getBlogStats(cookieHeader),
+      getRevenueStats(cookieHeader),
+    ]);
+
+    const contacts = results[0].status === "fulfilled" ? results[0].value : [];
+    const users = results[1].status === "fulfilled" ? results[1].value : [];
+    const bookings = results[2].status === "fulfilled" ? results[2].value : [];
+    const tripStats = results[3].status === "fulfilled" ? results[3].value : {};
+    const blogStats = results[4].status === "fulfilled" ? results[4].value : {};
+    const revenueStats = results[5].status === "fulfilled" ? results[5].value : {};
+
+    const metrics = {
+      bookings: Number(tripStats.totalBookings || bookings.length || 0),
+      trips: Number(tripStats.totalTrips || 0),
+      users: Number(tripStats.totalUsers || users.length || 0),
+      blogs: Number(blogStats.totalBlogs || 0),
+      revenue: Number(revenueStats.totalRevenue || 0),
+    };
+
     return {
       props: {
-        admin: data.user,
+        admin: {
+          ...user,
+          metrics,
+          statCards: buildStatCards(metrics),
+          recentBookings: bookings.slice(0, 5).map(mapBooking),
+        },
+        contacts,
       },
     };
   } catch (error) {
     console.error("Admin verification error:", error.message);
     return {
-      redirect: {
-        destination: "/auth/auth",
-        permanent: false,
-      },
+      redirect: { destination: "/auth/auth", permanent: false },
     };
   }
 }

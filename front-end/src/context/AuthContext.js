@@ -7,7 +7,8 @@ import {
   resetPassword,
   confirmResetPassword,
   ApiCall,
-} from "@/services/authService";
+  getCurrentUser,
+} from "@/services/authServices";
 
 
 const AuthContext = createContext();
@@ -15,6 +16,8 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(false);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const router = useRouter();
@@ -23,10 +26,21 @@ export const AuthProvider = ({ children }) => {
     const restoredSession = async () => {
       setLoading(true);
       try {
-        const res = await ApiCall("/api/auth/refresh" , {method: "POST"});
-        setUser(res.data.user);
-        } catch (error) {
+        const backendUser = await getCurrentUser();
+        if (backendUser) {
+          setUser(backendUser);
+          setAdmin(backendUser.role === "admin");
+          setRole(backendUser.role || null);
+        } else {
+          const res = await ApiCall("/api/auth/refresh" , {method: "POST"});
+          setUser(res.data.user);
+          setAdmin(res.data.user && res.data.user.role === "admin");
+          setRole(res.data.user?.role || null);
+        }
+      } catch (error) {
         setUser(null);
+        setAdmin(false);
+        setRole(null);
       }finally{
         setLoading(false);
       }
@@ -42,7 +56,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await loginUser(formData);
       setUser(data.user);
-      router.push("/");
+      const loggedInUser = data.user;
+      const userRole = loggedInUser?.role || null;
+      setAdmin(userRole === "admin");
+      setRole(userRole);
+
+      if (userRole === "admin") {
+        router.push("/admin/dashboard");
+      } else if (userRole === "guide") {
+        router.push("/guide/dashboard");
+      } else {
+        router.push("/user-dashboard");
+      }
     } catch (error) {
       setError(error.message);
     } finally {
@@ -56,7 +81,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await registerUser(formData);
       setUser(data.user);
-      router.push("/");
+      const registeredUser = data.user;
+      const registeredRole = registeredUser?.role || null;
+      setAdmin(registeredRole === "admin");
+      setRole(registeredRole);
+
+      if (registeredRole === "admin") {
+        router.push("/admin/dashboard");
+      } else if (registeredRole === "guide") {
+        router.push("/guide/dashboard");
+      } else {
+        router.push("/user-dashboard");
+      }
     } catch (error) {
       setError(error.message);
     } finally {
@@ -70,7 +106,9 @@ export const AuthProvider = ({ children }) => {
     try {
       await logout();
       setUser(null);
-      router.push("/auth/auth");
+      setAdmin(false);
+      setRole(null);
+      router.push("/");
     } catch (error) {
       setError(error.message);
     } finally {
@@ -108,6 +146,8 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        admin,
+        role,
         loading,
         error,
         login,

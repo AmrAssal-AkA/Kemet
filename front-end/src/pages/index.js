@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Head from "next/head";
 
 export default function Home() {
   const cities = [
@@ -13,8 +14,13 @@ export default function Home() {
   ];
 
   return (
-    <div className="font-sans bg-[#f9fafb]">
-
+    <>
+   <Head>
+    <title>Kemet Travel - Discover Egypt through Egyptian Eyes</title>
+    <meta name="description" content="Plan your smart trip to Egypt with Kemet Travel. Explore temples, beaches, and hidden gems through Egyptian eyes." />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+   </Head>
+    <main className="font-sans bg-[#f9fafb]">
       {/* HERO */}
       <section className="relative">
         <img
@@ -57,19 +63,49 @@ export default function Home() {
       </section>
 
       {/* SEARCH */}
-    <div className="-mt-14 px-4 md:px-20 relative z-10">
-  <div className="bg-white rounded-2xl shadow-xl p-5 flex flex-col md:flex-row gap-4 items-center">
-    <input placeholder="Where to?" className="flex-1 outline-none" />
-    <input placeholder="Date" className="flex-1 outline-none" />
-    <input placeholder="Guests" className="flex-1 outline-none" />
+      <div className="relative z-10 -mt-14 px-4 md:px-20">
+        <div className="flex flex-col items-center gap-4 rounded-2xl bg-white p-5 shadow-xl md:flex-row">
+          <div className="w-full">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              Destination
+            </span>
+            <input
+              placeholder="Where to?"
+              className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
+            />
+          </div>
 
-    <Link href="/guide">
-      <button className="bg-yellow-400 px-6 py-2 rounded-full font-semibold hover:bg-yellow-300 transition">
-        Search
-      </button>
-    </Link>
-  </div>
-</div>
+          <div className="hidden h-10 w-px bg-gray-200 md:block" />
+
+          <div className="w-full">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              Date
+            </span>
+            <input
+              type="date"
+              className="w-full cursor-pointer bg-transparent text-sm font-bold text-[#111827] outline-none"
+            />
+          </div>
+
+          <div className="hidden h-10 w-px bg-gray-200 md:block" />
+
+          <div className="w-full">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              Travelers
+            </span>
+            <input
+              placeholder="Guests"
+              className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
+            />
+          </div>
+
+          <Link href="/guide" className="w-full md:w-auto">
+            <button className="w-full rounded-full bg-yellow-400 px-6 py-3 font-semibold text-[#111827] transition hover:bg-yellow-300 md:w-auto">
+              Search
+            </button>
+          </Link>
+        </div>
+      </div>
 
       {/* CITIES */}
       <section className="py-16 px-4 md:px-20">
@@ -212,6 +248,7 @@ export default function Home() {
         </div>
       </section>
 
-    </div>
+    </main> 
+    </>
   );
 }

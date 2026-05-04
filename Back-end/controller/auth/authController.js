@@ -64,7 +64,7 @@ passport.use(
 // Registration (Sign Up)
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, Nationality } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -74,10 +74,21 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+
+    const customEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if(!customEmailRegex.test(email)){
+      return res.status(400).json({ message: "Please provide a valid email address." });
+    }
+    const customPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if(!customPasswordRegex.test(password)){
+      return res.status(400).json({ message: "Password must contain at least one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long." });
+    }
+
     const Newuser = await User.create({
       name,
       email,
       password: hashedPassword,
+      Nationality,
     });
 
     const { accessToken, refreshToken } = generateToken(Newuser);
@@ -107,7 +118,7 @@ const register = async (req, res) => {
       emailVerificationToken: verifyToken,
       emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
-    const verifyURL = `http://localhost:8000/auth/verify-email?token=${verifyToken}`;
+    const verifyURL = `http://localhost:3000/auth/verifyaccount?token=${verifyToken}`;
     const emailResult = await verifyEmailTemplate(name, verifyURL);
     await sendEmail({
       to: email,
@@ -154,7 +165,7 @@ const login = async (req, res) => {
     const { accessToken, refreshToken } = generateToken(user);
 
     await RefreshToken.create({
-      userId: user._id,
+      userId: user.userId,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
@@ -182,6 +193,8 @@ const login = async (req, res) => {
       message: `Login successful, welcome back ${user.name}`,
     });
   } catch (error) {
+    console.error("Login Error:", error.message);
+    console.error("Login Error Stack:", error.stack);
     res.status(500).json({ message: "An internal server error occurred" });
   }
 };
@@ -190,7 +203,7 @@ const googleCallback = async (req, res) => {
   try {
     const { accessToken, refreshToken } = generateToken(req.user);
     await RefreshToken.create({
-      userId: req.user._id,
+      userId: req.user.userId,
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
@@ -236,33 +249,36 @@ const verifyEmail = async (req, res) => {
     if (!token) {
       return res
         .status(400)
-        .json({ message: "Verification token is missing." });
+        .json({ success: false, message: "Verification token is missing." });
     }
 
-    const user = await User.findOne({
-      emailVerificationToken: token,
-      emailVerificationTokenExpires: { $gt: Date.now() },
-    });
+    const user = await User.findOneAndUpdate(
+      { 
+        emailVerificationToken: token, 
+        emailVerificationTokenExpires: { $gt: Date.now() } 
+      },
+      { 
+        isVerified: true, 
+        emailVerificationToken: undefined, 
+        emailVerificationTokenExpires: undefined 
+      },
+      { new: true }
+    );
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User not found for verification." });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification link.",
+      });
     }
 
-    if (user.isVerified) {
-      return res.status(200).send("<h1>Email has already been verified.</h1>");
-    }
-
-    user.isVerified = true;
-    await user.save();
-
-    res
-      .status(200)
-      .send("<h1>Email verified successfully! You can now log in.</h1>");
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully! You can now log in.",
+    });
   } catch (error) {
     console.error("Email verification error:", error);
-    res.status(400).send("<h1>Invalid or expired verification link.</h1>");
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -281,11 +297,12 @@ const refresh = async (req, res) => {
           await RefreshToken.deleteOne({ token: refreshToken });
           return res.status(401).json({ message: "Invalid refresh token" });
         }
-
         await RefreshToken.deleteOne({ token: refreshToken });
-        const user = await User.findById(decoded.id);
 
+
+        const user = await User.findOne({ userId: decoded.userId });
         if (!user) {
+          await RefreshToken.deleteOne({ token: refreshToken });
           return res.status(401).json({ message: "User not found" });
         }
 
@@ -293,7 +310,7 @@ const refresh = async (req, res) => {
           generateToken(user);
 
         await RefreshToken.create({
-          userId: user._id,
+          userId: user.userId,
           token: newRefreshToken,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         });

@@ -1,5 +1,5 @@
 const blog = require("../../model/blogSchema");
-const cloudinary = require("../../services/cloudinary");
+const cloudinary = require("../../config/cloudinary");
 
 // Create Blog
 const createBlog = async (req, res) => {
@@ -9,11 +9,15 @@ const createBlog = async (req, res) => {
     return res.status(400).json({ message: "Please fill the blog" });
   }
   if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ message: "Please upload at least one image" });
+    return res
+      .status(400)
+      .json({ message: "Please upload at least one image" });
   }
 
   try {
-    const imageResult = await Promise.all(req.files.map((file) => cloudinary.uploadImage(file.path, "blog_images")));
+    const imageResult = await Promise.all(
+      req.files.map((file) => cloudinary.uploadImage(file.path, "blog_images")),
+    );
     const blogs = new blog({
       title,
       content,
@@ -27,7 +31,7 @@ const createBlog = async (req, res) => {
     res.status(201).json({ message: "Blog Created" });
   } catch (error) {
     console.error("Error creating blog:", error);
-    res.status(500).json({ message: "Server Error" , error: error.message});
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
@@ -45,7 +49,9 @@ const getAllBlog = async (req, res) => {
 const getOneBlogById = async (req, res) => {
   const { blogId } = req.params;
   try {
-    const blogByOne = await blog.findById(blogId).populate("author", "name email")  ;
+    const blogByOne = await blog
+      .findById(blogId)
+      .populate("author", "name email");
     if (!blogByOne) {
       return res.status(404).json({ message: "blog not found." });
     }
@@ -61,7 +67,7 @@ const updateBlogById = async (req, res) => {
     const blogUpdate = await blog.findByIdAndUpdate(
       req.params.blogId,
       {
-        title: req.body.title,    
+        title: req.body.title,
         content: req.body.content,
         images: req.files ? req.files.map((file) => file.path) : null,
       },
@@ -86,8 +92,14 @@ const deleteBlogById = async (req, res) => {
     }
     res.status(201).json({ message: "Blog deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message   });
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-module.exports = { createBlog, getAllBlog, getOneBlogById, updateBlogById, deleteBlogById };
+module.exports = {
+  createBlog,
+  getAllBlog,
+  getOneBlogById,
+  updateBlogById,
+  deleteBlogById,
+};

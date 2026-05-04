@@ -16,12 +16,12 @@ export default function Auth() {
       const parsedUser = JSON.parse(user);
 
       if (parsedUser.role === "admin") {
-        router.replace("/admin-dashboard");
+        router.replace("/admin/dashboard");
         return;
       }
 
       if (parsedUser.role === "guide") {
-        router.replace("/guide-dashboard");
+        router.replace("/guide/dashboard");
         return;
       }
 

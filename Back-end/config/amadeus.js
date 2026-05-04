@@ -65,6 +65,8 @@ const makeAuthenticatedRequest = async (
   endpoint,
   params = {},
   data = null,
+  retries = 0,
+  maxRetries = 1, // Amadeus 5xx errors (e.g. 38189) are usually persistent — 1 retry is enough
 ) => {
   const token = await getAccessToken();
 
@@ -83,7 +85,41 @@ const makeAuthenticatedRequest = async (
     config.data = data;
   }
 
-  return axios(config);
+  try {
+    const response = await axios(config);
+    return response;
+  } catch (error) {
+    console.error(`Amadeus API Error (${endpoint}):`, {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      errors: error.response?.data?.errors,
+      message: error.message,
+      params,
+      attempt: retries + 1,
+      maxRetries,
+    });
+
+    if (
+      retries < maxRetries &&
+      (error.response?.status >= 500 || error.code === "ECONNABORTED")
+    ) {
+      const delayMs = Math.pow(2, retries) * 1000; 
+      console.log(
+        `Retrying Amadeus API call (attempt ${retries + 2}/${maxRetries + 1}) after ${delayMs}ms...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return makeAuthenticatedRequest(
+        method,
+        endpoint,
+        params,
+        data,
+        retries + 1,
+        maxRetries,
+      );
+    }
+
+    throw error;
+  }
 };
 
 const amadeus = {
@@ -123,6 +159,39 @@ const amadeus = {
         );
         return response.data;
       },
+      post: async (data) => {
+        const response = await makeAuthenticatedRequest(
+          "POST",
+          "/v2/shopping/flight-offers",
+          {},
+          data,
+        );
+        return response.data;
+      },
+    },
+    flightOffersPrice: {
+      post: async (data) => {
+        const response = await makeAuthenticatedRequest(
+          "POST",
+          "/v1/shopping/flight-offers/pricing",
+          {},
+          data,
+        );
+        return response.data;
+      },
+    },
+  },
+  booking: {
+    flightOrders: {
+      post: async (data) => {
+        const response = await makeAuthenticatedRequest(
+          "POST",
+          "/v1/booking/flight-orders",
+          {},
+          data,
+        );
+        return response.data;
+      },
     },
   },
 };
@@ -142,7 +211,6 @@ const testConnection = async () => {
   }
 };
 
-// Only test connection when not in test environment
 if (process.env.NODE_ENV !== "test") {
   testConnection();
 }
