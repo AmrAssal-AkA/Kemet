@@ -8,151 +8,167 @@ import {
   FaTiktok,
   FaTwitter,
   FaYoutube,
+  FaArrowRight,
 } from "react-icons/fa";
 
 function Footer() {
   return (
-    <footer className="mt-10 bg-gradient-to-r from-[#0b1f46] via-[#123c7a] to-[#0b1f46] text-white antialiased">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <h2 className="text-lg font-semibold tracking-[0.04em] text-white">EG - KEMET</h2>
-            <ul className="mt-5 space-y-3 text-sm text-slate-100">
-              <li className="flex items-center gap-3">
-                <FaMapMarkerAlt className="text-slate-300" />
+    <footer className="mt-10 text-white antialiased" style={{ background: "linear-gradient(160deg, #06122e 0%, #0b1f46 40%, #102554 70%, #06122e 100%)" }}>
+
+      {/* Top accent line */}
+      <div className="h-[3px] w-full" style={{ background: "linear-gradient(90deg, transparent, #FFCE2A 30%, #f5b800 70%, transparent)" }} />
+
+      {/* Newsletter strip */}
+      <div className="border-b border-white/10">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-yellow-400">Stay in the loop</p>
+              <h3 className="mt-1 text-lg font-bold text-white">Get weekly Egypt travel inspiration</h3>
+            </div>
+            <div className="flex max-w-sm flex-1 gap-2">
+              <input
+                type="email"
+                placeholder="your@email.com"
+                className="flex-1 rounded-full bg-white/10 px-5 py-2.5 text-sm text-white placeholder-white/40 outline-none border border-white/10 focus:border-yellow-400/60 transition-colors"
+              />
+              <button
+                className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-black transition-all hover:-translate-y-0.5 active:translate-y-0"
+                style={{ background: "linear-gradient(135deg,#FFCE2A,#f5b800)", boxShadow: "0 4px 14px rgba(255,206,42,.30)" }}
+              >
+                Subscribe <FaArrowRight className="text-xs" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main footer grid */}
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+
+          {/* Brand column */}
+          <div className="lg:col-span-1">
+            <h2
+              className="text-2xl font-extrabold tracking-tight text-white"
+              style={{ fontFamily: "'Playfair Display', serif", letterSpacing: "0.04em" }}
+            >
+              EG — KEMET
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300/80 max-w-xs">
+              Your gateway to authentic Egyptian travel — from pharaonic wonders to hidden oases.
+            </p>
+
+            <ul className="mt-6 space-y-3 text-sm text-slate-300">
+              <li className="flex items-start gap-3">
+                <FaMapMarkerAlt className="mt-0.5 flex-shrink-0 text-yellow-400" />
                 <span>123 Egypt St, Cairo</span>
               </li>
               <li className="flex items-center gap-3">
-                <FaEnvelope className="text-slate-300" />
-                <span>kemet3003@gmail.com</span>
+                <FaEnvelope className="flex-shrink-0 text-yellow-400" />
+                <a href="mailto:kemet3003@gmail.com" className="transition-colors hover:text-yellow-400">
+                  kemet3003@gmail.com
+                </a>
               </li>
               <li className="flex items-center gap-3">
-                <FaPhoneAlt className="text-slate-300" />
-                <span>+20 123 456 7890</span>
+                <FaPhoneAlt className="flex-shrink-0 text-yellow-400" />
+                <a href="tel:+201234567890" className="transition-colors hover:text-yellow-400">
+                  +20 123 456 7890
+                </a>
               </li>
             </ul>
           </div>
 
+          {/* Services */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-100">Services</h3>
-            <div className="mt-5 space-y-2 text-sm">
-              <Link
-                href="/offerings"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                Smart Trip Planner
-              </Link>
-              <Link
-                href="/offerings"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                Destination Discovery
-              </Link>
-              <Link
-                href="/offerings"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                Local Experiences
-              </Link>
-              <Link
-                href="/offerings"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                Travel Community
-              </Link>
-              <Link
-                href="/Blog"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                Blog & Guides
-              </Link>
+            <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-yellow-400">Services</h3>
+            <div className="mt-5 flex flex-col gap-2.5">
+              {[
+                { href: "/offerings", label: "Smart Trip Planner" },
+                { href: "/offerings", label: "Destination Discovery" },
+                { href: "/offerings", label: "Local Experiences" },
+                { href: "/offerings", label: "Travel Community" },
+                { href: "/blogs", label: "Blog & Guides" },
+              ].map(({ href, label }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="group flex items-center gap-1.5 text-sm text-slate-300 transition-colors duration-200 hover:text-yellow-400"
+                >
+                  <span className="inline-block h-px w-4 bg-white/20 transition-all duration-200 group-hover:w-6 group-hover:bg-yellow-400" />
+                  {label}
+                </Link>
+              ))}
             </div>
           </div>
 
+          {/* Company */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-100">Company</h3>
-            <div className="mt-5 space-y-2 text-sm">
-              <Link
-                href="/about"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                About Us
-              </Link>
-              <Link
-                href="/contact"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                Contact Us
-              </Link>
-              <Link
-                href="/offerings"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                Features
-              </Link>
-              <Link
-                href="/Blog"
-                className="block text-slate-100 transition-colors duration-200 hover:text-[#FFCE2A]"
-              >
-                Blog
-              </Link>
+            <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-yellow-400">Company</h3>
+            <div className="mt-5 flex flex-col gap-2.5">
+              {[
+                { href: "/about", label: "About Us" },
+                { href: "/contact", label: "Contact Us" },
+                { href: "/offerings", label: "Features" },
+                { href: "/blogs", label: "Blog" },
+              ].map(({ href, label }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="group flex items-center gap-1.5 text-sm text-slate-300 transition-colors duration-200 hover:text-yellow-400"
+                >
+                  <span className="inline-block h-px w-4 bg-white/20 transition-all duration-200 group-hover:w-6 group-hover:bg-yellow-400" />
+                  {label}
+                </Link>
+              ))}
             </div>
           </div>
 
+          {/* Social */}
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-100">Social</h3>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="grid h-9 w-9 place-items-center rounded-full border border-slate-300/60 text-slate-100 transition-all duration-200 hover:border-[#FFCE2A] hover:text-[#FFCE2A]"
-              >
-                <FaInstagram className="text-sm" />
-              </a>
-              <a
-                href="https://www.facebook.com/profile.php?id=61584789544926"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="grid h-9 w-9 place-items-center rounded-full border border-slate-300/60 text-slate-100 transition-all duration-200 hover:border-[#FFCE2A] hover:text-[#FFCE2A]"
-              >
-                <FaFacebookF className="text-sm" />
-              </a>
-              <a
-                href="https://tiktok.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="TikTok"
-                className="grid h-9 w-9 place-items-center rounded-full border border-slate-300/60 text-slate-100 transition-all duration-200 hover:border-[#FFCE2A] hover:text-[#FFCE2A]"
-              >
-                <FaTiktok className="text-sm" />
-              </a>
-              <a
-                href="https://x.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="X"
-                className="grid h-9 w-9 place-items-center rounded-full border border-slate-300/60 text-slate-100 transition-all duration-200 hover:border-[#FFCE2A] hover:text-[#FFCE2A]"
-              >
-                <FaTwitter className="text-sm" />
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-                className="grid h-9 w-9 place-items-center rounded-full border border-slate-300/60 text-slate-100 transition-all duration-200 hover:border-[#FFCE2A] hover:text-[#FFCE2A]"
-              >
-                <FaYoutube className="text-sm" />
-              </a>
+            <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-yellow-400">Follow Us</h3>
+            <p className="mt-3 text-sm text-slate-400">Join our community of Egypt explorers.</p>
+            <div className="mt-5 flex flex-wrap gap-2.5">
+              {[
+                { href: "https://instagram.com", icon: <FaInstagram />, label: "Instagram" },
+                { href: "https://www.facebook.com/profile.php?id=61584789544926", icon: <FaFacebookF />, label: "Facebook" },
+                { href: "https://tiktok.com", icon: <FaTiktok />, label: "TikTok" },
+                { href: "https://x.com", icon: <FaTwitter />, label: "X" },
+                { href: "https://youtube.com", icon: <FaYoutube />, label: "YouTube" },
+              ].map(({ href, icon, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="grid h-10 w-10 place-items-center rounded-full border border-white/15 text-slate-300 transition-all duration-200 hover:border-yellow-400 hover:text-yellow-400 hover:-translate-y-0.5"
+                  style={{ backdropFilter: "blur(4px)", background: "rgba(255,255,255,0.04)" }}
+                >
+                  {icon}
+                </a>
+              ))}
+            </div>
+
+            {/* Trust badge */}
+            <div className="mt-6 flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <span className="text-2xl">🏺</span>
+              <div>
+                <p className="text-xs font-semibold text-white">Trusted by 12,000+ travelers</p>
+                <p className="text-[11px] text-slate-400">Authentic Egypt experiences since 2021</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-8 border-t border-slate-200/20 pt-4">
-          <p className="text-sm text-slate-200">© All rights Reserved to Kemet</p>
+        {/* Bottom bar */}
+        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} EG-Kemet. All rights reserved.</p>
+          <div className="flex gap-5">
+            <Link href="/privacy" className="transition-colors hover:text-yellow-400">Privacy Policy</Link>
+            <Link href="/terms" className="transition-colors hover:text-yellow-400">Terms of Service</Link>
+            <Link href="/sitemap" className="transition-colors hover:text-yellow-400">Sitemap</Link>
+          </div>
         </div>
       </div>
     </footer>
