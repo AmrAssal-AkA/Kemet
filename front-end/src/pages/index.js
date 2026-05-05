@@ -104,7 +104,7 @@ const gems = [
 // ── Community preview ─────────────────────────────────────────────────────────
 const communityPreviews = [
   {
-    img:      "/community/story1.jpg",
+img:      "/images/communities/story1.jpg",
     category: "Luxor · Featured",
     title:    "Waking up at 4AM for the balloon ride that changed how I see Egypt forever",
     author:   "Sara Al-Masri",
@@ -114,7 +114,7 @@ const communityPreviews = [
     likes:    284,
   },
   {
-    img:      "/community/story2.jpg",
+img:      "/images/communities/story2.jpg",
     category: "Siwa · Hidden Gem",
     title:    "The oasis that Instagram hasn't discovered yet",
     author:   "Karim Mansour",
@@ -267,7 +267,7 @@ export default function Home() {
               <Link href="/blogs">
                 <button className="btn-gold rounded-full px-8 py-3.5 font-semibold text-black text-sm">Explore Now</button>
               </Link>
-              <Link href="/destination">
+              <Link href="/Destination">
                 <button className="btn-ghost-white rounded-full px-8 py-3.5 font-medium text-white text-sm">View Destinations</button>
               </Link>
             </motion.div>

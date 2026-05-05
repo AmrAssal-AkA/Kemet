@@ -41,7 +41,7 @@ function Header() {
     { href: user ? "/user-dashboard" : "/", label: "Home", match: ["/", "/user-dashboard"] },
     { href: "/offerings", label: "Offerings" },
     { href: "/communities", label: "Communities" },
-    { href: "/destination", label: "Destination" },
+    { href: "/Destination", label: "Destination" },
     { href: "/hidden-gems", label: "Hidden Gems" },
     { href: "/blogs", label: "Blog" },
     { href: "/about", label: "About Us" },
@@ -150,7 +150,7 @@ function Header() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:py-2.5">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image
               src="/logo.png"
               alt="Logo"
@@ -176,7 +176,7 @@ function Header() {
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden items-center gap-2.5 lg:flex flex-shrink-0">
+          <div className="hidden items-center gap-2.5 lg:flex shrink-0">
             {!user ? (
               <Link href="/auth/auth">
                 <button className="login-btn rounded-full px-4 py-1.5 text-sm font-medium text-slate-700">
