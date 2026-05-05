@@ -38,6 +38,26 @@ const GoogleSignInTemplate = (name) => `
   </div>
 `;
 
+const BookingConfirmationTemplate = (name, bookingDetails) => `
+  <div style="font-family: Arial, sans-serif; color: #333;">
+    <h2 style="color: #decb00;">Booking Confirmation</h2>
+    <p>Hello ${name},</p>
+    <p>Your booking has been confirmed. Here are your booking details:</p>
+    <ul>
+      <li>Destination: ${bookingDetails.destination}</li>
+      <li>Flight: ${bookingDetails.flight}</li>
+      <li>Hotel: ${bookingDetails.hotel}</li>
+      <li>Travel Dates: ${bookingDetails.travelDates}</li>
+      <li>Number of Travelers: ${bookingDetails.travelers}</li>
+      <li>Total Price: ${bookingDetails.totalPrice}</li>
+    </ul>
+    <p>Thank you for choosing Kemet Travel!</p>
+    <p>Best regards,<br>Kemet Travel Team</p>
+  </div>
+`;
+
+
+
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
     await transporter.sendMail({
@@ -54,4 +74,4 @@ const sendEmail = async ({ to, subject, html, text }) => {
   }
 };
 
-module.exports = { sendEmail , verifyEmailTemplate, resetPasswordTemplate, GoogleSignInTemplate};
+module.exports = { sendEmail , verifyEmailTemplate, resetPasswordTemplate, GoogleSignInTemplate, BookingConfirmationTemplate};

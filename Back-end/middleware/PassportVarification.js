@@ -89,7 +89,9 @@ const validateBooking = (req, res, next) => {
     });
   }
 
-  req.body.userId = req.user.userId;
+  if (req.user) {
+    req.body.userId = req.user.userId;
+  }
 
   next();
 };

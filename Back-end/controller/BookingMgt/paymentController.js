@@ -1,5 +1,3 @@
-
-const { checkout } = require("../../routes/AddTripRoutes");
 const Booking = require("../../model/BookingSchema");
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
@@ -9,6 +7,7 @@ const domain = process.env.DOMAIN;
 const stripeCheckout = async (req) => {
     try {
         const bookingId = req.body.bookingId;
+        const email = req.body.email;
         if (!bookingId) {
             throw new Error("Missing booking ID for payment session");
         }
@@ -21,9 +20,10 @@ const stripeCheckout = async (req) => {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "payment",
+            customer_email: email,
             success_url: `${domain}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${domain}/api/payments/cancel?payment_fail=true`,
-            metadata: {BookingId: bookingId},
+            metadata: {BookingId: bookingId, Email: email},
             line_items: req.body.items.map(item => ({
                 price_data: {
                     currency: booking.currency,
@@ -62,7 +62,7 @@ const success = async (req, res) => {
                 stripePaymentIntentId: session.payment_intent
             })
         }
-        res.redirect(`${domain}/checkout?payment=done`);
+        return res.redirect(`${domain}/checkout?payment=done`);
 
     } catch (err) {
         console.log(err);

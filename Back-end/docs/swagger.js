@@ -479,12 +479,17 @@ const definition = {
             type: "array",
             items: { type: "string", description: "Reference to Trip" },
           },
+          PassportNumber: {
+            type: "string",
+            description:
+              "Primary passport number persisted on the booking document.",
+          },
           totalPrice: { type: "number" },
           currency: {
             type: "string",
-            default: "USD",
+            default: "EGP",
             description:
-              "Currency code. Automatically set to USD if any guest has USA nationality, otherwise defaults to USD",
+              "Currency code stored with the booking. During booking creation it is typically derived from the first guest nationality (`USA` -> `USD`, `EG` -> `EGP`, `EUR` -> `EUR`) and otherwise falls back to the provided request value.",
           },
           status: {
             type: "string",
@@ -493,8 +498,21 @@ const definition = {
           },
           paymentStatus: {
             type: "string",
-            enum: ["Pending", "Paid", "Failed", "Refunded"],
+            enum: ["Pending", "Paid", "Failed", "Refunded", "PartiallyRefunded"],
             default: "Pending",
+          },
+          refundedAmount: { type: "number", default: 0 },
+          refunds: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                refundId: { type: "string" },
+                amount: { type: "number" },
+                date: { type: "string", format: "date-time" },
+                reason: { type: "string" },
+              },
+            },
           },
           stripeSessionId: { type: "string" },
           stripePaymentIntentId: { type: "string" },
@@ -508,7 +526,6 @@ const definition = {
                   "Hotel",
                   "Trip",
                   "FlightAndHotel",
-                  "Package",
                   "Mixed",
                 ],
               },
@@ -521,13 +538,21 @@ const definition = {
       Guest: {
         type: "object",
         required: [
+          "type",
           "firstName",
           "lastName",
+          "nationality",
           "passportNumber",
+          "dateOfBirth",
           "expiryDate",
-          "type",
         ],
         properties: {
+          type: {
+            type: "string",
+            enum: ["adult", "child", "infant"],
+            description:
+              "Guest type. Booking middleware currently enforces the adult/infant ratio.",
+          },
           firstName: {
             type: "string",
             description: "Guest's first name (will be converted to uppercase)",
@@ -538,9 +563,10 @@ const definition = {
           },
           nationality: {
             type: "string",
+            enum: ["USA", "EG", "EURO"],
             example: "EG",
             description:
-              "Guest nationality code used by booking creation to derive the checkout currency (for example: EG -> EGP, USA -> USD, EURO -> EUR).",
+              "Guest nationality code used by booking creation to derive the checkout currency (`EG` -> `EGP`, `USA` -> `USD`, `EURO` -> `EUR`).",
           },
           passportNumber: {
             type: "string",
@@ -559,16 +585,17 @@ const definition = {
             description:
               "Passport expiry date. Must be valid (not expired) and valid for at least 6 months from today",
           },
-          type: {
+          dateOfBirth: {
             type: "string",
-            enum: ["adult", "infant"],
-            description: "Guest type. Each infant must have at least one adult",
+            format: "date",
+            description:
+              "Guest date of birth. Required by the guest schema even though booking middleware does not validate age buckets.",
           },
         },
       },
       BookingRequest: {
         type: "object",
-        required: ["guests", "totalPrice"],
+        required: ["guests", "PassportNumber", "totalPrice", "items"],
         properties: {
           guests: {
             type: "array",
@@ -593,6 +620,11 @@ const definition = {
             description:
               "Optional trip IDs. At least one of `flight`, `hotel`, or `trip` must be supplied.",
           },
+          PassportNumber: {
+            type: "string",
+            description:
+              "Primary passport number stored on the booking document in addition to guest passport details.",
+          },
           totalPrice: {
             type: "number",
             minimum: 0.01,
@@ -602,19 +634,25 @@ const definition = {
             type: "string",
             default: "EGP",
             description:
-              "Currency code. Automatically mapped based on guest nationality (USA → USD, Egypt → EGP, Euro → EUR). Defaults to EGP if not matched.",
+              "Optional preferred currency. The booking controller may override this using the first guest nationality mapping.",
           },
           items: {
             type: "array",
             description: "Items for Stripe checkout",
             items: {
               type: "object",
+              required: ["name", "price", "quantity"],
               properties: {
                 name: { type: "string" },
                 description: { type: "string" },
                 price: { type: "number" },
-                quantity: { type: "number" },
-                image: { type: "string" },
+                quantity: { type: "integer", minimum: 1 },
+                image: {
+                  type: "string",
+                  format: "uri",
+                  description:
+                    "Public image URL used by Stripe checkout. Provide a valid URL when available.",
+                },
               },
             },
           },
@@ -622,11 +660,17 @@ const definition = {
       },
       StripeCheckoutRequest: {
         type: "object",
-        required: ["items", "bookingId"],
+        required: ["items", "bookingId", "email"],
         properties: {
           bookingId: {
             type: "string",
             description: "MongoDB ObjectId of the booking being checked out",
+          },
+          email: {
+            type: "string",
+            format: "email",
+            description:
+              "Customer email used to prefill the Stripe checkout session.",
           },
           items: {
             type: "array",
@@ -647,7 +691,7 @@ const definition = {
                 price: {
                   type: "number",
                   description:
-                    "Item price in EGP (will be multiplied by 100 for Stripe)",
+                    "Item price in the booking currency (will be multiplied by 100 for Stripe)",
                 },
                 quantity: {
                   type: "integer",
@@ -1201,7 +1245,7 @@ const definition = {
         tags: ["Bookings"],
         summary: "Create a unified booking and initiate Stripe checkout",
         description:
-          "Creates a new booking with guest passport validation and automatically initiates Stripe checkout. Returns the booking ID and checkout URL. Booking is created with `Pending` status until payment succeeds. Validation includes: at least one booking type (`flight`, `hotel`, or `trip`), valid guest fields, supported passport formats, no duplicate passport numbers in the same booking, passports not expired, passports valid for at least 6 months, and no more infants than adults.",
+          "Creates a new booking for the authenticated user, persists the booking, and immediately creates a Stripe checkout session from the supplied `items`. Returns the new booking ID and Stripe checkout URL. Booking is created with `Pending` status until `/api/payments/success` is called by Stripe. Validation includes: at least one booking type (`flight`, `hotel`, or `trip`), valid guest fields, supported passport formats, no duplicate passport numbers in the same booking, passports not expired, passports valid for at least 6 months, and no more infants than adults.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -1230,7 +1274,7 @@ const definition = {
           },
           400: {
             description:
-              "Booking validation failed. Possible errors include missing booking type, missing or invalid guest fields, invalid passport format, duplicate passport numbers, expired passport, passport not valid for 6+ months, invalid total price, or more infants than adults.",
+              "Booking validation failed. Possible errors include missing booking type, missing passport number, missing or invalid guest fields, invalid passport format, duplicate passport numbers, expired passport, passport not valid for 6+ months, missing checkout items, invalid total price, or more infants than adults.",
           },
           401: { description: "Unauthorized - User not authenticated" },
           403: { description: "Forbidden" },
@@ -1242,6 +1286,8 @@ const definition = {
       get: {
         tags: ["Bookings"],
         summary: "Cancel a booking and process refund if applicable",
+        description:
+          "Cancels a booking for the authenticated user. If the booking has already been paid and a Stripe payment intent exists, the endpoint attempts a Stripe refund before marking the booking as cancelled.",
         security: [{ cookieAuth: [] }],
         parameters: [
           {
@@ -1253,7 +1299,10 @@ const definition = {
           },
         ],
         responses: {
-          200: { description: "Booking cancelled successfully" },
+          200: {
+            description:
+              "Booking cancelled successfully, with or without Stripe refund depending on payment state",
+          },
           400: {
             description: "Booking is already cancelled or cannot be cancelled",
           },
@@ -1268,7 +1317,7 @@ const definition = {
         tags: ["Payments"],
         summary: "Create a Stripe checkout session",
         description:
-          "Initiates a Stripe checkout session for booking payment. Accepts items array with pricing in EGP. Amounts will be converted to fils (multiply by 100) for Stripe processing. Returns checkout URL and booking ID.",
+          "Creates a Stripe checkout session for an existing booking using the booking currency stored in MongoDB. This route is the same helper used internally by booking creation, but when called directly it expects `bookingId`, `email`, and `items` in the request body.",
         requestBody: {
           required: true,
           content: {
@@ -1278,29 +1327,39 @@ const definition = {
           },
         },
         responses: {
-          201: {
-            description: "Checkout session created successfully",
+          200: {
+            description: "Stripe checkout session created successfully",
             content: {
               "application/json": {
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string" },
-                    status: { type: "string" },
-                    bookingId: {
+                    id: { type: "string" },
+                    url: {
                       type: "string",
-                      description: "MongoDB ObjectId of the booking",
+                      description: "Stripe-hosted checkout URL",
                     },
-                    checkoutUrl: {
+                    customer_email: {
                       type: "string",
-                      description: "Stripe checkout URL",
+                      format: "email",
+                    },
+                    payment_status: { type: "string" },
+                    metadata: {
+                      type: "object",
+                      properties: {
+                        BookingId: {
+                          type: "string",
+                          description: "MongoDB ObjectId of the booking",
+                        },
+                        Email: { type: "string", format: "email" },
+                      },
                     },
                   },
                 },
               },
             },
           },
-          400: { description: "Invalid checkout request" },
+          400: { description: "Invalid checkout request or missing booking" },
           500: { description: "Stripe checkout creation failed" },
         },
       },
@@ -1310,7 +1369,7 @@ const definition = {
         tags: ["Payments"],
         summary: "Handle successful Stripe payment",
         description:
-          "Stripe redirects to this endpoint after successful checkout. Updates booking status to 'Confirmed' and payment status to 'Paid'. Redirects to frontend success page.",
+          "Stripe redirects to this endpoint after successful checkout. The handler reads `session_id`, retrieves the Stripe session, updates the booking status to `Confirmed`, sets payment status to `Paid`, stores Stripe IDs, and then redirects the browser to the frontend checkout success page.",
         parameters: [
           {
             in: "query",

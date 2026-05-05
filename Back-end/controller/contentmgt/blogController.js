@@ -8,6 +8,14 @@ const createBlog = async (req, res) => {
   if (!title || !content) {
     return res.status(400).json({ message: "Please fill the blog" });
   }
+  const textRegex = /^[a-zA-Z0-9\s]+$/;
+  if (!textRegex.test(title) || !textRegex.test(content)) {
+    return res
+      .status(400)
+      .json({ message: "Title and content must contain only letters and spaces." });
+  }
+
+
   if (!req.files || req.files.length === 0) {
     return res
       .status(400)

@@ -7,7 +7,7 @@ const validateTravelPassport = require("../middleware/PassportVarification");
 
 
 
-router.post("/create",authenticate, authorize('user'),validateTravelPassport, BookingController.createBooking);
+router.post("/create", authenticate, authorize('user'), validateTravelPassport, BookingController.createBooking);
 router.get("/refund/:bookingId", authenticate, authorize('user'), BookingController.cancelBooking);
 
 module.exports = router;
