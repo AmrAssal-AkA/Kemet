@@ -62,6 +62,20 @@ function Header() {
           </Link>
 
           <Link
+            href="/destination"
+            className={`transition-colors duration-200 ${pathname === "/destination" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+          >
+            Destination
+          </Link>
+
+          <Link
+            href="/hidden-gems"
+            className={`transition-colors duration-200 ${pathname === "/hidden-gems" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
+          >
+            Hidden Gems
+          </Link>
+
+          <Link
             href="/blogs"
             className={`transition-colors duration-200 ${pathname === "/blogs" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
           >
@@ -165,6 +179,22 @@ function Header() {
             className={pathname === "/offerings" ? "text-[#FFCE2A]" : ""}
           >
             Offerings
+          </Link>
+
+          <Link
+            onClick={() => setOpen(false)}
+            href="/destination"
+            className={pathname === "/destination" ? "text-[#FFCE2A]" : ""}
+          >
+            destination
+          </Link>
+          
+          <Link
+            onClick={() => setOpen(false)}
+            href="/hidden-gems"
+            className={pathname === "/hidden-gems" ? "text-[#FFCE2A]" : ""}
+          >
+            Hidden Gems
           </Link>
 
           <Link
