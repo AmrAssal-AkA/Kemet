@@ -1,7 +1,7 @@
 const { booking } = require("../../config/amadeus");
 const Booking = require("../../model/BookingSchema");
 const { stripeCheckout, refundPayment } = require("./paymentController");
-const guest = require("../../model/GuestSchema");
+const guest = require("../../model/guestSchema");
 const {
   BookingConfirmationTemplate,
   sendEmail,
