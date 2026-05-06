@@ -46,7 +46,10 @@ app.use(
     cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
   }),
 );
-app.use(helmet());
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api-docs')) return next();
+  helmet()(req, res, next);
+});
 require("./controller/auth/authController");
 app.use(passport.initialize());
 
@@ -63,17 +66,16 @@ const swaggerUiOptions = {
     "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js",
   ],
   customSiteTitle: "Kemet Travel API Docs",
-  customfavIcon: "https://fastapi.tiangolo.com/img/favicon.png",
 };
-app.use("/api-docs", swaggerUi.serve);
-app.get("/api-docs", swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Cache-Control", "public, max-age=0");
   res.send(swaggerSpec);
 });
-
 
 process.on("uncaughtException", (exception) => {
   Logger.error(`Uncaught Exception: ${exception.message}`);
