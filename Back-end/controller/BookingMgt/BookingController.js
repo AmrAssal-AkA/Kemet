@@ -5,7 +5,7 @@ const guest = require("../../model/guestSchema");
 const {
   BookingConfirmationTemplate,
   sendEmail,
-} = require("../../services/mailing");
+} = require("../../services/miling");
 
 const currencyMapping = {
   USA: "USD",
