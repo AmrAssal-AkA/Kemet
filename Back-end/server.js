@@ -50,25 +50,30 @@ app.use(helmet());
 require("./controller/auth/authController");
 app.use(passport.initialize());
 
-// Swagger UI configuration
 const swaggerUiOptions = {
   swaggerOptions: {
     url: "/api-docs.json",
     persistAuthorization: true,
+    deepLinking: true,
   },
   customCss: ".swagger-ui { background-color: #fafafa; }",
+  customCssUrl: "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css",
+  customJs: [
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js",
+  ],
   customSiteTitle: "Kemet Travel API Docs",
+  customfavIcon: "https://fastapi.tiangolo.com/img/favicon.png",
 };
+app.use("/api-docs", swaggerUi.serve);
+app.get("/api-docs", swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, swaggerUiOptions)
-);
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "public, max-age=0");
   res.send(swaggerSpec);
 });
+
 
 process.on("uncaughtException", (exception) => {
   Logger.error(`Uncaught Exception: ${exception.message}`);
@@ -93,21 +98,17 @@ app.use("/api/userdashboard", userRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
 
-
-
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");
   res.send("Welcome to the Travel Agency API");
 });
 
-
 app.use(errorHandlerMW);
 
 if (process.env.NODE_ENV !== "production") {
-app.listen(port, () => {
-  Logger.info(`Server is running on port ${port}`);
-});
+  app.listen(port, () => {
+    Logger.info(`Server is running on port ${port}`);
+  });
 }
-
 
 module.exports = app;
