@@ -29,7 +29,7 @@ async function handler(req, res) {
 
   try {
     const response = await axios.get(
-      "http://localhost:8000/api/adminDashboard/bookingDetails",
+      "https://kemet-two.vercel.app/api/adminDashboard/bookingDetails",
       {
         headers: {
           Cookie: req.headers.cookie || "",

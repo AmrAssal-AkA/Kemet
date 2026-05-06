@@ -19,7 +19,7 @@ const handler = async (req, res) => {
   }
   try {
     const response = await axios.post(
-      "http://localhost:8000/api/auth/register",
+      "https://kemet-two.vercel.app/api/auth/register",
       { name, email, password },
       {
         headers: {

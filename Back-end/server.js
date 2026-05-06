@@ -49,7 +49,22 @@ app.use(
 app.use(helmet());
 require("./controller/auth/authController");
 app.use(passport.initialize());
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Swagger UI configuration
+const swaggerUiOptions = {
+  swaggerOptions: {
+    url: "/api-docs.json",
+    persistAuthorization: true,
+  },
+  customCss: ".swagger-ui { background-color: #fafafa; }",
+  customSiteTitle: "Kemet Travel API Docs",
+};
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, swaggerUiOptions)
+);
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(swaggerSpec);

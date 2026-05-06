@@ -8,7 +8,7 @@ async function hundler(req, res){
     }
 
     try{
-        const response = await axios.post("http://localhost:8000/api/auth/logout",{},{
+        const response = await axios.post("https://kemet-two.vercel.app/api/auth/logout",{},{
             headers: {Cookie: req.headers.cookie || "" },
             withCredentials: true,
         }
