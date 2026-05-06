@@ -1,11 +1,11 @@
 const { booking } = require("../../config/amadeus");
 const Booking = require("../../model/BookingSchema");
-const { stripeCheckout, refundPayment } = require("./PaymentController");
+const { stripeCheckout, refundPayment } = require("./paymentController");
 const guest = require("../../model/GuestSchema");
 const {
   BookingConfirmationTemplate,
   sendEmail,
-} = require("../../services/miling");
+} = require("../../services/mailing");
 
 const currencyMapping = {
   USA: "USD",
