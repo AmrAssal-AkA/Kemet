@@ -4,7 +4,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const domain = process.env.DOMAIN;
 
 
-const stripeCheckout = async (req) => {
+const stripeCheckout = async (req, res, nxt) => {
     try {
         const bookingId = req.body.bookingId;
         const email = req.body.email;
@@ -40,12 +40,11 @@ const stripeCheckout = async (req) => {
         return session;
 
     } catch (err) {
-        console.error("Stripe checkout error:", err.message);
-        throw err;
+        nxt(err);
     }
 };
 
-const success = async (req, res) => {
+const success = async (req, res, nxt) => {
     const {session_id} = req.query;
 
     try {
@@ -65,13 +64,12 @@ const success = async (req, res) => {
         return res.redirect(`${domain}/checkout?payment=done`);
 
     } catch (err) {
-        console.log(err);
-        res.status(400).json({error: "Failed to retrieve payment session"});
+        nxt(err);
     }
 };
 
 
-const refundPayment = async (bookingId) => {
+const refundPayment = async (bookingId , res, nxt) => {
     try {
         const booking = await Booking.findById(bookingId);
         if (!booking || !booking.stripePaymentIntentId) {
@@ -90,7 +88,7 @@ const refundPayment = async (bookingId) => {
             return { success: false, message: "Failed to process refund" };
         }
     } catch (error) {
-        console.error("Refund error:", error.message);
+        nxt(error);
         return { success: false, message: error.message };
     }
 }

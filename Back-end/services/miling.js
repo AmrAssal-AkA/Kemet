@@ -58,7 +58,7 @@ const BookingConfirmationTemplate = (name, bookingDetails) => `
 
 
 
-const sendEmail = async ({ to, subject, html, text }) => {
+const sendEmail = async ({ to, subject, html, text }, res) => {
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -67,9 +67,9 @@ const sendEmail = async ({ to, subject, html, text }) => {
       text: text || "",
       html: html,
     });
-    console.log("Email sent successfully.");
+   res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
-    console.error("Error sending email:", error);
+      res.status(500).json({ message: "Failed to send email", error: error.message });
     throw error;
   }
 };

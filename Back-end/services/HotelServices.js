@@ -1,16 +1,11 @@
 const amadeusProvider = require("./providers/amadeusHotelProvider");
 const makcorpsProvider = require("./providers/HotelApiProvider");
 
-const VALID_PROVIDERS = ["all", "amadeus", "makcorps"];
-
 exports.SearchCity = async (params) => {
   const { provider = "all" } = params;
 
-  if (!VALID_PROVIDERS.includes(provider)) {
-    throw {
-      status: 400,
-      message: `Invalid provider "${provider}". Must be one of: ${VALID_PROVIDERS.join(", ")}`,
-    };
+  if (!["all", "amadeus", "makcorps"].includes(provider)) {
+    throw { status: 400, message: `Invalid provider "${provider}". Use: all, amadeus, makcorps` };
   }
 
   const searchParams = {
@@ -21,72 +16,53 @@ exports.SearchCity = async (params) => {
     rooms: params.NumberOfrooms || 1,
   };
 
-  console.log(`🏨 Hotel Search: ${searchParams.cityCode} | ${searchParams.checkInDate} to ${searchParams.checkOutDate} | Provider: ${provider}`);
-
-  const providerResults = {
-    amadeus: { offers: [], error: null, responseTime: 0 },
-    makcorps: { offers: [], error: null, responseTime: 0 },
-  };
+  const results = { amadeus: null, makcorps: null };
 
   const promises = [];
 
   if (provider === "all" || provider === "amadeus") {
-    promises.push(queryProvider("amadeus", amadeusProvider, searchParams, providerResults));
+    promises.push(
+      queryProvider("amadeus", () => amadeusProvider.search(searchParams))
+        .then((r) => (results.amadeus = r))
+    );
   }
 
   if (provider === "all" || provider === "makcorps") {
-    promises.push(queryProvider("makcorps", makcorpsProvider, searchParams, providerResults));
+    promises.push(
+      queryProvider("makcorps", () => makcorpsProvider.search(searchParams))
+        .then((r) => (results.makcorps = r))
+    );
   }
-
 
   await Promise.allSettled(promises);
 
 
   const allOffers = [
-    ...providerResults.amadeus.offers,
-    ...providerResults.makcorps.offers,
-  ].sort((a, b) => a.price.total - b.price.total); 
+    ...(results.amadeus?.offers || []),
+    ...(results.makcorps?.offers || []),
+  ].sort((a, b) => a.price.total - b.price.total);
 
   return {
     success: true,
     totalOffers: allOffers.length,
     offers: allOffers,
     providers: {
-      amadeus: {
-        count: providerResults.amadeus.offers.length,
-        responseTime: providerResults.amadeus.responseTime,
-        error: providerResults.amadeus.error,
-      },
-      makcorps: {
-        count: providerResults.makcorps.offers.length,
-        responseTime: providerResults.makcorps.responseTime,
-        error: providerResults.makcorps.error,
-      },
+      amadeus: results.amadeus ? { count: results.amadeus.offers.length, responseTime: results.amadeus.responseTime, error: results.amadeus.error } : undefined,
+      makcorps: results.makcorps ? { count: results.makcorps.offers.length, responseTime: results.makcorps.responseTime, error: results.makcorps.error } : undefined,
     },
     searchParams,
   };
 };
 
-async function queryProvider(name, providerModule, searchParams, results) {
+async function queryProvider(name, searchFn) {
   const start = Date.now();
   try {
-    const offers = await providerModule.search(searchParams);
-    results[name].offers = Array.isArray(offers) ? offers : [];
-    results[name].responseTime = Date.now() - start;
-    console.log(`✅ ${name} hotels: ${results[name].offers.length} offers in ${results[name].responseTime}ms`);
+    const offers = await searchFn();
+    return { offers: Array.isArray(offers) ? offers : [], responseTime: Date.now() - start, error: null };
   } catch (error) {
-    results[name].responseTime = Date.now() - start;
-    results[name].error = extractErrorMessage(name, error);
-    console.error(`❌ ${name} failed (${results[name].responseTime}ms):`, results[name].error);
+    const msg = error.response?.data?.errors
+      ? JSON.stringify(error.response.data.errors)
+      : error.message || "Unknown error";
+    return { offers: [], responseTime: Date.now() - start, error: `${name}: ${msg}` };
   }
-}
-
-function extractErrorMessage(providerName, error) {
-  if (error.response?.data?.errors) {
-    return `${providerName}: ${JSON.stringify(error.response.data.errors)}`;
-  }
-  if (error.response?.data?.message) {
-    return `${providerName}: ${error.response.data.message}`;
-  }
-  return `${providerName}: ${error.message || "Unknown error"}`;
 }

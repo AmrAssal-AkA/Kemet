@@ -1,15 +1,15 @@
 const HotelServices = require("../../services/HotelServices");
+const amadeusAPI = require("../../config/amadeus");
 
-const SearchHotel = async (req, res) => {
+const SearchHotel = async (req, res, nxt) => {
   const {
     cityCode,
     checkInDate,
     checkOutDate,
     NumberOfGuests,
     NumberOfrooms,
-    provider = "all", 
+    provider = "all",
   } = req.body;
-
 
   if (!cityCode || !checkInDate || !checkOutDate || !NumberOfGuests || !NumberOfrooms) {
     return res.status(400).json({
@@ -34,31 +34,22 @@ const SearchHotel = async (req, res) => {
   }
 
   try {
-    const searchParams = {
+    const searchResults = await HotelServices.SearchCity({
       cityCode,
       checkInDate,
       checkOutDate,
       NumberOfGuests,
       NumberOfrooms,
-      provider
-    };
-
-    const searchResults = await HotelServices.SearchCity(searchParams);
+      provider,
+    });
 
     return res.status(200).json(searchResults);
   } catch (error) {
-    console.error("[SearchHotel] Error:", error.message || error);
-
-    return res.status(error.status || 500).json({
-      error: error.message || "Failed to fetch hotel data. Please try again later.",
-    });
+    nxt(error);
   }
 };
 
-
-const getHotelOffers = async (req, res) => {
-  const amadeusAPI = require("../../config/amadeus");
-
+const getHotelOffers = async (req, res, nxt) => {
   const { hotelId, checkInDate, checkOutDate, adults } = req.query;
 
   if (!hotelId || !checkInDate || !checkOutDate || !adults) {
@@ -104,20 +95,7 @@ const getHotelOffers = async (req, res) => {
       offers: hotelOffers,
     });
   } catch (error) {
-    const amadeusErrors = error.response?.data?.errors;
-    console.error("[getHotelOffers] Error:", amadeusErrors || error.message);
-
-    if (amadeusErrors?.length) {
-      return res.status(error.response?.status || 502).json({
-        error: "Failed to fetch hotel offers.",
-        details: amadeusErrors.map((e) => e.detail || e.title),
-      });
-    }
-
-    return res.status(500).json({
-      error: "Failed to fetch hotel offers. Please try again later.",
-      details: error.message,
-    });
+    nxt(error);
   }
 };
 

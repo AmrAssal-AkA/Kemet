@@ -62,7 +62,7 @@ passport.use(
   ),
 );
 // Registration (Sign Up)
-const register = async (req, res) => {
+const register = async (req, res, nxt) => {
   try {
     const { name, email, password, Nationality } = req.body;
 
@@ -133,15 +133,13 @@ const register = async (req, res) => {
       },
       message: "User registered successfully",
     });
-  } catch (error) {
-    console.error("Register Error:", error.message);
-    console.error("Register Error Stack:", error.stack);
-    res.status(500).json({ message: "An internal server error occurred" });
+  } catch (err) {
+    nxt(err);
   }
 };
 
 // Login (Sign In)
-const login = async (req, res) => {
+const login = async (req, res, nxt) => {
   try {
     const { email, password } = req.body;
 
@@ -192,14 +190,12 @@ const login = async (req, res) => {
       },
       message: `Login successful, welcome back ${user.name}`,
     });
-  } catch (error) {
-    console.error("Login Error:", error.message);
-    console.error("Login Error Stack:", error.stack);
-    res.status(500).json({ message: "An internal server error occurred" });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-const googleCallback = async (req, res) => {
+const googleCallback = async (req, res, nxt) => {
   try {
     const { accessToken, refreshToken } = generateToken(req.user);
     await RefreshToken.create({
@@ -237,13 +233,13 @@ const googleCallback = async (req, res) => {
       subject: "Kemet Travel - Google Sign-In Successful",
       html: emailResult,
     });
-  } catch (error) {
-    res.redirect("http://localhost:3000/auth/auth?error=google_auth_failed");
+  } catch (err) {
+    nxt(err);
   }
 };
 
 // Email Verification
-const verifyEmail = async (req, res) => {
+const verifyEmail = async (req, res, nxt  ) => {
   try {
     const { token } = req.query;
     if (!token) {
@@ -276,13 +272,12 @@ const verifyEmail = async (req, res) => {
       success: true,
       message: "Email verified successfully! You can now log in.",
     });
-  } catch (error) {
-    console.error("Email verification error:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-const refresh = async (req, res) => {
+const refresh = async (req, res, nxt  ) => {
   const refreshToken = req.cookies["x-refresh-token"];
 
   if (!refreshToken) {
@@ -338,8 +333,8 @@ const refresh = async (req, res) => {
         });
       },
     );
-  } catch (error) {
-    res.status(500).json({ message: "An internal server error occurred" });
+  } catch (err) {
+    nxt(err);
   }
 };
 

@@ -1,6 +1,5 @@
 // server.js
-const dotenv = require("dotenv");
-dotenv.config();
+const dotenv = require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -29,6 +28,7 @@ const port = process.env.PORT;
 const userRoutes = require("./routes/userdashboardRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const guideDashboardRoute = require("./routes/guideDashboardRoute");
+const errorHandlerMW = require("./middleware/ErrorMW");
 
 // Connect to database
 connectDB();
@@ -55,6 +55,15 @@ app.get("/api-docs.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
+process.on("uncaughtException", (exception) => {
+  Logger.error(`Uncaught Exception: ${exception.message}`);
+  process.exit(1);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  Logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
+  process.exit(1);
+});
+
 // Routes
 app.use("/api", apiLimiter);
 app.use("/api/Trip", addTripRoute);
@@ -76,6 +85,14 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Travel Agency API");
 });
 
+
+app.use(errorHandlerMW);
+
+if (process.env.NODE_ENV !== "production") {
 app.listen(port, () => {
   Logger.info(`Server is running on port ${port}`);
 });
+}
+
+
+module.exports = app;

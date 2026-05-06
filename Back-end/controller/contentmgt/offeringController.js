@@ -23,7 +23,6 @@ const createOffers = async (req, res) => {
         await offering.save();
     res.status(200).json({message: "Offer Created"});
     } catch (error) {
-    console.error("Error creating offer:", error);
     res.status(500).json({message: "Server Error" , error: error.message});
     }
 };

@@ -34,9 +34,8 @@ const createContact = async (req, res) => {
       message: message,
     });
     await Newcontacts.save();
-    res.status(201).json({ message: "Thank you for contacting us" });
+    res.status(200).json({ message: "Thank you for contacting us" });
   } catch (error) {
-    console.error("Error creating form:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -45,7 +44,7 @@ const createContact = async (req, res) => {
 const getAllContacts = async (req, res) => {
   try {
     const allcontacts = await contact.find();
-    res.status(201).json(allcontacts);
+    res.status(200).json(allcontacts);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -59,7 +58,7 @@ const getContactByName = async (req, res) => {
     if (!contactByOne) {
       return res.status(404).json({ message: "Contact not found." });
     }
-    res.status(201).json(contactByOne);
+    res.status(200).json(contactByOne);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
