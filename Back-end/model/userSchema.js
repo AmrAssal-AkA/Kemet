@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     validate: {
-      validator: (v) => {
+      validator: function (v) {
         if(this.googleId){
           return true;
         }
@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema({
     minlength: 7,
     select: false,
     validate: {
-      validator: (v) => {
+      validator: function (v) {
          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);
       },
       message: "Password must contain at least one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long.",
