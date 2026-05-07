@@ -42,7 +42,7 @@ async function handler(req, res) {
     if (error.response?.status === 401 && refreshToken) {
       try {
         const refreshResponse = await axios.post(
-          "http://localhost:8000/api/auth/refresh",
+          "https://kemet-two.vercel.app/api/auth/refresh",
           {},
           {
             headers: {
@@ -52,7 +52,7 @@ async function handler(req, res) {
         );
         token = refreshResponse.data.token;
         const retryResponse = await axios.get(
-          "http://localhost:8000/api/contact/contacts",
+          "https://kemet-two.vercel.app/api/contact/contacts",
           {
             headers: {
               Cookie: req.headers.cookie || "",

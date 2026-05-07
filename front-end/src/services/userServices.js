@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://kemet-two.vercel.app/";
 
 export const USER_ROLES = ["user", "admin", "guide"];
 
@@ -44,7 +44,7 @@ export async function updateUserRole(userId, role) {
     throw new Error("Invalid role selected.");
   }
 
-  const endpoint = "/api/admin/updateUserRole";
+  const endpoint = `$/api/admin/updateUserRole`;
   const payload = { userId, role };
 
   console.log("[updateUserRole] endpoint URL:", endpoint);

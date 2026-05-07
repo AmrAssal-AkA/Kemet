@@ -48,7 +48,7 @@ async function handler(req, res) {
       console.log("Token expired, attempting refresh with refresh token...");
       try {
         const refreshResponse = await axios.post(
-          "http://localhost:8000/api/auth/refresh",
+          "https://kemet-two.vercel.app/api/auth/refresh",
           {},
           {
             headers: {
@@ -67,7 +67,7 @@ async function handler(req, res) {
 
         try {
           const retryResponse = await axios.get(
-            "http://localhost:8000/api/adminDashboard/AllUsers",
+            "https://kemet-two.vercel.app/api/adminDashboard/AllUsers",
             {
               headers: {
                 Cookie: req.headers.cookie || "",
