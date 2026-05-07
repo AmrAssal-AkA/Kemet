@@ -77,7 +77,6 @@ const userSchema = new mongoose.Schema({
   },
   googleId: {
     type: String,
-    sparse: true,
     unique: true,
   },
   emailVerificationToken: {
@@ -114,6 +113,14 @@ userSchema.virtual('Bookings', {
   rel: 'Booking',
   localField: 'userId',
   foreignField: 'userId',
-})
+});
+
+userSchema.pre("/validate", {document: true}, function (next) {
+  if(!this.googleId && !this.password){
+    return next(new Error("Password is required if not using Google authentication."));
+  }
+  next();
+});
+
 
 module.exports = mongoose.model("User", userSchema);
