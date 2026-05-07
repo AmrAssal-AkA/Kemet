@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: (v) => {
+        if(this.googleId){
+          return true;
+        }
         return /^[a-z0-9_]*[A-Z][a-z0-9_]*@[a-z0-9]+\.[a-z]{2,}$/.test(v);
       },
       message: "email must be valid and contain at least one uppercase letter and only _ and @ special characters.",
