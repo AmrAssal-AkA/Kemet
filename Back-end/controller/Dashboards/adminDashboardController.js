@@ -14,7 +14,7 @@ const getAllUsers = async (req, res, nxt) => {
 
 const getBookingsDetails = async (req, res, nxt) => {
   try {
-    const bookings = await Booking.find().populate("user").populate("trip");
+    const bookings = await Booking.find();
     res.status(200).json({ bookings });
   } catch (err) {
     nxt(err);

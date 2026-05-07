@@ -15,14 +15,13 @@ const currencyMapping = {
 
 const createBooking = async (req, res, nxt) => {
   try {
-    const userId = req.user?.userId;
-    const email = req.user?.email;
-    const userName = req.user?.name;
-    if (!userId || !email) {
-      return res
-        .status(401)
-        .json({ error: "Unauthorized: User not authenticated" });
-    }
+      const userId = req.user?.userId;
+      const email = req.email?.email;
+
+      if(!userId && !email){
+        return res.status(400).json({ error: "Missing required fields: userId, email" });
+      }
+
     const {
       guests,
       flight,
@@ -70,6 +69,8 @@ const createBooking = async (req, res, nxt) => {
       totalPrice,
       currency,
       details: bookingDetails,
+      status: "Pending",
+      paymentStatus: "Pending",
     });
     await newBooking.save();
 
@@ -81,27 +82,6 @@ const createBooking = async (req, res, nxt) => {
       res.status(500).json({ error: "Failed to create Stripe session" });
       return;
     }
-
-    const BookingConfirmationHtml = BookingConfirmationTemplate(userName, {
-      destination: flight?.data?.to || hotel?.data?.location || "N/A",
-      flight: flight?.data
-        ? `${flight.data.airline} (${flight.data.flightNumber})`
-        : "N/A",
-      hotel: hotel?.data?.name || "N/A",
-      travelDates:
-        flight?.data?.departureDate && flight?.data?.returnDate
-          ? `${flight.data.departureDate} to ${flight.data.returnDate}`
-          : hotel?.data?.checkInDate && hotel?.data?.checkOutDate
-            ? `${hotel.data.checkInDate} to ${hotel.data.checkOutDate}`
-            : "N/A",
-      travelers: guests.length,
-      totalPrice: `${totalPrice} ${currency}`,
-    });
-    await sendEmail({
-      to: email,
-      subject: "Booking Confirmation",
-      html: BookingConfirmationHtml,
-    });
 
     await Booking.findByIdAndUpdate(newBooking._id, {
       stripeSessionId: session.id,

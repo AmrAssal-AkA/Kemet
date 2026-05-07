@@ -33,6 +33,7 @@ const errorHandlerMW = require("./middleware/ErrorMW");
 // Connect to database
 connectDB();
 // Middleware
+app.use("/api/payments", paymentRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -46,10 +47,7 @@ app.use(
     cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
   }),
 );
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api-docs')) return next();
-  helmet()(req, res, next);
-});
+app.use(helmet());
 require("./controller/auth/authController");
 app.use(passport.initialize());
 
@@ -97,7 +95,6 @@ app.use("/api/booking", BookingRoute);
 app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
 app.use("/api/userdashboard", userRoutes);
-app.use("/api/payments", paymentRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
 
 app.get("/", (req, res) => {
