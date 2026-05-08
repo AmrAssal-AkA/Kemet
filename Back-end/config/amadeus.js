@@ -4,70 +4,40 @@ const axios = require("axios");
 dotenv.config();
 
 if (!process.env.Amadeus_API_KEY || !process.env.Amadeus_API_SECRET) {
-  console.error(
-    " Amadeus API credentials are missing in environment variables",
-  );
   process.exit(1);
 }
 
-const isProduction = process.env.NODE_ENV === "production";
-const baseURL = isProduction
+const baseURL = process.env.NODE_ENV === "production"
   ? "https://api.amadeus.com"
   : "https://test.api.amadeus.com";
-
-console.log(
-  ` Initializing Amadeus client for ${isProduction ? "PRODUCTION" : "TEST"} environment`,
-);
 
 let accessToken = null;
 let tokenExpiration = null;
 
 const fetchAccessToken = async () => {
-  try {
-    const response = await axios.post(
-      `${baseURL}/v1/security/oauth2/token`,
-      {
-        grant_type: "client_credentials",
-        client_id: process.env.Amadeus_API_KEY,
-        client_secret: process.env.Amadeus_API_SECRET,
-      },
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      },
-    );
+  const response = await axios.post(
+    `${baseURL}/v1/security/oauth2/token`,
+    {
+      grant_type: "client_credentials",
+      client_id: process.env.Amadeus_API_KEY,
+      client_secret: process.env.Amadeus_API_SECRET,
+    },
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } },
+  );
 
-    accessToken = response.data.access_token;
-    const expiresIn = response.data.expires_in || 3600;
-    tokenExpiration = Date.now() + expiresIn * 1000;
-
-    console.log(" Amadeus access token fetched successfully");
-    return accessToken;
-  } catch (error) {
-    console.error(
-      " Failed to fetch Amadeus access token:",
-      error.response?.data || error.message,
-    );
-    throw error;
-  }
+  accessToken = response.data.access_token;
+  tokenExpiration = Date.now() + (response.data.expires_in || 3600) * 1000 - 60000;
+  return accessToken;
 };
 
 const getAccessToken = async () => {
-  if (!accessToken || !tokenExpiration || Date.now() >= tokenExpiration) {
+  if (!accessToken || Date.now() >= tokenExpiration) {
     await fetchAccessToken();
   }
   return accessToken;
 };
 
-const makeAuthenticatedRequest = async (
-  method,
-  endpoint,
-  params = {},
-  data = null,
-  retries = 0,
-  maxRetries = 1, // Amadeus 5xx errors (e.g. 38189) are usually persistent — 1 retry is enough
-) => {
+const request = async (method, endpoint, params = {}, data = null) => {
   const token = await getAccessToken();
 
   const config = {
@@ -86,38 +56,12 @@ const makeAuthenticatedRequest = async (
   }
 
   try {
-    const response = await axios(config);
-    return response;
+    return await axios(config);
   } catch (error) {
-    console.error(`Amadeus API Error (${endpoint}):`, {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      errors: error.response?.data?.errors,
-      message: error.message,
-      params,
-      attempt: retries + 1,
-      maxRetries,
-    });
-
-    if (
-      retries < maxRetries &&
-      (error.response?.status >= 500 || error.code === "ECONNABORTED")
-    ) {
-      const delayMs = Math.pow(2, retries) * 1000; 
-      console.log(
-        `Retrying Amadeus API call (attempt ${retries + 2}/${maxRetries + 1}) after ${delayMs}ms...`,
-      );
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-      return makeAuthenticatedRequest(
-        method,
-        endpoint,
-        params,
-        data,
-        retries + 1,
-        maxRetries,
-      );
+    if (error.response?.status >= 500 || error.code === "ECONNABORTED") {
+      await new Promise((r) => setTimeout(r, 1000));
+      return await axios(config);
     }
-
     throw error;
   }
 };
@@ -127,92 +71,32 @@ const amadeus = {
     locations: {
       hotels: {
         byCity: {
-          get: async (params) => {
-            const response = await makeAuthenticatedRequest(
-              "GET",
-              "/v1/reference-data/locations/hotels/by-city",
-              params,
-            );
-            return response.data;
-          },
+          get: async (params) => (await request("GET", "/v1/reference-data/locations/hotels/by-city", params)).data,
         },
       },
     },
   },
   shopping: {
     hotelOffersSearch: {
-      get: async (params) => {
-        const response = await makeAuthenticatedRequest(
-          "GET",
-          "/v3/shopping/hotel-offers",
-          params,
-        );
-        return response.data;
-      },
+      get: async (params) => (await request("GET", "/v3/shopping/hotel-offers", params)).data,
     },
     flightOffersSearch: {
-      get: async (params) => {
-        const response = await makeAuthenticatedRequest(
-          "GET",
-          "/v2/shopping/flight-offers",
-          params,
-        );
-        return response.data;
-      },
-      post: async (data) => {
-        const response = await makeAuthenticatedRequest(
-          "POST",
-          "/v2/shopping/flight-offers",
-          {},
-          data,
-        );
-        return response.data;
-      },
+      get: async (params) => (await request("GET", "/v2/shopping/flight-offers", params)).data,
+      post: async (data) => (await request("POST", "/v2/shopping/flight-offers", {}, data)).data,
     },
     flightOffersPrice: {
-      post: async (data) => {
-        const response = await makeAuthenticatedRequest(
-          "POST",
-          "/v1/shopping/flight-offers/pricing",
-          {},
-          data,
-        );
-        return response.data;
-      },
+      post: async (data) => (await request("POST", "/v1/shopping/flight-offers/pricing", {}, data)).data,
     },
   },
   booking: {
     flightOrders: {
-      post: async (data) => {
-        const response = await makeAuthenticatedRequest(
-          "POST",
-          "/v1/booking/flight-orders",
-          {},
-          data,
-        );
-        return response.data;
-      },
+      post: async (data) => (await request("POST", "/v1/booking/flight-orders", {}, data)).data,
     },
   },
-};
-
-const testConnection = async () => {
-  try {
+  testConnection: async () => {
     await getAccessToken();
-    console.log("Amadeus API connection successful");
-  } catch (error) {
-    console.error(
-      " Amadeus API connection failed:",
-      error.response?.data || error.message,
-    );
-    if (error.response?.status === 401) {
-      console.error(" Check your API credentials in the .env file");
-    }
-  }
+    return { ok: true };
+  },
 };
-
-if (process.env.NODE_ENV !== "test") {
-  testConnection();
-}
 
 module.exports = amadeus;

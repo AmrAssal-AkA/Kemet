@@ -7,7 +7,7 @@ async function handler(req,res){
         res.status(405).json({message: "Method not allowed"});
     }
     try{
-        const response = await axios.get("http://localhost:8000/api/blog/", {
+        const response = await axios.get("https://kemet-two.vercel.app/api/blog/", {
             headers: {
                 "Content-Type": "application/json",
             },

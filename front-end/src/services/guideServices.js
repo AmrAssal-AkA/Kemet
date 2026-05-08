@@ -1,6 +1,6 @@
 import { getCurrentUser } from "./authServices";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://kemet-two.vercel.app/";
 
 async function handleResponse(res, fallbackMessage) {
   const data = await res.json().catch(() => null);

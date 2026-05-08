@@ -2,7 +2,7 @@ const User = require("../../model/userSchema");
 const Booking = require("../../model/BookingSchema");
 const cloudinary = require("../../config/cloudinary");
 
-const updateProfilePicture = async (req, res) => {
+const updateProfilePicture = async (req, res, nxt) => {
   try {
     const userId = req.cookies["userId"];
     if (!userId) {
@@ -26,12 +26,12 @@ const updateProfilePicture = async (req, res) => {
       { new: true },
     );
     res.status(200).json({ message: "Profile picture updated successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error updating profile picture" });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-const saveTrip = async (req, res) => {
+const saveTrip = async (req, res, nxt) => {
   try {
     const userId = req.cookies["userId"];
     if (!userId) {
@@ -44,12 +44,12 @@ const saveTrip = async (req, res) => {
       { new: true },
     );
     res.status(200).json({ message: "Trip saved successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error saving trip" });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-const getSavedTrips = async (req, res) => {
+const getSavedTrips = async (req, res, nxt) => {
   try {
     const userId = req.cookies["userId"];
     if (!userId) {
@@ -59,12 +59,12 @@ const getSavedTrips = async (req, res) => {
       .select("savedTrips")
       .populate("savedTrips");
     res.json(savedTrips.savedTrips);
-  } catch (error) {
-    return res.status(500).json({ message: "Error fetching saved trips" });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-const removeSavedTrip = async (req, res) => {
+const removeSavedTrip = async (req, res, nxt) => {
   try {
     const userId = req.cookies["userId"];
     const tripId = req.params.tripId;
@@ -75,12 +75,12 @@ const removeSavedTrip = async (req, res) => {
       { new: true },
     );
     res.status(200).json({ message: "Trip removed from saved trips" });
-  } catch (error) {
-    return res.status(500).json({ message: "Error removing saved trip" });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-const getBookedTrips = async (req, res) => {
+const getBookedTrips = async (req, res, nxt) => {
   const userId = req.cookies["userId"];
   if (!userId) {
     return res.status(401).json({ message: "Unauthorized" });
@@ -89,8 +89,8 @@ const getBookedTrips = async (req, res) => {
     try {
       const bookedTrips = await Booking.find({ userId: userId });
       res.json(bookedTrips);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching booked trips" });
+    } catch (err) {
+      nxt(err);
     }
   };
   getBookedTrips();

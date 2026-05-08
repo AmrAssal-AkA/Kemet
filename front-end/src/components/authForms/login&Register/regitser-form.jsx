@@ -9,6 +9,7 @@ export default function RegisterForm() {
     name: "",
     email: "",
     password: "",
+    Nationality: "",
   });
   const { register, loading, error } = useAuth();
 
@@ -108,11 +109,11 @@ export default function RegisterForm() {
           <option value="MX">Mexico</option>
           <option value="KR">South Korea</option>
           <option value="SA">Saudi Arabia</option>
-          <option value="ZA">South Africa</	option>
-          <	option value="NG">Nigeria	</ option >
-          <	option value="AR">Argentina	</ option >
-          <	option value="CL">Chile	</ option >
-          <option value="EUR">Europe</ option >
+          <option value="ZA">South Africa</option>
+          <option value="NG">Nigeria</option>
+          <option value="AR">Argentina</option>
+          <option value="CL">Chile</option>
+          <option value="EUR">Europe</option>
         </select>
       </div>
       <button

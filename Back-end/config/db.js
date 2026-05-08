@@ -1,20 +1,17 @@
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const dns = require('dns');
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 dotenv.config();
 
-dns.setServers(['8.8.8.8', '8.8.4.8']);
 
 const connectDB = async () => {
-    try{
-        await mongoose.connect(process.env.MONGO_URI, {
-            family: 4,
-            serverSelectionTimeoutMS: 5000,
-        });
-        console.log("MongoDB connected successfully");
-    }catch(err){
-        console.log(err.message);
-    }
-}
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      family: 4,
+      serverSelectionTimeoutMS: 5000,
+    });
+  } catch (err) {
+    console.error("Error connecting to MongoDB:", err);
+  }
+};
 
 module.exports = connectDB;

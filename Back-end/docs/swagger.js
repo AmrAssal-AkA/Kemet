@@ -1,6 +1,14 @@
 const swaggerJSDoc = require("swagger-jsdoc");
 
 const port = process.env.PORT || 8000;
+const getServerUrl = () => {
+  if (process.env.NODE_ENV === "production") {
+    return process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "https://kemet-two.vercel.app";
+  }
+  return `http://localhost:${port}`;
+};
 
 const definition = {
   openapi: "3.0.3",
@@ -12,8 +20,8 @@ const definition = {
   },
   servers: [
     {
-      url: `http://localhost:${port}`,
-      description: "Local development server",
+      url: getServerUrl(),
+      description: process.env.NODE_ENV === "production" ? "Production server" : "Local development server",
     },
   ],
   tags: [

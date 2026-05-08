@@ -19,12 +19,12 @@ const setGuideSchedule = async (req, res) => {
 }
 
 
-const guideRequiredTrips = async (req, res) => {
+const guideRequiredTrips = async (req, res, nxt) => {
     try {
         const guideOrdered = await Trip.findOne({guideAvailable: true});
         res.json({ guideOrdered });
-    } catch (error) {
-        res.status(500).json({ error: "Server Error" });
+    } catch (err) {
+        nxt(err);
     }
 }
 

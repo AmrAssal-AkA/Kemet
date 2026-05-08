@@ -6,7 +6,7 @@ const crypto = require("crypto");
 
 const RESET_PASSWORD_SECRET = process.env.RESET_PASSWORD_SECRET;
 
-const generateResetToken = async (req, res) => {
+const generateResetToken = async (req, res, nxt) => {
   const { email } = req.body;
   try {
     if (!email) {
@@ -37,13 +37,11 @@ const generateResetToken = async (req, res) => {
     });
     res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    nxt(error);
   }
 };
 
-const resetPassword = async (req, res) => {
+const resetPassword = async (req, res, nxt) => {
   const { token, newPassword } = req.body;
   try {
     if (!token) {
@@ -90,9 +88,7 @@ const resetPassword = async (req, res) => {
 
     return res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    nxt(error);
   }
 };
 

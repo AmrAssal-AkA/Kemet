@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { validate } = require("./tripSchema");
 
 const contactSchema = new mongoose.Schema({
   id: {

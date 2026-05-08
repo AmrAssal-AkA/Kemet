@@ -29,7 +29,7 @@ export async function getServerSideProps(context) {
   }
 
   try {
-    const response = await fetch("http://localhost:8000/api/auth/refresh", {
+    const response = await fetch("http://localhost:3000/api/auth/refresh", {
       method: "POST",
       headers: {
         Cookie: cookie,

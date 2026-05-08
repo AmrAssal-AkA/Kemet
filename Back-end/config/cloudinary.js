@@ -12,15 +12,14 @@ const uploadImage = async (filePath) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
       folder: "KEMET",
-      transformation:[
+      transformation: [
         { width: 800, height: 600, crop: "fill" },
-        { quality: "auto" }
-      ]
+        { quality: "auto" },
+      ],
     });
     return result;
   } catch (error) {
-    console.error("Error uploading image to Cloudinary:", error);
-    throw error; 
+    throw error;
   }
 };
 

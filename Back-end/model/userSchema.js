@@ -30,7 +30,10 @@ const userSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     validate: {
-      validator: (v) => {
+      validator: function (v) {
+        if(this.googleId){
+          return true;
+        }
         return /^[a-z0-9_]*[A-Z][a-z0-9_]*@[a-z0-9]+\.[a-z]{2,}$/.test(v);
       },
       message: "email must be valid and contain at least one uppercase letter and only _ and @ special characters.",
@@ -44,7 +47,7 @@ const userSchema = new mongoose.Schema({
     minlength: 7,
     select: false,
     validate: {
-      validator: (v) => {
+      validator: function (v) {
          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);
       },
       message: "Password must contain at least one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long.",
@@ -74,7 +77,6 @@ const userSchema = new mongoose.Schema({
   },
   googleId: {
     type: String,
-    sparse: true,
     unique: true,
   },
   emailVerificationToken: {
@@ -111,6 +113,14 @@ userSchema.virtual('Bookings', {
   rel: 'Booking',
   localField: 'userId',
   foreignField: 'userId',
-})
+});
+
+userSchema.pre("/validate", {document: true}, function (next) {
+  if(!this.googleId && !this.password){
+    return next(new Error("Password is required if not using Google authentication."));
+  }
+  next();
+});
+
 
 module.exports = mongoose.model("User", userSchema);

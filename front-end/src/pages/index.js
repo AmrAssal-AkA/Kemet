@@ -242,7 +242,7 @@ export default function Home() {
           <img src="/hero.png" alt="Egypt hero" className="w-full h-[80vh] object-cover" />
           <div className="absolute inset-0"
             style={{ background:"linear-gradient(105deg,rgba(6,18,46,.82) 0%,rgba(11,31,70,.55) 50%,rgba(0,0,0,.15) 100%)" }} />
-          <div className="absolute left-0 bottom-0 w-full h-[3px] pointer-events-none"
+          <div className="absolute left-0 bottom-0 w-full h-0.75 pointer-events-none"
             style={{ background:"linear-gradient(90deg,transparent,#FFCE2A 40%,#f5b800 60%,transparent)" }} />
 
           <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-20 text-white">
@@ -305,7 +305,7 @@ export default function Home() {
                 <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Travelers</span>
                 <input placeholder="Guests" className="search-input w-full bg-transparent text-sm font-bold text-gray-900 placeholder-gray-400" />
               </div>
-              <Link href="/guide" className="w-full md:w-auto flex-shrink-0">
+              <Link href="/guide" className="w-full md:w-auto shrink-0">
                 <button className="btn-gold w-full md:w-auto rounded-full px-7 py-3 font-semibold text-black text-sm">Search</button>
               </Link>
             </div>
@@ -327,7 +327,7 @@ export default function Home() {
                 Egypt's most iconic destinations — each city with its own story, charm, and unforgettable experiences.
               </p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
               <span className="text-gray-400 text-sm">Sort by:</span>
               <Link href="/offerings"><span className="text-[13px] font-medium px-4 py-1.5 rounded-full bg-yellow-400 text-black cursor-pointer">Popular</span></Link>
               <Link href="/offerings"><span className="text-[13px] font-medium px-4 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 cursor-pointer transition-colors">Hidden Gems</span></Link>
@@ -534,7 +534,7 @@ export default function Home() {
 
                     <div className="flex items-center gap-3 pt-2 border-t border-white/10">
                       <img src={r.avatar} alt={r.name}
-                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                        className="w-10 h-10 rounded-full object-cover shrink-0"
                         style={{ border:"2px solid rgba(255,206,42,.4)" }} />
                       <div>
                         <p className="text-white text-sm font-semibold leading-none">{r.name}</p>
@@ -590,7 +590,7 @@ export default function Home() {
                   transition={{ delay: i * 0.1, duration:0.5 }}
                   className="comm-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer flex flex-col md:flex-row"
                 >
-                  <div className="overflow-hidden md:w-2/5 h-52 md:h-auto flex-shrink-0">
+                  <div className="overflow-hidden md:w-2/5 h-52 md:h-auto shrink-0">
                     <img src={story.img} alt={story.title}
                       className="comm-img w-full h-full object-cover" />
                   </div>
@@ -604,7 +604,7 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2.5 mb-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                           style={{ background: story.avatarBg }}>
                           {story.initials}
                         </div>
@@ -631,7 +631,7 @@ export default function Home() {
               <p className="text-white font-bold text-base mb-0.5">Ready to share your own story?</p>
               <p className="text-gray-400 text-sm">Join 12,400+ travelers and become part of Egypt's travel community.</p>
             </div>
-            <Link href="/communities" className="flex-shrink-0">
+            <Link href="/communities" className="shrink-0">
               <button className="btn-gold rounded-full px-7 py-3 font-semibold text-black text-sm whitespace-nowrap">
                 Join the Community
               </button>
@@ -660,7 +660,7 @@ export default function Home() {
                   Every guide, every route, every hidden spot is curated by locals who grew up between these monuments.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4 flex-shrink-0 w-full lg:w-auto">
+              <div className="grid grid-cols-2 gap-4 shrink-0 w-full lg:w-auto">
                 {[
                   { icon:"🏺", label:"Authentic Experiences" },
                   { icon:"🗺️", label:"Smart Trip Planning" },
@@ -710,7 +710,7 @@ export default function Home() {
                   style={{ border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.10)" }}
                 />
                 <button
-                  className="flex-shrink-0 rounded-full px-7 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
+                  className="shrink-0 rounded-full px-7 py-3.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5"
                   style={{ background:"#06122e", boxShadow:"0 4px 14px rgba(6,18,46,.35)", whiteSpace:"nowrap" }}
                 >
                   Subscribe →

@@ -22,7 +22,6 @@ const createHiddenGem = async (req, res) => {
     await hidden.save();
     res.status(200).json({message: "Hidden Gem Created"});
     } catch (error) {
-    console.error("Error creating Hidden Gem:", error);
     res.status(500).json({message: "Server Error" , error: error.message});
     }
 };

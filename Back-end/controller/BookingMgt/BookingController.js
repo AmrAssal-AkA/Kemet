@@ -1,7 +1,7 @@
 const { booking } = require("../../config/amadeus");
 const Booking = require("../../model/BookingSchema");
-const { stripeCheckout, refundPayment } = require("./PaymentController");
-const guest = require("../../model/GuestSchema");
+const { stripeCheckout, refundPayment } = require("./paymentController");
+const guest = require("../../model/guestSchema");
 const {
   BookingConfirmationTemplate,
   sendEmail,
@@ -13,14 +13,15 @@ const currencyMapping = {
   EUR: "EUR",
 };
 
-const createBooking = async (req, res) => {
+const createBooking = async (req, res, nxt) => {
   try {
-    const userId = req.user?.userId;
-    const email = req.user?.email;
-    const userName = req.user?.name;
-    if (!userId || !email) {
-      return res.status(401).json({ error: "Unauthorized: User not authenticated" });
-    }
+      const userId = req.user?.userId;
+      const email = req.email?.email;
+
+      if(!userId && !email){
+        return res.status(400).json({ error: "Missing required fields: userId, email" });
+      }
+
     const {
       guests,
       flight,
@@ -68,6 +69,8 @@ const createBooking = async (req, res) => {
       totalPrice,
       currency,
       details: bookingDetails,
+      status: "Pending",
+      paymentStatus: "Pending",
     });
     await newBooking.save();
 
@@ -80,30 +83,6 @@ const createBooking = async (req, res) => {
       return;
     }
 
-    const BookingConfirmationHtml = BookingConfirmationTemplate(
-      userName,
-      {
-        destination: flight?.data?.to || hotel?.data?.location || "N/A",
-        flight: flight?.data
-          ? `${flight.data.airline} (${flight.data.flightNumber})`
-          : "N/A",
-        hotel: hotel?.data?.name || "N/A",
-        travelDates:
-          flight?.data?.departureDate && flight?.data?.returnDate
-            ? `${flight.data.departureDate} to ${flight.data.returnDate}`
-            : hotel?.data?.checkInDate && hotel?.data?.checkOutDate
-              ? `${hotel.data.checkInDate} to ${hotel.data.checkOutDate}`
-              : "N/A",
-        travelers: guests.length,
-        totalPrice: `${totalPrice} ${currency}`,
-      },
-    );
-    await sendEmail({
-      to: email,
-      subject: "Booking Confirmation",
-      html: BookingConfirmationHtml,
-    });
-
     await Booking.findByIdAndUpdate(newBooking._id, {
       stripeSessionId: session.id,
     });
@@ -114,14 +93,12 @@ const createBooking = async (req, res) => {
       bookingId: newBooking._id,
       checkoutUrl: session.url,
     });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Failed to create booking", details: error.message });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-const cancelBooking = async (req, res) => {
+const cancelBooking = async (req, res, nxt) => {
   try {
     const { bookingId } = req.params;
     const booking = await Booking.findById(bookingId);
@@ -150,10 +127,8 @@ const cancelBooking = async (req, res) => {
       paymentStatus: "Refunded",
     });
     return res.status(200).json({ message: "Booking cancelled successfully" });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ error: "Failed to cancel booking", details: error.message });
+  } catch (err) {
+    nxt(err);
   }
 };
 

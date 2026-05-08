@@ -29,7 +29,7 @@ async function handler(req, res) {
 
   try {
     const response = await axios.get(
-      "http://localhost:8000/api/adminDashboard/bookingDetails",
+      "https://kemet-two.vercel.app/api/adminDashboard/bookingDetails",
       {
         headers: {
           Cookie: req.headers.cookie || "",
@@ -41,7 +41,7 @@ async function handler(req, res) {
     if (error.response?.status === 401 && refreshToken) {
       try {
         const refreshResponse = await axios.post(
-          "http://localhost:8000/api/auth/refresh",
+          "https://kemet-two.vercel.app/api/auth/refresh",
           {},
           {
             headers: {
@@ -51,7 +51,7 @@ async function handler(req, res) {
         );
         token = refreshResponse.data.token;
         const retryResponse = await axios.get(
-          "http://localhost:8000/api/adminDashboard/bookingDetails",
+          "https://kemet-two.vercel.app/api/adminDashboard/bookingDetails",
           {
             headers: {
               Cookie: req.headers.cookie || "",

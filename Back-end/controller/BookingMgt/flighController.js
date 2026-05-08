@@ -1,11 +1,9 @@
 const FlightServices = require("../../services/flightServices");
 
-
-exports.searchFlights = async (req, res) => {
+exports.searchFlights = async (req, res, nxt) => {
   try {
     const provider = req.query.provider || "all";
     const searchParams = { ...req.body, provider };
-
 
     const searchResults = await FlightServices.searchFlights(searchParams);
 
@@ -14,17 +12,11 @@ exports.searchFlights = async (req, res) => {
       ...searchResults,
     });
   } catch (error) {
-    console.error("Flight Search Error:", error);
-    res.status(error.status || 500).json({
-      success: false,
-      message: error.message || "An error occurred while searching for flights",
-      data: error.data || null,
-    });
+    nxt(error);
   }
 };
 
-
-exports.getFlightDetails = async (req, res) => {
+exports.getFlightDetails = async (req, res, nxt) => {
   try {
     const { flightOffer } = req.body;
 
@@ -42,17 +34,11 @@ exports.getFlightDetails = async (req, res) => {
       ...details,
     });
   } catch (error) {
-    console.error("Flight Details Error:", error);
-    res.status(error.status || 500).json({
-      success: false,
-      message: error.message || "Failed to get flight details",
-      data: error.data || null,
-    });
+    nxt(error);
   }
 };
 
-
-exports.priceFlightOffer = async (req, res) => {
+exports.priceFlightOffer = async (req, res, nxt) => {
   try {
     const { flightOffer } = req.body;
 
@@ -70,11 +56,28 @@ exports.priceFlightOffer = async (req, res) => {
       ...pricingResult,
     });
   } catch (error) {
-    console.error("Flight Pricing Error:", error);
-    res.status(error.status || 500).json({
-      success: false,
-      message: error.message || "Failed to confirm flight pricing",
-      data: error.data || null,
+    nxt(error);
+  }
+};
+
+exports.createFlightOrder = async (req, res, nxt) => {
+  try {
+    const { pricedOffer, travelers } = req.body;
+
+    if (!pricedOffer || !travelers?.length) {
+      return res.status(400).json({
+        success: false,
+        message: "pricedOffer and at least one traveler are required",
+      });
+    }
+
+    const order = await FlightServices.createFlightOrder(pricedOffer, travelers);
+
+    res.status(201).json({
+      success: true,
+      ...order,
     });
+  } catch (error) {
+    nxt(error);
   }
 };
