@@ -38,7 +38,6 @@ const passportRoutes = require("./routes/passportRoutes");
 connectDB();
 // Middleware
 app.use("/api/payments", paymentRoutes);
-app.use("/api/passport", passportRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -100,6 +99,7 @@ app.use("/api/booking", BookingRoute);
 app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
 app.use("/api/userdashboard", userRoutes);
+app.use("/api/passport", passportRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
 
 app.get("/", (req, res) => {

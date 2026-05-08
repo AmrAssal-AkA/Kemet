@@ -100,6 +100,12 @@ const bookingSchema = new mongoose.Schema(
         default: "Trip",
       },
     },
+    passportImages: [
+      {
+        url: String,
+        cloudinaryId: String,
+      },
+    ],
   },
   {
     timestamps: true,

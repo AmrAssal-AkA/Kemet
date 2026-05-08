@@ -1,11 +1,14 @@
 const { booking } = require("../../config/amadeus");
 const Booking = require("../../model/BookingSchema");
 const { stripeCheckout, refundPayment } = require("./paymentController");
-const guest = require("../../model/guestSchema");
+const guests = require("../../model/guestSchema");
 const {
   BookingConfirmationTemplate,
   sendEmail,
 } = require("../../services/miling");
+const passport = require("passport");
+const validatePassport = require("../auth/passportValidation").validatePassport;
+const cloudinary = require("../../config/cloudinary");
 
 const currencyMapping = {
   USA: "USD",
@@ -15,12 +18,14 @@ const currencyMapping = {
 
 const createBooking = async (req, res, nxt) => {
   try {
-      const userId = req.user?.userId;
-      const email = req.email?.email;
+    const userId = req.user?.userId;
+    const email = req.email?.email;
 
-      if(!userId && !email){
-        return res.status(400).json({ error: "Missing required fields: userId, email" });
-      }
+    if (!userId && !email) {
+      return res
+        .status(400)
+        .json({ error: "Missing required fields: userId, email" });
+    }
 
     const {
       guests,
@@ -31,6 +36,30 @@ const createBooking = async (req, res, nxt) => {
       PassportNumber,
       totalPrice,
     } = req.body;
+
+    const PassportImage = req.file ? req.file.buffer : null;
+
+    if (!PassportImage) {
+      res.status(400).json({ error: "Passport image is required" });
+      return;
+    }
+
+    const passportValidationResult = await validatePassport({
+      imageMetadata: { width: 0, height: 0, format: "", size: 0 },
+      file: { buffer: req.file.buffer },
+    });
+
+    if (!passportValidationResult.validation.isReadable) {
+      return res.status(400).json({
+        error: "Passport image is not readable",
+        issues: passportValidationResult.validation.issues,
+      });
+    }
+    const uploadedPassports = await Promise.all(
+      PassportImages.map((buffer) =>
+        cloudinary.uploadImage(buffer, "guest_passport_images"),
+      ),
+    );
 
     let currency = req.body.currency;
     if (!userId || !guests || guests.length === 0 || !totalPrice) {
@@ -71,6 +100,10 @@ const createBooking = async (req, res, nxt) => {
       details: bookingDetails,
       status: "Pending",
       paymentStatus: "Pending",
+      passportImages: uploadedPassports.map(upload => ({
+        url: upload.secure_url,
+        cloudinaryId: upload.public_id,
+      }))
     });
     await newBooking.save();
 

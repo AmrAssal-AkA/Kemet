@@ -1,5 +1,6 @@
 // models/Guest.js
 const mongoose = require("mongoose");
+const passport = require("passport");
 
 const passportRegex = /^[A-Z0-9]{6,9}$/;
 
