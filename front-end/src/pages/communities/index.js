@@ -11,7 +11,7 @@ export default function Community() {
     {
       id: 1,
       featured: true,
-      img: "/community/story1.jpg",        // ← put your image in /public/community/story1.jpg
+      img: "/images/communities/story1.jpg",
       category: "Luxor · Featured",
       title: "Waking up at 4AM for the balloon ride that changed how I see Egypt forever",
       excerpt: "I almost skipped it — too tired, too cold. Then we rose above the Valley of the Kings as the sun cracked the horizon. Some things can't be captured in photos, only in memory.",
@@ -26,7 +26,7 @@ export default function Community() {
     {
       id: 2,
       featured: false,
-      img: "/community/story2.jpg",        // ← put your image in /public/community/story2.jpg
+      img: "/images/communities/story2.jpg",
       category: "Siwa · Hidden Gem",
       title: "The oasis that Instagram hasn't discovered yet",
       excerpt: "3 days completely offline, salt lake sunsets, and the friendliest locals I've ever met.",
@@ -41,7 +41,7 @@ export default function Community() {
     {
       id: 3,
       featured: false,
-      img: "/community/story3.jpg",        // ← put your image in /public/community/story3.jpg
+      img: "/images/communities/story3.jpg",
       category: "Alexandria · Local Life",
       title: "Eating ful medames by the sea at sunrise — an Alexandrian morning ritual",
       excerpt: "The corniche at 6AM with a paper cup of tea. This is the city nobody tells you about.",
@@ -56,7 +56,7 @@ export default function Community() {
     {
       id: 4,
       featured: false,
-      img: "/community/story4.jpg",        // ← put your image in /public/community/story4.jpg
+      img: "/images/communities/story4.jpg",
       category: "Cairo · History",
       title: "Standing inside the Great Pyramid — what the photos never show you",
       excerpt: "The heat, the silence, the weight of 4,000 years pressing in. It rewires something in your brain.",
@@ -71,20 +71,18 @@ export default function Community() {
   ];
 
   const tips = [
-    { img: "/community/tip1.jpg", title: "Best Time to Visit",  text: "Oct–Apr is ideal. Summer in Aswan hits 45°C — temples won't wait but heat will slow you." },
-    { img: "/community/tip2.jpg", title: "Cash & Cards",        text: "Always carry Egyptian pounds. ATMs in Luxor & Cairo are reliable; Siwa is cash-only territory." },
-    { img: "/community/tip3.jpg", title: "Local Guides",        text: "Official guides open doors — literally. Many restricted areas are guide-access only." },
-    { img: "/community/tip4.jpg", title: "Dress Code",          text: "Pack a light scarf. Shoulders & knees covered at temples is respectful and required." },
+    { img: "/images/communities/tip1.jpg", title: "Best Time to Visit",  text: "Oct–Apr is ideal. Summer in Aswan hits 45°C — temples won't wait but heat will slow you." },
+    { img: "/images/communities/tip2.jpg", title: "Cash & Cards",        text: "Always carry Egyptian pounds. ATMs in Luxor & Cairo are reliable; Siwa is cash-only territory." },
+    { img: "/images/communities/tip3.jpg", title: "Local Guides",        text: "Official guides open doors — literally. Many restricted areas are guide-access only." },
+    { img: "/images/communities/tip4.jpg", title: "Dress Code",          text: "Pack a light scarf. Shoulders & knees covered at temples is respectful and required." },
   ];
 
-  // Photo wall — large mosaic grid
-  // photo1 spans 2 cols + 2 rows (big left tile), photos 2-5 fill the right side
   const photos = [
-    { img: "/community/photo1.jpg", label: "Valley of the Kings · by @sara.travels" },   // ← big tile
-    { img: "/community/photo2.jpg", label: "Aswan sunset · by @karim.m" },
-    { img: "/community/photo3.jpg", label: "Siwa Oasis · by @nour.f" },
-    { img: "/community/photo4.jpg", label: "Sharm reefs · by @youssef.h" },
-    { img: "/community/photo5.jpg", label: "Cairo nights · by @layla.r" },
+    { img: "/images/communities/photo1.jpg", label: "Valley of the Kings · by @sara.travels" },
+    { img: "/images/communities/photo2.jpg", label: "Aswan sunset · by @karim.m" },
+    { img: "/images/communities/photo3.jpg", label: "Siwa Oasis · by @nour.f" },
+    { img: "/images/communities/photo4.jpg", label: "Sharm reefs · by @youssef.h" },
+    { img: "/images/communities/photo5.jpg", label: "Cairo nights · by @layla.r" },
   ];
 
   const members = [
@@ -108,6 +106,7 @@ export default function Community() {
     <div className="font-sans bg-[#f9fafb]">
 
       {/* ───────── HERO BANNER ───────── */}
+      {/* EDIT 1: Added hero-bg.jpg as background image with overlay */}
       <section className="px-4 md:px-20 pt-10 pb-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -115,10 +114,20 @@ export default function Community() {
           transition={{ duration: 0.6 }}
           className="rounded-3xl overflow-hidden relative"
           style={{
-            background: "linear-gradient(135deg,#1a1a1a 0%,#2d2519 60%,#3d3020 100%)",
             padding: "3.5rem 3rem",
+            backgroundImage: "url('/images/communities/hero-bg.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         >
+          {/* Dark overlay to keep text readable */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "linear-gradient(135deg,rgba(26,26,26,0.88) 0%,rgba(45,37,25,0.82) 60%,rgba(61,48,32,0.78) 100%)",
+            }}
+          />
+
           {/* glow blobs */}
           <div
             className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
@@ -138,53 +147,56 @@ export default function Community() {
             }}
           />
 
-          <span className="inline-block bg-yellow-400/20 text-yellow-400 text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-5">
-            Community Hub
-          </span>
+          {/* All content needs relative z-index to sit above the overlay */}
+          <div className="relative z-10">
+            <span className="inline-block bg-yellow-400/20 text-yellow-400 text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-5">
+              Community Hub
+            </span>
 
-          <h1
-            className="text-4xl md:text-5xl font-extrabold text-white leading-tight max-w-xl mb-4"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Where every traveler becomes a{" "}
-            <em className="not-italic text-yellow-400">storyteller</em>
-          </h1>
-
-          <p className="text-gray-400 text-base max-w-md leading-relaxed mb-8">
-            Join thousands of explorers sharing their real Egypt experiences — from Siwa sunsets to Luxor nights.
-          </p>
-
-          <div className="flex gap-4 flex-wrap">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-yellow-400 text-black px-7 py-3 rounded-full font-semibold shadow-lg"
+            <h1
+              className="text-4xl md:text-5xl font-extrabold text-white leading-tight max-w-xl mb-4"
+              style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              Join the Community
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="border border-white/30 text-white px-7 py-3 rounded-full font-medium"
-            >
-              Browse Stories
-            </motion.button>
-          </div>
+              Where every traveler becomes a{" "}
+              <em className="not-italic text-yellow-400">storyteller</em>
+            </h1>
 
-          <div className="flex gap-12 mt-10 pt-6 border-t border-white/10">
-            {[["12,400+", "Members"], ["3,800+", "Stories Shared"], ["6", "Destinations"]].map(
-              ([num, label]) => (
-                <div key={label}>
-                  <div
-                    className="text-2xl font-bold text-white"
-                    style={{ fontFamily: "'Playfair Display', serif" }}
-                  >
-                    {num}
+            <p className="text-gray-400 text-base max-w-md leading-relaxed mb-8">
+              Join thousands of explorers sharing their real Egypt experiences — from Siwa sunsets to Luxor nights.
+            </p>
+
+            <div className="flex gap-4 flex-wrap">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-yellow-400 text-black px-7 py-3 rounded-full font-semibold shadow-lg"
+              >
+                Join the Community
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="border border-white/30 text-white px-7 py-3 rounded-full font-medium"
+              >
+                Browse Stories
+              </motion.button>
+            </div>
+
+            <div className="flex gap-12 mt-10 pt-6 border-t border-white/10">
+              {[["12,400+", "Members"], ["3,800+", "Stories Shared"], ["6", "Destinations"]].map(
+                ([num, label]) => (
+                  <div key={label}>
+                    <div
+                      className="text-2xl font-bold text-white"
+                      style={{ fontFamily: "'Playfair Display', serif" }}
+                    >
+                      {num}
+                    </div>
+                    <div className="text-xs uppercase tracking-widest text-gray-500 mt-0.5">{label}</div>
                   </div>
-                  <div className="text-xs uppercase tracking-widest text-gray-500 mt-0.5">{label}</div>
-                </div>
-              )
-            )}
+                )
+              )}
+            </div>
           </div>
         </motion.div>
       </section>
@@ -218,7 +230,8 @@ export default function Community() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* EDIT 2: Featured card image fixed width/height, no empty space. Small cards get fixed h-40 image. */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {filteredStories.map((story, i) => {
             const isFeaturedFirst = story.featured && filteredStories[0]?.id === story.id;
             return (
@@ -229,23 +242,27 @@ export default function Community() {
                 transition={{ delay: i * 0.08 }}
                 whileHover={{ y: -4 }}
                 className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer ${
-                  isFeaturedFirst ? "md:col-span-2 md:flex" : ""
+                  isFeaturedFirst ? "md:col-span-3 md:flex md:h-72" : "flex flex-col"
                 }`}
               >
                 {/* Story image */}
-                <img
-                  src={story.img}
-                  alt={story.title}
-                  className={`object-cover ${
+                <div
+                  className={`flex-shrink-0 overflow-hidden ${
                     isFeaturedFirst
-                      ? "md:w-2/5 w-full h-56 md:h-auto"
-                      : "w-full h-48"
+                      ? "md:w-[480px] w-full h-56 md:h-full"
+                      : "w-full h-52"
                   }`}
-                />
+                >
+                  <img
+                    src={story.img}
+                    alt={story.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
 
                 {/* Body */}
-                <div className="flex flex-col flex-1">
-                  <div className="p-5 flex-1">
+                <div className="flex flex-col flex-1 min-h-0">
+                  <div className="p-5 flex-1 overflow-hidden">
                     <p className="text-xs font-semibold tracking-widest uppercase text-yellow-500 mb-2">
                       {story.category}
                     </p>
@@ -269,7 +286,7 @@ export default function Community() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-4 px-5 py-3 border-t border-gray-100">
+                  <div className="flex gap-4 px-5 py-3 border-t border-gray-100 mt-auto">
                     <span className="text-xs text-gray-400 cursor-pointer hover:text-gray-700">
                       ♥ {story.likes} likes
                     </span>
@@ -286,6 +303,7 @@ export default function Community() {
       </section>
 
       {/* ───────── TRAVEL TIPS ───────── */}
+      {/* EDIT 3: Increased card image height to h-44 and overall card min-height */}
       <section className="px-4 md:px-20 pb-12">
         <div className="bg-yellow-50 rounded-2xl p-8">
           <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -296,15 +314,16 @@ export default function Community() {
               <motion.div
                 key={tip.title}
                 whileHover={{ y: -3 }}
-                className="bg-white rounded-xl overflow-hidden border border-yellow-100"
+                className="bg-white rounded-xl overflow-hidden border border-yellow-100 flex flex-col"
+                style={{ minHeight: "340px" }}
               >
-                {/* Tip image */}
+                {/* Tip image — taller now */}
                 <img
                   src={tip.img}
                   alt={tip.title}
-                  className="w-full h-28 object-cover"
+                  className="w-full h-56 object-cover flex-shrink-0"
                 />
-                <div className="p-4">
+                <div className="p-4 flex flex-col flex-1">
                   <h4 className="font-semibold text-sm mb-1">{tip.title}</h4>
                   <p className="text-xs text-gray-500 leading-relaxed">{tip.text}</p>
                 </div>
@@ -315,6 +334,7 @@ export default function Community() {
       </section>
 
       {/* ───────── PHOTO WALL ───────── */}
+      {/* EDIT 4: Label always visible — removed opacity-0 / hover:opacity-100, uses permanent gradient + white text */}
       <section className="px-4 md:px-20 pb-12">
         <div className="flex items-end justify-between mb-6">
           <h2 className="text-3xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
@@ -325,7 +345,6 @@ export default function Community() {
           </Link>
         </div>
 
-        {/* Mosaic: photo[0] spans 2 cols + 2 rows, the rest fill the right */}
         <div className="grid grid-cols-4 grid-rows-2 gap-3 h-[340px]">
           {photos.map((photo, i) => (
             <motion.div
@@ -340,9 +359,14 @@ export default function Community() {
                 alt={photo.label}
                 className="w-full h-full object-cover"
               />
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-all duration-200 flex items-end p-3">
-                <span className="text-white text-xs font-semibold opacity-0 hover:opacity-100 transition-opacity duration-200">
+              {/* Always-visible gradient + label */}
+              <div
+                className="absolute inset-0 flex items-end p-3"
+                style={{
+                  background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 50%)",
+                }}
+              >
+                <span className="text-white text-xs font-semibold drop-shadow">
                   {photo.label}
                 </span>
               </div>

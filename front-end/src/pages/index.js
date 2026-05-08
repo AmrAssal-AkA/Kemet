@@ -6,12 +6,12 @@ import Head from "next/head";
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
 const cities = [
-  { img: "alex.jpeg",  name: "Alexandria" },
-  { img: "cairo.jpeg", name: "Cairo" },
-  { img: "luxor.jpeg", name: "Luxor" },
-  { img: "aswan.jpeg", name: "Aswan" },
-  { img: "siwa.jpeg",  name: "Siwa" },
-  { img: "sharm.jpeg", name: "Sharm El Sheikh" },
+  { img: "alex.jpeg",  name: "Alexandria",    href: "/Alexandria" },
+  { img: "cairo.jpeg", name: "Cairo",          href: "/Cairo" },
+  { img: "luxor.jpeg", name: "Luxor",          href: "/Luxor" },
+  { img: "aswan.jpeg", name: "Aswan",          href: "/Aswan" },
+  { img: "siwa.jpeg",  name: "Siwa",           href: "/Siwa" },
+  { img: "sharm.jpeg", name: "Sharm El Sheikh",href: "/SharmElSheikh" },
 ];
 
 const packages = [
@@ -335,9 +335,10 @@ export default function Home() {
             </div>
           </div>
 
+          {/* ── Only change: each city now links to its own page ── */}
           <div className="flex flex-wrap justify-center gap-8 md:gap-10">
             {cities.map((city, i) => (
-              <Link href="/offerings" key={i}>
+              <Link href={city.href} key={i}>
                 <motion.div
                   initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
                   transition={{ delay: i * 0.07, duration:0.45 }}
