@@ -88,7 +88,7 @@ export default function CityPage({
           />
           {/* gold accent line */}
           <div
-            className="absolute left-0 bottom-0 w-full h-[3px] pointer-events-none"
+            className="absolute left-0 bottom-0 w-full  pointer-events-none"
             style={{ background: "linear-gradient(90deg,transparent,#FFCE2A 40%,#f5b800 60%,transparent)" }}
           />
 
