@@ -22,6 +22,11 @@ async function handleResponse(res, errorMessage) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    console.error("[bookServices]", {
+      url: res.url,
+      status: res.status,
+      body: data,
+    });
     throw new BookingApiError(
       data?.message || data?.error || errorMessage,
       res.status,
@@ -72,14 +77,7 @@ function toHotelGuest(traveler) {
 function buildBookingRequest(payload) {
   const travelers = payload.travelers?.length ? payload.travelers : [payload.traveler];
   const request = {
-    tripId: payload.tripId,
     tripIds: payload.tripId ? [payload.tripId] : [],
-    numberOfGuests: payload.numberOfGuests,
-    selectedFlightId: payload.selectedFlightId,
-    selectedHotelId: payload.selectedHotelId,
-    paymentMethod: payload.paymentMethod,
-    notes: payload.notes,
-    totalPrice: payload.totalPrice,
     travelers,
   };
 
@@ -97,11 +95,6 @@ function buildBookingRequest(payload) {
     request.payments = [
       {
         method: "creditCard",
-        card: {
-          vendorCode: payload.payment?.vendorCode || "VI",
-          cardNumber: payload.payment?.cardNumber || "4111111111111111",
-          expiryDate: payload.payment?.expiryDate || "2030-12",
-        },
       },
     ];
   }
@@ -134,7 +127,7 @@ export async function searchHotels(payload) {
 }
 
 export async function createBooking(payload) {
-  const res = await fetch(`${API_BASE_URL}/api/booking/confirm`, {
+  const res = await fetch(`${API_BASE_URL}/api/booking/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

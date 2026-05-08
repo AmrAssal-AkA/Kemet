@@ -3,11 +3,38 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createBooking, searchFlights, searchHotels } from "@/services/bookServices";
 import { getCurrentUser } from "@/services/authServices";
-import { createStripeCheckout } from "@/services/paymentServices";
+import { createPayment } from "@/services/paymentServices";
 import { getTrips } from "@/services/tripServices";
 
-const airportOptions = ["CAI", "ALY", "HRG", "LXR", "ASW", "HBE", "PSD", "SKV", "TCP", "ELT", "MUH", "SPX"];
-const cityOptions = ["CAI", "ALY", "HRG", "LXR", "ASW", "PSD", "SKV", "TCP", "ELT", "MUH", "SSH", "RMF", "DBB"];
+const airportOptions = [
+  { label: "Cairo", value: "CAI" },
+  { label: "Alexandria", value: "ALY" },
+  { label: "Hurghada", value: "HRG" },
+  { label: "Luxor", value: "LXR" },
+  { label: "Aswan", value: "ASW" },
+  { label: "Borg El Arab", value: "HBE" },
+  { label: "Port Said", value: "PSD" },
+  { label: "St. Catherine", value: "SKV" },
+  { label: "Taba", value: "TCP" },
+  { label: "El Tor", value: "ELT" },
+  { label: "Marsa Matruh", value: "MUH" },
+  { label: "Sphinx/Giza", value: "SPX" },
+];
+const cityOptions = [
+  { label: "Cairo", value: "CAI" },
+  { label: "Alexandria", value: "ALY" },
+  { label: "Hurghada", value: "HRG" },
+  { label: "Luxor", value: "LXR" },
+  { label: "Aswan", value: "ASW" },
+  { label: "Port Said", value: "PSD" },
+  { label: "St. Catherine", value: "SKV" },
+  { label: "Taba", value: "TCP" },
+  { label: "El Tor", value: "ELT" },
+  { label: "Marsa Matruh", value: "MUH" },
+  { label: "Sharm El Sheikh", value: "SSH" },
+  { label: "Marsa Alam", value: "RMF" },
+  { label: "Dabaa", value: "DBB" },
+];
 const serviceFee = 0;
 
 const initialTraveler = {
@@ -67,7 +94,9 @@ function getTripImage(trip) {
 }
 
 function getTripPrice(trip) {
-  return Number(trip?.finalPrice || trip?.basePrice || trip?.price || 0);
+  const basePrice = Number(trip?.price || 0);
+  const guideCost = trip?.guideAvailable ? Number(trip?.guidefees || 0) : 0;
+  return basePrice + guideCost;
 }
 
 function splitName(name = "") {
@@ -149,8 +178,8 @@ function SelectInput({ name, value, onChange, options }) {
       className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100"
     >
       {options.map((option) => (
-        <option key={option} value={option}>
-          {option}
+        <option key={option.value || option} value={option.value || option}>
+          {option.label || option}
         </option>
       ))}
     </select>
@@ -402,18 +431,31 @@ export default function BookTripPage() {
 
     setSubmitting(true);
     try {
-      await createBooking(payload);
-      const checkout = await createStripeCheckout({
-        items: [
-          {
-            name: selectedTrip ? getTripTitle(selectedTrip) : "KEMET booking",
-            description: notes.trim() || "KEMET travel booking",
-            image: getTripImage(selectedTrip),
-            price: toStripeUnitAmount(totals.totalPrice),
-            quantity: 1,
-          },
-        ],
-      });
+      const booking = await createBooking(payload);
+      const bookingData = booking?.data || booking;
+      const checkout = bookingData?.checkoutUrl
+        ? { url: bookingData.checkoutUrl }
+        : await createPayment({
+            bookingId: bookingData?.bookingId || bookingData?._id,
+            amount: totals.totalPrice,
+            currency: "EGP",
+            metadata: {
+              tripId: getTripId(selectedTrip),
+              tripName: selectedTrip ? getTripTitle(selectedTrip) : "KEMET booking",
+              guestCount: Number(numberOfGuests),
+              description: notes.trim() || "KEMET travel booking",
+              image: getTripImage(selectedTrip),
+            },
+            items: [
+              {
+                name: selectedTrip ? getTripTitle(selectedTrip) : "KEMET booking",
+                description: notes.trim() || "KEMET travel booking",
+                image: getTripImage(selectedTrip),
+                price: toStripeUnitAmount(totals.totalPrice),
+                quantity: 1,
+              },
+            ],
+          });
 
       if (checkout?.url) {
         setSuccess("Booking created. Redirecting to secure Stripe checkout...");

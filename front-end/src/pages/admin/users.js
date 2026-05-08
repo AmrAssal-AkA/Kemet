@@ -1,9 +1,8 @@
-import jwt from "jsonwebtoken";
-import { parse } from "cookie";
 import { useState } from "react";
 
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
+import { requireAdmin } from "@/services/adminService";
 import { getAllUsers, updateUserRole, USER_ROLES } from "@/services/userServices";
 
 export default function AdminUsers({ admin, AllUser, initialError = "" }) {
@@ -158,38 +157,20 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
 }
 
 export async function getServerSideProps(context) {
-  const { req } = context;
-  const cookie = parse(req.headers.cookie || "");
-  const token = cookie["x-auth-token"];
-
-  if (!token) {
-    return {
-      redirect: { destination: "/auth/auth", permanent: false },
-    };
-  }
+  const adminSession = await requireAdmin(context);
+  if (adminSession.redirect) return adminSession;
 
   try {
-    const user = jwt.verify(
-      token,
-      process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
-    );
-
-    if (user.role !== "admin") {
-      return {
-        redirect: { destination: "/", permanent: false },
-      };
-    }
-
-    const AllUser = await getAllUsers(req.headers.cookie || "");
+    const AllUser = await getAllUsers(adminSession.cookie);
 
     return {
-      props: { admin: user, AllUser, initialError: "" },
+      props: { admin: adminSession.admin, AllUser, initialError: "" },
     };
   } catch (error) {
     console.error("Error fetching users:", error.message);
     return {
       props: {
-        admin: {},
+        admin: adminSession.admin,
         AllUser: [],
         initialError: error.message || "Users could not be loaded.",
       },

@@ -1,9 +1,8 @@
-import jwt from "jsonwebtoken";
-import { parse } from "cookie";
 import { useMemo, useState } from "react";
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
-import { createTrip } from "@/services/tripServices";
+import { requireAdmin } from "@/services/adminService";
+import { createTrip, getAdminTrips } from "@/services/tripServices";
 
 const initialForm = {
   title: "",
@@ -13,34 +12,34 @@ const initialForm = {
   description: "",
   price: "",
   duration: "",
-  imageUrl: "",
-  rating: "",
-  requiresGuide: false,
-  guideFee: "0",
+  image: null,
+  guideAvailable: false,
+  guidefees: "0",
   guestCapacity: "1",
 };
 
-export default function AdminTrips({ admin }) {
+export default function AdminTrips({ admin, initialTrips = [], initialError = "" }) {
   const { logout } = useAuth();
+  const [trips] = useState(initialTrips);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState({ type: "", message: "" });
+  const [status, setStatus] = useState({ type: initialError ? "error" : "", message: initialError });
 
   const pricePreview = useMemo(() => {
     const basePrice = Number(form.price || 0);
-    const guideFee = form.requiresGuide ? Number(form.guideFee || 0) : 0;
+    const guideCost = form.guideAvailable ? Number(form.guidefees || 0) : 0;
     return {
       basePrice,
-      guideFee,
-      finalPrice: basePrice + guideFee,
+      guideCost,
+      finalPrice: basePrice + guideCost,
     };
-  }, [form.guideFee, form.price, form.requiresGuide]);
+  }, [form.guideAvailable, form.guidefees, form.price]);
 
   function handleChange(event) {
-    const { name, value, type, checked } = event.target;
+    const { name, value, type, checked, files } = event.target;
     setForm((current) => ({
       ...current,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : type === "file" ? files?.[0] || null : value,
     }));
   }
 
@@ -53,7 +52,7 @@ export default function AdminTrips({ admin }) {
       return;
     }
 
-    if (Number(form.guideFee) < 0) {
+    if (Number(form.guidefees) < 0) {
       setStatus({ type: "error", message: "Guide fee cannot be negative." });
       return;
     }
@@ -68,10 +67,10 @@ export default function AdminTrips({ admin }) {
       await createTrip({
         ...form,
         name: form.title,
-        basePrice: pricePreview.basePrice,
-        guideFee: pricePreview.guideFee,
+        price: pricePreview.basePrice,
+        guideAvailable: form.guideAvailable,
+        guidefees: pricePreview.guideCost,
         guestCapacity: Number(form.guestCapacity),
-        finalPrice: pricePreview.finalPrice,
       });
       setStatus({ type: "success", message: "Trip created successfully." });
       setForm(initialForm);
@@ -115,14 +114,11 @@ export default function AdminTrips({ admin }) {
             <Field label="Duration">
               <input name="duration" type="number" min="1" value={form.duration} onChange={handleChange} required className={inputClass} />
             </Field>
-            <Field label="Image URL">
-              <input type="file" name="imageUrl" onChange={handleChange} required className={inputClass} />
-            </Field>
-            <Field label="Rating optional">
-              <input name="rating" type="number" min="0" max="5" step="0.1" value={form.rating} onChange={handleChange} className={inputClass} />
+            <Field label="Image">
+              <input type="file" name="image" onChange={handleChange} required className={inputClass} />
             </Field>
             <Field label="Guide fee">
-              <input name="guideFee" type="number" min="0" value={form.guideFee} onChange={handleChange} className={inputClass} />
+              <input name="guidefees" type="number" min="0" value={form.guidefees} onChange={handleChange} className={inputClass} />
             </Field>
             <Field label="Guest capacity">
               <input name="guestCapacity" type="number" min="1" value={form.guestCapacity} onChange={handleChange} required className={inputClass} />
@@ -131,8 +127,8 @@ export default function AdminTrips({ admin }) {
               Guide available for this trip
               <input
                 type="checkbox"
-                name="requiresGuide"
-                checked={form.requiresGuide}
+                name="guideAvailable"
+                checked={form.guideAvailable}
                 onChange={handleChange}
                 className="h-4 w-4 accent-amber-400"
               />
@@ -158,7 +154,7 @@ export default function AdminTrips({ admin }) {
               </p>
               <p className="flex justify-between">
                 <span>Guide Fee</span>
-                <strong>EGP {pricePreview.guideFee.toLocaleString()}</strong>
+                <strong>EGP {pricePreview.guideCost.toLocaleString()}</strong>
               </p>
               <p className="flex justify-between border-t border-slate-200 pt-3 text-base">
                 <span className="font-bold">Final Trip Price</span>
@@ -187,6 +183,30 @@ export default function AdminTrips({ admin }) {
             </button>
           </aside>
         </form>
+
+        <div className="mt-8 border-t border-slate-200 pt-6">
+          <h2 className="text-xl font-extrabold text-slate-900">Current Trips</h2>
+          {trips.length > 0 ? (
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {trips.map((trip) => (
+                <article key={trip._id || trip.tripId} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="font-bold text-slate-900">{trip.name || trip.title}</p>
+                  <p className="mt-1 text-sm text-slate-500">{trip.location || trip.city || "Egypt"}</p>
+                  <p className="mt-2 text-sm font-semibold text-amber-700">
+                    EGP {Number(trip.price || 0).toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Capacity: {trip.guestCapacity || 0} | Guide: {trip.guideAvailable ? "Available" : "Unavailable"}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">
+              No trips found yet.
+            </p>
+          )}
+        </div>
       </section>
     </AdminLayout>
   );
@@ -207,33 +227,20 @@ function Field({ label, children, className = "" }) {
 }
 
 export async function getServerSideProps(context) {
-  const { req } = context;
-  const cookie = parse(req.headers.cookie || "");
-  const token = cookie["x-auth-token"];
-
-  if (!token) {
-    return {
-      redirect: { destination: "/auth/auth", permanent: false },
-    };
-  }
+  const adminSession = await requireAdmin(context);
+  if (adminSession.redirect) return adminSession;
 
   try {
-    const user = jwt.verify(
-      token,
-      process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
-    );
-
-    if (user.role !== "admin") {
-      return {
-        redirect: { destination: "/", permanent: false },
-      };
-    }
-
-    return { props: { admin: user } };
+    const initialTrips = await getAdminTrips(adminSession.cookie);
+    return { props: { admin: adminSession.admin, initialTrips, initialError: "" } };
   } catch (error) {
     console.error("Admin trip page verification error:", error.message);
     return {
-      redirect: { destination: "/auth/auth", permanent: false },
+      props: {
+        admin: adminSession.admin,
+        initialTrips: [],
+        initialError: error.message || "Trips could not be loaded.",
+      },
     };
   }
 }

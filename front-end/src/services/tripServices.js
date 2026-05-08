@@ -4,10 +4,19 @@ async function handleResponse(res, errorMessage) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    console.error("[tripServices]", {
+      url: res.url,
+      status: res.status,
+      body: data,
+    });
     throw new Error(data?.message || data?.error || errorMessage);
   }
 
   return data;
+}
+
+function getHeaders(cookie) {
+  return cookie ? { Cookie: cookie } : {};
 }
 
 function getArray(data) {
@@ -30,6 +39,8 @@ function getFileNameFromUrl(imageUrl) {
 }
 
 async function getImageFileFromUrl(imageUrl) {
+  if (imageUrl instanceof File) return imageUrl;
+
   const imageResponse = await fetch(imageUrl);
 
   if (!imageResponse.ok) {
@@ -44,28 +55,19 @@ async function getImageFileFromUrl(imageUrl) {
 }
 
 export async function createTrip(payload) {
-  const imageFile = await getImageFileFromUrl(payload.imageUrl);
+  const imageFile = await getImageFileFromUrl(payload.image || payload.imageUrl);
   const formData = new FormData();
-  const basePrice = Number(payload.basePrice || payload.price || 0);
-  const finalPrice = Number(payload.finalPrice || basePrice);
 
-  formData.append("title", payload.title || payload.name);
   formData.append("name", payload.name || payload.title);
   formData.append("city", payload.city);
   formData.append("category", payload.category);
   formData.append("description", payload.description);
-  formData.append("price", String(finalPrice));
-  formData.append("basePrice", String(basePrice));
-  formData.append("guideFee", String(payload.guideFee || 0));
-  formData.append("requiresGuide", String(Boolean(payload.requiresGuide)));
-  formData.append("guestCapacity", String(payload.guestCapacity || 1));
-  formData.append("finalPrice", String(finalPrice));
+  formData.append("price", String(payload.price || 0));
   formData.append("duration", String(payload.duration));
   formData.append("location", payload.location);
-  if (payload.rating !== "" && payload.rating !== undefined) {
-    formData.append("rating", String(payload.rating));
-  }
-  formData.append("imageUrl", payload.imageUrl);
+  formData.append("guideAvailable", String(Boolean(payload.guideAvailable)));
+  formData.append("guidefees", String(payload.guidefees || 0));
+  formData.append("guestCapacity", String(payload.guestCapacity || 1));
   formData.append("image", imageFile);
 
   const res = await fetch(`${API_BASE_URL}/api/Trip/addTrip`, {
@@ -86,10 +88,54 @@ export async function getTrips() {
   return getArray(data);
 }
 
+export async function getAdminTrips(cookie = "") {
+  const res = await fetch(`${API_BASE_URL}/api/Trip`, {
+    headers: getHeaders(cookie),
+    credentials: "include",
+  });
+
+  const data = await handleResponse(res, "Trips could not be loaded.");
+  return getArray(data);
+}
+
 export async function getTripById(id) {
   const res = await fetch(`${API_BASE_URL}/api/Trip/${id}`, {
     credentials: "include",
   });
 
   return handleResponse(res, "Trip could not be loaded.");
+}
+
+export async function updateTrip(id, payload) {
+  const imageFile = await getImageFileFromUrl(payload.image || payload.imageUrl);
+  const formData = new FormData();
+
+  formData.append("name", payload.name || payload.title);
+  formData.append("city", payload.city);
+  formData.append("category", payload.category);
+  formData.append("description", payload.description);
+  formData.append("price", String(payload.price || 0));
+  formData.append("duration", String(payload.duration));
+  formData.append("location", payload.location);
+  formData.append("guideAvailable", String(Boolean(payload.guideAvailable)));
+  formData.append("guidefees", String(payload.guidefees || 0));
+  formData.append("guestCapacity", String(payload.guestCapacity || 1));
+  formData.append("image", imageFile);
+
+  const res = await fetch(`${API_BASE_URL}/api/Trip/updateTrip/${id}`, {
+    method: "PUT",
+    credentials: "include",
+    body: formData,
+  });
+
+  return handleResponse(res, "Trip could not be updated.");
+}
+
+export async function deleteTrip(id) {
+  const res = await fetch(`${API_BASE_URL}/api/Trip/deleteTrip/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Trip could not be deleted.");
 }

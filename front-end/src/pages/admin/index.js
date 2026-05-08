@@ -1,17 +1,14 @@
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
-import jwt from "jsonwebtoken";
-import { parse } from "cookie";
 import {
   getAdminBookings,
   getAdminContacts,
   getAdminUsers,
   getBlogStats,
+  requireAdmin,
   getRevenueStats,
   getTripStats,
 } from "@/services/adminService";
-
-const trendBars = [5, 7, 6, 10, 12, 9, 13, 11, 8, 12];
 
 function StatCard({ card }) {
   return (
@@ -43,12 +40,16 @@ function StatCard({ card }) {
         </div>
       ) : (
         <div className="mt-6 flex items-end gap-2">
-          {card.bars.map((height, index) => (
-            <span
-              key={`${card.title}-${index}`}
-              className={`w-8 rounded-md ${height} ${card.color} opacity-${index === 4 ? "100" : "50"}`}
-            />
-          ))}
+          {card.bars.length > 0 ? (
+            card.bars.map((height, index) => (
+              <span
+                key={`${card.title}-${index}`}
+                className={`w-8 rounded-md ${height} ${card.color} opacity-${index === card.bars.length - 1 ? "100" : "50"}`}
+              />
+            ))
+          ) : (
+            <span className="text-sm font-semibold text-slate-400">No data</span>
+          )}
         </div>
       )}
     </article>
@@ -69,7 +70,7 @@ function BookingStatus({ status }) {
   );
 }
 
-export default function AdminDashboard({ admin, contacts }) {
+export default function AdminDashboard({ admin, contacts, loadError }) {
   const { logout } = useAuth();
 
   return (
@@ -99,24 +100,36 @@ export default function AdminDashboard({ admin, contacts }) {
         ))}
       </section>
 
+      {loadError && (
+        <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-700">
+          {loadError}
+        </p>
+      )}
+
       <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">Engagement Trends</h2>
-            <p className="text-sm text-slate-500">Explorer activity across all channels</p>
+            <p className="text-sm text-slate-500">Real activity based on recent bookings</p>
           </div>
           <div className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">30d</div>
         </div>
 
-        <div className="mt-8 flex h-60 items-end gap-3 overflow-hidden">
-          {trendBars.map((value, index) => (
-            <span
-              key={`trend-${index}`}
-              className="flex-1 rounded-t-full bg-linear-to-t from-amber-200 to-amber-400"
-              style={{ height: `${value * 7}%` }}
-            />
-          ))}
-        </div>
+        {admin.activityBars.length > 0 ? (
+          <div className="mt-8 flex h-60 items-end gap-3 overflow-hidden">
+            {admin.activityBars.map((value, index) => (
+              <span
+                key={`trend-${index}`}
+                className="flex-1 rounded-t-full bg-linear-to-t from-amber-200 to-amber-400"
+                style={{ height: `${Math.max(value, 4)}%` }}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="mt-8 rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">
+            No activity data yet.
+          </p>
+        )}
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -189,14 +202,51 @@ function formatDate(value) {
 
 function mapBooking(booking) {
   const trip = Array.isArray(booking.trip) ? booking.trip[0] : booking.trip;
+  const customer = booking.user || booking.userId;
 
   return {
     id: booking._id || booking.id,
-    customer: booking.user?.name || "Guest",
+    customer: customer?.name || customer?.email || "Guest",
     destination: trip?.name || trip?.city || booking.details?.bookingType || "KEMET Experience",
     date: formatDate(booking.createdAt),
     status: booking.status || "Pending",
   };
+}
+
+function calculateRevenueFromBookings(bookings) {
+  return bookings
+    .filter((booking) => {
+      const status = String(booking.status || "").toLowerCase();
+      const paymentStatus = String(booking.paymentStatus || "").toLowerCase();
+      return status === "confirmed" || paymentStatus === "paid";
+    })
+    .reduce((total, booking) => total + Number(booking.totalPrice || 0), 0);
+}
+
+function buildActivityBars(bookings) {
+  if (!bookings.length) return [];
+
+  const dayCounts = new Map();
+  const today = new Date();
+  const days = Array.from({ length: 10 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (9 - index));
+    const key = date.toISOString().slice(0, 10);
+    dayCounts.set(key, 0);
+    return key;
+  });
+
+  bookings.forEach((booking) => {
+    const date = new Date(booking.createdAt);
+    if (Number.isNaN(date.getTime())) return;
+    const key = date.toISOString().slice(0, 10);
+    if (dayCounts.has(key)) dayCounts.set(key, dayCounts.get(key) + 1);
+  });
+
+  const max = Math.max(...dayCounts.values(), 0);
+  if (max === 0) return [];
+
+  return days.map((day) => Math.round((dayCounts.get(day) / max) * 100));
 }
 
 function buildStatCards(metrics) {
@@ -205,14 +255,14 @@ function buildStatCards(metrics) {
       title: "Total Bookings",
       value: metrics.bookings.toLocaleString(),
       growth: "Live",
-      bars: ["h-4", "h-6", "h-5", "h-8", "h-10"],
+      bars: metrics.bookings > 0 ? ["h-4", "h-6", "h-8", "h-10"] : [],
       color: "bg-emerald-400",
     },
     {
       title: "Revenue",
-      value: `EGP ${metrics.revenue.toLocaleString()}`,
-      growth: "Live",
-      bars: ["h-3", "h-5", "h-7", "h-6", "h-9"],
+      value: metrics.revenue > 0 ? `EGP ${metrics.revenue.toLocaleString()}` : "EGP 0",
+      growth: metrics.revenue > 0 ? "Live" : "No revenue yet",
+      bars: metrics.revenue > 0 ? ["h-3", "h-5", "h-7", "h-9"] : [],
       color: "bg-amber-400",
     },
     {
@@ -225,29 +275,11 @@ function buildStatCards(metrics) {
 }
 
 export async function getServerSideProps(context) {
-  const { req } = context;
-  const cookie = parse(req.headers.cookie || "");
-  const token = cookie["x-auth-token"];
-
-  if (!token) {
-    return {
-      redirect: { destination: "/auth/auth", permanent: false },
-    };
-  }
+  const adminSession = await requireAdmin(context);
+  if (adminSession.redirect) return adminSession;
 
   try {
-    const user = jwt.verify(
-      token,
-      process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
-    );
-
-    if (user.role !== "admin") {
-      return {
-        redirect: { destination: "/", permanent: false },
-      };
-    }
-
-    const cookieHeader = req.headers.cookie || "";
+    const { admin: user, cookie: cookieHeader } = adminSession;
     const results = await Promise.allSettled([
       getAdminContacts(cookieHeader),
       getAdminUsers(cookieHeader),
@@ -257,19 +289,22 @@ export async function getServerSideProps(context) {
       getRevenueStats(cookieHeader),
     ]);
 
+    const failedLoads = results.filter((result) => result.status === "rejected");
     const contacts = results[0].status === "fulfilled" ? results[0].value : [];
     const users = results[1].status === "fulfilled" ? results[1].value : [];
     const bookings = results[2].status === "fulfilled" ? results[2].value : [];
     const tripStats = results[3].status === "fulfilled" ? results[3].value : {};
     const blogStats = results[4].status === "fulfilled" ? results[4].value : {};
     const revenueStats = results[5].status === "fulfilled" ? results[5].value : {};
+    const bookingRevenue = calculateRevenueFromBookings(bookings);
+    const endpointRevenue = Number(revenueStats.totalRevenue || 0);
 
     const metrics = {
-      bookings: Number(tripStats.totalBookings || bookings.length || 0),
+      bookings: Number(bookings.length || 0),
       trips: Number(tripStats.totalTrips || 0),
-      users: Number(tripStats.totalUsers || users.length || 0),
+      users: Number(users.length || tripStats.totalUsers || 0),
       blogs: Number(blogStats.totalBlogs || 0),
-      revenue: Number(revenueStats.totalRevenue || 0),
+      revenue: bookingRevenue || endpointRevenue || 0,
     };
 
     return {
@@ -278,15 +313,36 @@ export async function getServerSideProps(context) {
           ...user,
           metrics,
           statCards: buildStatCards(metrics),
+          activityBars: buildActivityBars(bookings),
           recentBookings: bookings.slice(0, 5).map(mapBooking),
         },
         contacts,
+        loadError: failedLoads.length
+          ? "Some admin overview data could not be loaded. Showing available real data only."
+          : "",
       },
     };
   } catch (error) {
-    console.error("Admin verification error:", error.message);
+    console.error("Admin overview data error:", error.message);
+    const metrics = {
+      bookings: 0,
+      trips: 0,
+      users: 0,
+      blogs: 0,
+      revenue: 0,
+    };
     return {
-      redirect: { destination: "/auth/auth", permanent: false },
+      props: {
+        admin: {
+          ...adminSession.admin,
+          metrics,
+          statCards: buildStatCards(metrics),
+          activityBars: [],
+          recentBookings: [],
+        },
+        contacts: [],
+        loadError: error.message || "Admin overview data could not be loaded.",
+      },
     };
   }
 }

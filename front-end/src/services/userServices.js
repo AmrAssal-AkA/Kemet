@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 export const USER_ROLES = ["user", "admin", "guide"];
 
@@ -12,10 +12,12 @@ function getUserArray(data) {
 async function handleResponse(res, fallbackMessage, logLabel = "userServices") {
   const data = await res.json().catch(() => null);
 
-  console.log(`[${logLabel}] response status:`, res.status);
-  console.log(`[${logLabel}] response body:`, data);
-
   if (!res.ok) {
+    console.error(`[${logLabel}]`, {
+      url: res.url,
+      status: res.status,
+      body: data,
+    });
     throw new Error(data?.message || data?.error || fallbackMessage);
   }
 
@@ -24,8 +26,6 @@ async function handleResponse(res, fallbackMessage, logLabel = "userServices") {
 
 export async function getAllUsers(cookie = "") {
   const endpoint = `${API_BASE_URL}/api/adminDashboard/AllUsers`;
-  console.log("[getAllUsers] endpoint URL:", endpoint);
-
   const res = await fetch(endpoint, {
     headers: cookie ? { Cookie: cookie } : {},
     credentials: "include",
@@ -44,11 +44,8 @@ export async function updateUserRole(userId, role) {
     throw new Error("Invalid role selected.");
   }
 
-  const endpoint = "/api/admin/updateUserRole";
-  const payload = { userId, role };
-
-  console.log("[updateUserRole] endpoint URL:", endpoint);
-  console.log("[updateUserRole] payload:", payload);
+  const endpoint = `${API_BASE_URL}/api/adminDashboard/upgradeUser/${userId}`;
+  const payload = { role };
 
   const res = await fetch(endpoint, {
     method: "PATCH",
