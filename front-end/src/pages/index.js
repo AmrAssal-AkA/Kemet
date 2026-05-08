@@ -427,7 +427,7 @@ export default function Home() {
             ))}
           </div>
           <div className="text-center mt-10">
-            <Link href="/offerings">
+            <Link href="/Luxor">
               <button className="btn-gold rounded-full px-9 py-3.5 font-semibold text-black text-sm">
                 View All Packages
               </button>
