@@ -169,7 +169,7 @@ export default function BlogPage(props) {
 
 export async function getStaticProps() {
   try {
-    const Blog = await axios.get("http://localhost:3000/api/Blog/GetBlogs");
+    const Blog = await axios.get("https://kemet-two.vercel.app/api/Blog/");
     return {
       props: {
         blogs: Blog.data,
@@ -182,6 +182,7 @@ export async function getStaticProps() {
       props: {
         blogs: [],
       },
+      revalidate: 10,
     };
   }
 }

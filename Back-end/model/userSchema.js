@@ -28,13 +28,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    lowercase: true,
     trim: true,
     validate: {
-      validator: (v) => {
-        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(v);
+      validator: function (v) {
+        if(this.googleId){
+          return true;
+        }
+        return /^[a-z0-9_]*[A-Z][a-z0-9_]*@[a-z0-9]+\.[a-z]{2,}$/.test(v);
       },
-      message: "Please provide a valid email address.",
+      message: "email must be valid and contain at least one uppercase letter and only _ and @ special characters.",
     },
   },
   password: {
@@ -45,7 +47,7 @@ const userSchema = new mongoose.Schema({
     minlength: 7,
     select: false,
     validate: {
-      validator: (v) => {
+      validator: function (v) {
          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(v);
       },
       message: "Password must contain at least one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long.",
@@ -55,6 +57,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["user", "admin", "guide"],
     default: "user",
+  },
+  Nationality: {
+    type: String,
+    trim: true,
+    enum: ["EG", "USA", "UK", "FR", "DE", "IT", "ES", "CN", "JP", "IN", "BR", "RU", "CA", "AU", "MX", "KR", "SA", "ZA", "NG", "AR", "CL" , "EUR"],
   },
   bookings: [
     {
@@ -70,7 +77,6 @@ const userSchema = new mongoose.Schema({
   },
   googleId: {
     type: String,
-    sparse: true,
     unique: true,
   },
   emailVerificationToken: {
@@ -101,6 +107,20 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
+}, {_id: false, timestamps: true});
+
+userSchema.virtual('Bookings', {
+  rel: 'Booking',
+  localField: 'userId',
+  foreignField: 'userId',
 });
+
+userSchema.pre("/validate", {document: true}, function (next) {
+  if(!this.googleId && !this.password){
+    return next(new Error("Password is required if not using Google authentication."));
+  }
+  next();
+});
+
 
 module.exports = mongoose.model("User", userSchema);

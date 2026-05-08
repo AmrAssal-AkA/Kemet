@@ -13,7 +13,7 @@ async function handler(req, res) {
 
   try {
     const response = await axios.post(
-      "http://localhost:8000/api/auth/refresh",
+      "https://kemet-two.vercel.app/api/auth/refresh",
       {},
       {
         headers: { Cookie: req.headers.cookie },

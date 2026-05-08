@@ -15,7 +15,7 @@ async function handler(req, res) {
   console.log("proxy received token:", token, "and new password:", newPassword);
   try {
     const response = await axios.post(
-      `http://localhost:8000/api/auth/reset-password-confirm`,
+      `https://kemet-two.vercel.app/api/auth/reset-password-confirm`,
       { token, newPassword },
       {
         headers: {

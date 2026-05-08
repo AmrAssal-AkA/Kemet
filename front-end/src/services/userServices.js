@@ -46,7 +46,6 @@ export async function updateUserRole(userId, role) {
 
   const endpoint = `${API_BASE_URL}/api/adminDashboard/upgradeUser/${userId}`;
   const payload = { role };
-
   const res = await fetch(endpoint, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const guestSchema = require("./guestSchema");
 
 const bookingSchema = new mongoose.Schema(
   {
@@ -7,13 +8,29 @@ const bookingSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    guests: {
+      type: [guestSchema],
+      required: true,
+    },
     flight: {
       orderId: String,
-      data: mongoose.Schema.Types.Mixed,
+      data: {
+        from: String,
+        to: String,
+        departureDate: Date,
+        returnDate: Date,
+        airline: String,
+        flightNumber: String,
+      },
     },
     hotel: {
       orderId: String,
-      data: mongoose.Schema.Types.Mixed,
+      data: {
+        name: String,
+        location: String,
+        checkInDate: Date,
+        checkOutDate: Date,
+      },
     },
     trip: [
       {
@@ -21,6 +38,15 @@ const bookingSchema = new mongoose.Schema(
         ref: "Trip",
       },
     ],
+    PassportNumber: {
+      type: String,
+      required: true,
+      validate: {
+        validator: function (v) {
+          return /^[A-Z0-9]{5,9}$/.test(v);
+        },
+      },
+    },
     status: {
       type: String,
       enum: ["Pending", "Confirmed", "Cancelled"],
@@ -28,8 +54,28 @@ const bookingSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed", "Refunded"],
+      enum: ["Pending", "Paid", "Failed", "Refunded", "PartiallyRefunded"],
       default: "Pending",
+    },
+    paymentDate: Date,
+    stripeSessionId: String,
+    stripePaymentIntentId: String,
+    refundedAmount: {
+      type: Number,
+      default: 0,
+    },
+    refunds: [
+      {
+        refundId: String,
+        amount: Number,
+        date: Date,
+        reason: String,
+      },
+    ],
+    paymentError: {
+      code: String,
+      message: String,
+      timestamp: Date,
     },
     stripeSessionId: {
       type: String,

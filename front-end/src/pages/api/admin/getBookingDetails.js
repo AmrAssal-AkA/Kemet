@@ -24,13 +24,12 @@ async function handler(req, res) {
   const refreshToken = cookies["x-refresh-token"];
 
   if (!token) {
-    res.status(401).json({ message: "Unauthorized - No token" });
-    return;
+    return res.status(401).json({ message: "Unauthorized - No token" });
   }
 
   try {
     const response = await axios.get(
-      "http://localhost:8000/api/adminDashboard/bookingDetails",
+      "https://kemet-two.vercel.app/api/adminDashboard/bookingDetails",
       {
         headers: {
           Cookie: req.headers.cookie || "",
@@ -42,7 +41,7 @@ async function handler(req, res) {
     if (error.response?.status === 401 && refreshToken) {
       try {
         const refreshResponse = await axios.post(
-          "http://localhost:8000/api/auth/refresh",
+          "https://kemet-two.vercel.app/api/auth/refresh",
           {},
           {
             headers: {
@@ -52,7 +51,7 @@ async function handler(req, res) {
         );
         token = refreshResponse.data.token;
         const retryResponse = await axios.get(
-          "http://localhost:8000/api/adminDashboard/bookingDetails",
+          "https://kemet-two.vercel.app/api/adminDashboard/bookingDetails",
           {
             headers: {
               Cookie: req.headers.cookie || "",
@@ -67,9 +66,9 @@ async function handler(req, res) {
           .json({ message: "Unauthorized - Invalid token" });
       }
     }
-    return res
-      .status(error.response?.status || 500)
-      .json({ message: "Server error" });
+    const status = error.response?.status || 500;
+    const message = error.response?.data?.message || "Server error";
+    return res.status(status).json({ message });
   }
 }
 

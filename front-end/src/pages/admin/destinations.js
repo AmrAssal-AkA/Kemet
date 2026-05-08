@@ -50,6 +50,19 @@ export async function getServerSideProps(context) {
       getHiddenGems(adminSession.cookie),
       getOfferings(adminSession.cookie),
     ]);
+    const response = await fetch("http://localhost:3000/api/auth/refresh", {
+      method: "POST",
+      headers: {
+        Cookie: cookie,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Session verification failed");
+    }
+
+    const data = await response.json();
 
     return {
       props: {

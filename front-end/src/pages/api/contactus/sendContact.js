@@ -10,7 +10,7 @@ async function sendconstactus(req, res){
         return res.status(400).json({message: "Please fill all the fields"});
     }
     try{
-        const response  = await axios.post("http://localhost:8000/api/contact/", {
+        const response  = await axios.post("https://kemet-two.vercel.app/api/contact/", {
             name,
             email,
             subject,

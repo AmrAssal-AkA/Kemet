@@ -9,6 +9,7 @@ export default function RegisterForm() {
     name: "",
     email: "",
     password: "",
+    Nationality: "",
   });
   const { register, loading, error } = useAuth();
 
@@ -79,8 +80,42 @@ export default function RegisterForm() {
           required
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 error:border-red-500"
         />
+    </div>
+      <div className="mb-4">
+        <label htmlFor="Nationality" className="block text-gray-700 font-bold mb-2">Nationality</label>
+        <select
+          id="Nationality"
+          name="Nationality"
+          value={formData.Nationality}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 error:border-red-500"
+        >
+          <option value="">Select your nationality</option>
+          <option value="EG">Egypt</option>
+          <option value="US">United States</option>
+          <option value="UK">United Kingdom</option>
+          <option value="FR">France</option>
+          <option value="DE">Germany</option>
+          <option value="IT">Italy</option>
+          <option value="ES">Spain</option>
+          <option value="CN">China</option>
+          <option value="JP">Japan</option>
+          <option value="IN">India</option>
+          <option value="BR">Brazil</option>
+          <option value="RU">Russia</option>
+          <option value="CA">Canada</option>
+          <option value="AU">Australia</option>
+          <option value="MX">Mexico</option>
+          <option value="KR">South Korea</option>
+          <option value="SA">Saudi Arabia</option>
+          <option value="ZA">South Africa</option>
+          <option value="NG">Nigeria</option>
+          <option value="AR">Argentina</option>
+          <option value="CL">Chile</option>
+          <option value="EUR">Europe</option>
+        </select>
       </div>
-
       <button
         type="submit"
         disabled={loading}

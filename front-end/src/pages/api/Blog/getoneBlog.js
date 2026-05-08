@@ -10,7 +10,7 @@ async function handler(req, res){
     const {blogId} = req.query;
 
     try{
-        const response = await axios.get(`http://localhost:8000/api/blog/${blogId}`, {
+        const response = await axios.get(`https://kemet-two.vercel.app/api/blog/${blogId}`, {
                 withCredentials: true,
         });
         res.status(200).json(response.data);

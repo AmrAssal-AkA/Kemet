@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     }
 
     const response = await axios.post(
-      "http://localhost:8000/api/blog",
+      "https://kemet-two.vercel.app/api/blog",
       formData,
       {
         headers: {

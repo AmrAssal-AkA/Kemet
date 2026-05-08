@@ -1,5 +1,6 @@
 const User = require("../../model/userSchema");
 const Guide = require("../../model/guideSchema");
+const Trip = require("../../model/tripSchema");
 
 const setGuideSchedule = async (req, res) => {
     try {
@@ -18,7 +19,17 @@ const setGuideSchedule = async (req, res) => {
 }
 
 
+const guideRequiredTrips = async (req, res, nxt) => {
+    try {
+        const guideOrdered = await Trip.findOne({guideAvailable: true});
+        res.json({ guideOrdered });
+    } catch (err) {
+        nxt(err);
+    }
+}
+
 
 module.exports = {
-    setGuideSchedule
+    setGuideSchedule,
+    guideRequiredTrips
 }

@@ -1,91 +1,138 @@
-const bookingServices = require("../../services/Booking.services");
+const { booking } = require("../../config/amadeus");
+const Booking = require("../../model/BookingSchema");
+const { stripeCheckout, refundPayment } = require("./paymentController");
+const guest = require("../../model/guestSchema");
+const {
+  BookingConfirmationTemplate,
+  sendEmail,
+} = require("../../services/miling");
 
-exports.createBooking = async (req, res) => {
-  try {
-    const result = await bookingServices.createUnifiedBooking(
-      req.body,
-      req.user.userId,
-    );
-    res.status(201).json({
-      success: true,
-      message: "Booking initiated — complete payment to confirm",
-      data: result,
-    });
-  } catch (error) {
-    console.error("[BookingController] createBooking error:", error);
-    res.status(error.status || 400).json({
-      success: false,
-      message: error.message || "Failed to create booking",
-    });
-  }
+const currencyMapping = {
+  USA: "USD",
+  EG: "EGP",
+  EUR: "EUR",
 };
 
-exports.paymentSuccess = async (req, res) => {
+const createBooking = async (req, res, nxt) => {
   try {
-    const { session_id } = req.query;
-    if (!session_id) {
-      return res.status(400).json({ success: false, message: "session_id is required" });
+      const userId = req.user?.userId;
+      const email = req.email?.email;
+
+      if(!userId && !email){
+        return res.status(400).json({ error: "Missing required fields: userId, email" });
+      }
+
+    const {
+      guests,
+      flight,
+      hotel,
+      trip,
+      tripDetails,
+      PassportNumber,
+      totalPrice,
+    } = req.body;
+
+    let currency = req.body.currency;
+    if (!userId || !guests || guests.length === 0 || !totalPrice) {
+      return res
+        .status(400)
+        .json({ error: "Missing required fields: userId, guests, totalPrice" });
+    }
+    const guestNationalities = guests.map(
+      (g) => currencyMapping[g.nationality] || "USD",
+    );
+    if (guestNationalities.length > 0) {
+      currency = guestNationalities[0];
     }
 
-    const booking = await bookingServices.confirmPayment(session_id);
-    res.status(200).json({
-      success: true,
-      message: "Payment confirmed. Booking is now active.",
-      data: booking,
+    const bookingDetails = {
+      bookingType:
+        trip && trip.length > 0
+          ? "Trip"
+          : flight && hotel
+            ? "FlightAndHotel"
+            : flight
+              ? "Flight"
+              : hotel
+                ? "Hotel"
+                : "Mixed",
+    };
+
+    const newBooking = new Booking({
+      userId,
+      email: email,
+      guests,
+      flight,
+      hotel,
+      trip,
+      PassportNumber,
+      totalPrice,
+      currency,
+      details: bookingDetails,
+      status: "Pending",
+      paymentStatus: "Pending",
     });
-  } catch (error) {
-    console.error("[BookingController] paymentSuccess error:", error);
-    res.status(error.status || 400).json({
-      success: false,
-      message: error.message || "Failed to confirm payment",
+    await newBooking.save();
+
+    req.body.bookingId = newBooking._id.toString();
+    req.body.email = email;
+
+    const session = await stripeCheckout(req);
+    if (!session) {
+      res.status(500).json({ error: "Failed to create Stripe session" });
+      return;
+    }
+
+    await Booking.findByIdAndUpdate(newBooking._id, {
+      stripeSessionId: session.id,
     });
+
+    res.status(201).json({
+      message: "Booking created successfully",
+      status: "success",
+      bookingId: newBooking._id,
+      checkoutUrl: session.url,
+    });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-
-exports.getMyBookings = async (req, res) => {
+const cancelBooking = async (req, res, nxt) => {
   try {
-    const bookings = await bookingServices.getUserBookings(req.user.userId);
-    res.status(200).json({
-      success: true,
-      count: bookings.length,
-      data: bookings,
+    const { bookingId } = req.params;
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    if (booking.status === "Cancelled") {
+      return res.status(400).json({ error: "Booking is already cancelled" });
+    }
+    if (booking.paymentStatus === "Paid" && booking.stripePaymentIntentId) {
+      const refund = await refundPayment(bookingId);
+      if (refund.success) {
+        booking.status = "Cancelled";
+        booking.paymentStatus = "Refunded";
+        await booking.save();
+        return res.status(200).json({
+          message: "Booking cancelled and payment refunded successfully",
+        });
+      } else {
+        return res.status(500).json({ error: "Failed to process refund" });
+      }
+    }
+    await Booking.findByIdAndUpdate(bookingId, {
+      status: "Cancelled",
+      paymentStatus: "Refunded",
     });
-  } catch (error) {
-    console.error("[BookingController] getMyBookings error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch bookings" });
+    return res.status(200).json({ message: "Booking cancelled successfully" });
+  } catch (err) {
+    nxt(err);
   }
 };
 
-exports.getBooking = async (req, res) => {
-  try {
-    const booking = await bookingServices.getBookingById(
-      req.params.id,
-      req.user.userId,
-    );
-    res.status(200).json({ success: true, data: booking });
-  } catch (error) {
-    console.error("[BookingController] getBooking error:", error);
-    res.status(404).json({ success: false, message: error.message || "Booking not found" });
-  }
-};
-
-exports.cancelBooking = async (req, res) => {
-  try {
-    const booking = await bookingServices.cancelBooking(
-      req.params.id,
-      req.user.userId,
-    );
-    res.status(200).json({
-      success: true,
-      message: "Booking cancelled successfully",
-      data: booking,
-    });
-  } catch (error) {
-    console.error("[BookingController] cancelBooking error:", error);
-    res.status(error.status || 400).json({
-      success: false,
-      message: error.message || "Failed to cancel booking",
-    });
-  }
+module.exports = {
+  createBooking,
+  cancelBooking,
 };

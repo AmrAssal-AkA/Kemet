@@ -8,6 +8,14 @@ const createBlog = async (req, res) => {
   if (!title || !content) {
     return res.status(400).json({ message: "Please fill the blog" });
   }
+  const textRegex = /^[a-zA-Z0-9\s]+$/;
+  if (!textRegex.test(title) || !textRegex.test(content)) {
+    return res
+      .status(400)
+      .json({ message: "Title and content must contain only letters and spaces." });
+  }
+
+
   if (!req.files || req.files.length === 0) {
     return res
       .status(400)
@@ -30,7 +38,6 @@ const createBlog = async (req, res) => {
     await blogs.save();
     res.status(201).json({ message: "Blog Created" });
   } catch (error) {
-    console.error("Error creating blog:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

@@ -10,7 +10,7 @@ async function handler(req, res) {
   }
   try {
     const response = await axios.post(
-      "http://localhost:8000/api/auth/reset-password",
+      "https://kemet-two.vercel.app/api/auth/reset-password",
       { email },
       {
         headers: {

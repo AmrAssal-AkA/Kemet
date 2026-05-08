@@ -38,7 +38,27 @@ const GoogleSignInTemplate = (name) => `
   </div>
 `;
 
-const sendEmail = async ({ to, subject, html, text }) => {
+const BookingConfirmationTemplate = (name, bookingDetails) => `
+  <div style="font-family: Arial, sans-serif; color: #333;">
+    <h2 style="color: #decb00;">Booking Confirmation</h2>
+    <p>Hello ${name},</p>
+    <p>Your booking has been confirmed. Here are your booking details:</p>
+    <ul>
+      <li>Destination: ${bookingDetails.destination}</li>
+      <li>Flight: ${bookingDetails.flight}</li>
+      <li>Hotel: ${bookingDetails.hotel}</li>
+      <li>Travel Dates: ${bookingDetails.travelDates}</li>
+      <li>Number of Travelers: ${bookingDetails.travelers}</li>
+      <li>Total Price: ${bookingDetails.totalPrice}</li>
+    </ul>
+    <p>Thank you for choosing Kemet Travel!</p>
+    <p>Best regards,<br>Kemet Travel Team</p>
+  </div>
+`;
+
+
+
+const sendEmail = async ({ to, subject, html, text }, res) => {
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -47,11 +67,11 @@ const sendEmail = async ({ to, subject, html, text }) => {
       text: text || "",
       html: html,
     });
-    console.log("Email sent successfully.");
+   res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
-    console.error("Error sending email:", error);
+      res.status(500).json({ message: "Failed to send email", error: error.message });
     throw error;
   }
 };
 
-module.exports = { sendEmail , verifyEmailTemplate, resetPasswordTemplate, GoogleSignInTemplate};
+module.exports = { sendEmail , verifyEmailTemplate, resetPasswordTemplate, GoogleSignInTemplate, BookingConfirmationTemplate};

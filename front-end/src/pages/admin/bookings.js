@@ -63,8 +63,7 @@ export async function getServerSideProps(context) {
     const bookings = await getAdminBookings(adminSession.cookie);
     return {
       props: {
-        bookingData: bookings.map(mapBooking),
-      },
+        bookingData:(data.bookings || []).map(mapBooking),
     };
   } catch (error) {
     console.error("Error fetching booking details:", error);

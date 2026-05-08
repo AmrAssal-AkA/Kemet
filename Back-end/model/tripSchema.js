@@ -24,7 +24,11 @@ const tripSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  price: {
+  basePrice: {
+    type: Number,
+    required: true,
+  },
+  finalProce: {
     type: Number,
     required: true,
   },
@@ -60,6 +64,7 @@ const tripSchema = new mongoose.Schema({
       },
     },
   ],
-});
+}, {_id: false, timestamps: true});
+
 
 module.exports = mongoose.models.trips || mongoose.model("trips", tripSchema);
