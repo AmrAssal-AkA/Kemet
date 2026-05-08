@@ -29,11 +29,16 @@ const userRoutes = require("./routes/userdashboardRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const guideDashboardRoute = require("./routes/guideDashboardRoute");
 const errorHandlerMW = require("./middleware/ErrorMW");
+const upload = require("./middleware/PassportVarification");
+const validateImage = require("./middleware/passportImageValidation");
+const {PassportValidation} = require("./controller/auth/passportValidation");
+const passportRoutes = require("./routes/passportRoutes");
 
 // Connect to database
 connectDB();
 // Middleware
 app.use("/api/payments", paymentRoutes);
+app.use("/api/passport", passportRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
