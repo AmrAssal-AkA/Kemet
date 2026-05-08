@@ -54,7 +54,7 @@ function HiddenGemsPage() {
   useEffect(() => {
     const fetchHiddenGems = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/hidden-gems');
+        const response = await fetch('https://kemet-two.vercel.app/api/hidden-gems');
         const data = await response.json();
         setHiddenGems(data);
         setIsLoading(false);

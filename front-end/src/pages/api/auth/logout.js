@@ -6,14 +6,21 @@ async function hundler(req, res) {
   }
 
   try {
-    const response = await axios.post(
-      "https://kemet-two.vercel.app/api/auth/logout",
+    const backendUrl ="https://kemet-two.vercel.app";
+    const authToken = req.cookies["x-auth-token"];
+
+    await axios.post(
+      `${backendUrl}/api/auth/logout`,
       {},
       {
-        headers: { Cookie: req.headers.cookie || "" },
+        headers: {
+          Cookie: req.headers.cookie || "",
+          Authorization: authToken ? `Bearer ${authToken}` : "",
+        },
         withCredentials: true,
       },
     );
+
     res.setHeader("Set-Cookie", [
       "x-auth-token=; Max-Age=0; Path=/; HttpOnly",
       "x-refresh-token=; Max-Age=0; Path=/; HttpOnly",
