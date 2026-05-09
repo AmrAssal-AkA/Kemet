@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 export const USER_ROLES = ["user", "admin", "guide"];
 
@@ -30,7 +30,7 @@ async function handleResponse(res, fallbackMessage, logLabel = "userServices") {
 }
 
 export async function getAllUsers(cookie = "") {
-  const endpoint = `${API_BASE_URL}/api/adminDashboard/AllUsers`;
+  const endpoint = buildApiUrl("/api/adminDashboard/AllUsers");
   const res = await fetch(endpoint, {
     headers: cookie ? { Cookie: cookie } : {},
     credentials: "include",
@@ -49,7 +49,7 @@ export async function updateUserRole(userId, role) {
     throw new Error("Invalid role selected.");
   }
 
-  const endpoint = `${API_BASE_URL}/api/adminDashboard/upgradeUser/${userId}`;
+  const endpoint = buildApiUrl(`/api/adminDashboard/upgradeUser/${userId}`);
   const payload = { role };
   const res = await fetch(endpoint, {
     method: "PATCH",

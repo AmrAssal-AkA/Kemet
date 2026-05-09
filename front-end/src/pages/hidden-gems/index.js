@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
+import { buildApiUrl } from '@/utils/apiBaseUrl';
 
 const ArrowRightIcon = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -54,7 +55,7 @@ function HiddenGemsPage() {
   useEffect(() => {
     const fetchHiddenGems = async () => {
       try {
-        const response = await fetch('https://kemet-two.vercel.app/api/hidden-gems');
+        const response = await fetch(buildApiUrl('/api/hidden-gems'));
         const data = await response.json();
         setHiddenGems(data);
         setIsLoading(false);

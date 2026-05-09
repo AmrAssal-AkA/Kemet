@@ -1,6 +1,5 @@
 import { extractUserFromAuthResponse, getUserRole } from "@/utils/authSession";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 async function handleResponse(res, fallbackMessage) {
   const data = await res.json().catch(() => null);
@@ -59,7 +58,7 @@ export async function requireAdmin(context) {
 }
 
 export async function getAdminUsers(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/adminDashboard/AllUsers`, {
+  const res = await fetch(buildApiUrl("/api/adminDashboard/AllUsers"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -68,7 +67,7 @@ export async function getAdminUsers(cookie = "") {
 }
 
 export async function getAdminBookings(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/adminDashboard/bookingDetails`, {
+  const res = await fetch(buildApiUrl("/api/adminDashboard/bookingDetails"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -77,7 +76,7 @@ export async function getAdminBookings(cookie = "") {
 }
 
 export async function getTripStats(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/adminDashboard/stats/trips`, {
+  const res = await fetch(buildApiUrl("/api/adminDashboard/stats/trips"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -85,7 +84,7 @@ export async function getTripStats(cookie = "") {
 }
 
 export async function getBlogStats(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/adminDashboard/stats/blogs`, {
+  const res = await fetch(buildApiUrl("/api/adminDashboard/stats/blogs"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -93,7 +92,7 @@ export async function getBlogStats(cookie = "") {
 }
 
 export async function getRevenueStats(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/adminDashboard/stats/revenue`, {
+  const res = await fetch(buildApiUrl("/api/adminDashboard/stats/revenue"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -101,7 +100,7 @@ export async function getRevenueStats(cookie = "") {
 }
 
 export async function getAdminContacts(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/contact/contacts`, {
+  const res = await fetch(buildApiUrl("/api/contact/contacts"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://kemet-two.vercel.app/";
+const API_BASE_URL = "https://kemet-gold.vercel.app/";
 
 
 async function handler(req,res){

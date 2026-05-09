@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 export class BookingApiError extends Error {
   constructor(message, status, data) {
@@ -166,7 +166,7 @@ export async function searchHotels(payload) {
 }
 
 export async function createBooking(payload) {
-  const res = await fetch(`${API_BASE_URL}/api/booking/create`, {
+  const res = await fetch(buildApiUrl("/api/booking/create"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

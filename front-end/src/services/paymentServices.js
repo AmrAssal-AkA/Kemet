@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 export class PaymentApiError extends Error {
   constructor(message, status, data) {
@@ -29,7 +29,7 @@ async function handleResponse(res, errorMessage) {
 }
 
 export async function createStripeCheckout(payload) {
-  const res = await fetch(`${API_BASE_URL}/api/payments/stripe-checkout`, {
+  const res = await fetch(buildApiUrl("/api/payments/stripe-checkout"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

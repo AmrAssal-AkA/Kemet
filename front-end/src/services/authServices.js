@@ -1,10 +1,9 @@
 import axios from "axios";
 import { extractUserFromAuthResponse } from "@/utils/authSession";
-
-const API_BASE_URL = "https://kemet-two.vercel.app/";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 export const ApiCall = async (url, options = {}) => {
-  const requestUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+  const requestUrl = buildApiUrl(url);
 
   return axios({
     url: requestUrl,
@@ -18,7 +17,7 @@ export const ApiCall = async (url, options = {}) => {
 };
 
 export const apiRequest = async (path, options = {}) => {
-  const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
+  const url = buildApiUrl(path);
 
   return axios({
     url,
@@ -87,7 +86,7 @@ export const registerUser = async (formData) => {
 };
 
 export const loginWithGoogle = async () => {
-  window.location.href = `${API_BASE_URL}/api/auth/continueWithGoogle`;
+      window.location.href = "https://kemet-gold.vercel.app/api/auth/google/callback";
 };
 
 export const completeGoogleLogin = async ({ token, user }) => {

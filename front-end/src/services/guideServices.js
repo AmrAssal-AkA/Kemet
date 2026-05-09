@@ -1,6 +1,5 @@
 import { getCurrentUser } from "./authServices";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 async function handleResponse(res, fallbackMessage) {
   const data = await res.json().catch(() => null);
@@ -36,7 +35,7 @@ export async function getGuideAvailability() {
 }
 
 export async function updateGuideAvailability(payload) {
-  const res = await fetch(`${API_BASE_URL}/api/guideDashboard/setGuideSchedule`, {
+  const res = await fetch(buildApiUrl("/api/guideDashboard/setGuideSchedule"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

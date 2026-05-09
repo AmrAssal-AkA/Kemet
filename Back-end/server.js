@@ -31,7 +31,7 @@ const guideDashboardRoute = require("./routes/guideDashboardRoute");
 const errorHandlerMW = require("./middleware/ErrorMW");
 const upload = require("./middleware/PassportVarification");
 const validateImage = require("./middleware/passportImageValidation");
-const {PassportValidation} = require("./controller/auth/passportValidation");
+const { PassportValidation } = require("./controller/auth/passportValidation");
 const passportRoutes = require("./routes/passportRoutes");
 const SearchRoute = require("./routes/searchRoutes");
 const newsletterRoute = require("./routes/newsletterRoute");
@@ -53,7 +53,18 @@ app.use(
     cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
   }),
 );
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
+  }),
+);
 require("./controller/auth/authController");
 app.use(passport.initialize());
 
@@ -64,16 +75,11 @@ const swaggerUiOptions = {
     deepLinking: true,
   },
   customCss: ".swagger-ui { background-color: #fafafa; }",
-  customCssUrl: "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css",
-  customJs: [
-    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js",
-  ],
   customSiteTitle: "Kemet Travel API Docs",
 };
 
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+app.use("/api-docs", swaggerUi.serve);
+app.get("/api-docs", swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");

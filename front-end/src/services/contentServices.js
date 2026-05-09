@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 async function handleResponse(res, fallbackMessage) {
   const data = await res.json().catch(() => null);
@@ -29,7 +29,7 @@ function getArray(data, key) {
 }
 
 export async function getBlogs(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/blog`, {
+  const res = await fetch(buildApiUrl("/api/blog"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -38,7 +38,7 @@ export async function getBlogs(cookie = "") {
 }
 
 export async function getContacts(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/contact/contacts`, {
+  const res = await fetch(buildApiUrl("/api/contact/contacts"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -47,7 +47,7 @@ export async function getContacts(cookie = "") {
 }
 
 export async function getHiddenGems(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/hiddenGem`, {
+  const res = await fetch(buildApiUrl("/api/hiddenGem"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -56,7 +56,7 @@ export async function getHiddenGems(cookie = "") {
 }
 
 export async function getOfferings(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/offerings`, {
+  const res = await fetch(buildApiUrl("/api/offerings"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });

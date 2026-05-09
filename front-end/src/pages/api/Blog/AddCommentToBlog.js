@@ -9,7 +9,7 @@ async function handler(req, res) {
     const { blogId } = req.query;
 
     try{
-        const addComment = await axios.post(`https://kemet-two.vercel.app/blog/addComment/${blogId}` ,req.body, {
+        const addComment = await axios.post(`https://kemet-gold.vercel.app/blog/addComment/${blogId}` ,req.body, {
                 headers: {
                     cookies: req.headers.cookie || '',
                 },

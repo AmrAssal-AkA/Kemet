@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 let tripsCache = null;
 let tripsRequest = null;
 
@@ -93,7 +93,7 @@ export async function createTrip(payload) {
   formData.append("guestCapacity", String(payload.guestCapacity || 1));
   formData.append("image", imageFile);
 
-  const res = await fetch(`${API_BASE_URL}/api/Trip/addTrip`, {
+  const res = await fetch(buildApiUrl("/api/Trip/addTrip"), {
     method: "POST",
     credentials: "include",
     body: formData,
@@ -106,7 +106,7 @@ export async function getTrips({ force = false } = {}) {
   if (!force && tripsCache) return tripsCache;
   if (!force && tripsRequest) return tripsRequest;
 
-  tripsRequest = fetch(`${API_BASE_URL}/api/Trip`, {
+  tripsRequest = fetch(buildApiUrl("/api/Trip"), {
     credentials: "include",
   })
     .then((res) => handleResponse(res, "Trips could not be loaded."))
@@ -122,7 +122,7 @@ export async function getTrips({ force = false } = {}) {
 }
 
 export async function getAdminTrips(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/Trip`, {
+  const res = await fetch(buildApiUrl("/api/Trip"), {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -139,7 +139,7 @@ export async function getTripById(id) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/Trip/${encodeURIComponent(tripId)}`, {
+    const res = await fetch(buildApiUrl(`/api/Trip/${encodeURIComponent(tripId)}`), {
       credentials: "include",
     });
 
@@ -170,7 +170,7 @@ export async function updateTrip(id, payload) {
   formData.append("guestCapacity", String(payload.guestCapacity || 1));
   formData.append("image", imageFile);
 
-  const res = await fetch(`${API_BASE_URL}/api/Trip/updateTrip/${id}`, {
+  const res = await fetch(buildApiUrl(`/api/Trip/updateTrip/${id}`), {
     method: "PUT",
     credentials: "include",
     body: formData,
@@ -180,7 +180,7 @@ export async function updateTrip(id, payload) {
 }
 
 export async function deleteTrip(id) {
-  const res = await fetch(`${API_BASE_URL}/api/Trip/deleteTrip/${id}`, {
+  const res = await fetch(buildApiUrl(`/api/Trip/deleteTrip/${id}`), {
     method: "DELETE",
     credentials: "include",
   });
