@@ -1,11 +1,16 @@
 import { getCurrentUser } from "./authServices";
 
-const API_BASE_URL = "https://kemet-two.vercel.app/";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 async function handleResponse(res, fallbackMessage) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    console.error("[guideServices]", {
+      url: res.url,
+      status: res.status,
+      body: data,
+    });
     throw new Error(data?.message || data?.error || fallbackMessage);
   }
 

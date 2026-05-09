@@ -1,9 +1,10 @@
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
-import { getAdminBookings, getRevenueStats, requireAdmin } from "@/services/adminService";
+import { getRevenueStats, requireAdmin } from "@/services/adminService";
 
-export default function AdminRevenue({ admin, revenue = 0, paidBookings = 0, initialError = "" }) {
+export default function AdminRevenue({ admin, revenue = 0, initialError = "" }) {
   const { logout } = useAuth();
+  const hasRevenue = Number(revenue || 0) > 0;
 
   return (
     <AdminLayout adminName={admin?.name} onLogout={logout}>
@@ -22,7 +23,7 @@ export default function AdminRevenue({ admin, revenue = 0, paidBookings = 0, ini
             EGP {Number(revenue || 0).toLocaleString()}
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            {paidBookings > 0 ? `${paidBookings} paid/confirmed bookings` : "No revenue yet."}
+            {hasRevenue ? "Revenue reported by backend payments/bookings." : "No revenue yet."}
           </p>
         </div>
       </section>
@@ -30,30 +31,27 @@ export default function AdminRevenue({ admin, revenue = 0, paidBookings = 0, ini
   );
 }
 
+function getRealRevenueValue(revenueStats) {
+  const rawRevenue =
+    revenueStats?.totalRevenue ??
+    revenueStats?.revenue ??
+    revenueStats?.data?.totalRevenue ??
+    revenueStats?.data?.revenue;
+
+  return Number(rawRevenue || 0);
+}
+
 export async function getServerSideProps(context) {
   const adminSession = await requireAdmin(context);
   if (adminSession.redirect) return adminSession;
 
   try {
-    const [revenueStats, bookings] = await Promise.all([
-      getRevenueStats(adminSession.cookie),
-      getAdminBookings(adminSession.cookie),
-    ]);
-    const paidBookings = bookings.filter((booking) => {
-      const status = String(booking.status || "").toLowerCase();
-      const paymentStatus = String(booking.paymentStatus || "").toLowerCase();
-      return status === "confirmed" || paymentStatus === "paid";
-    });
-    const bookingRevenue = paidBookings.reduce(
-      (total, booking) => total + Number(booking.totalPrice || 0),
-      0,
-    );
+    const revenueStats = await getRevenueStats(adminSession.cookie);
 
     return {
       props: {
         admin: adminSession.admin,
-        revenue: bookingRevenue || Number(revenueStats.totalRevenue || 0),
-        paidBookings: paidBookings.length,
+        revenue: getRealRevenueValue(revenueStats),
         initialError: "",
       },
     };
@@ -63,7 +61,6 @@ export async function getServerSideProps(context) {
       props: {
         admin: adminSession.admin,
         revenue: 0,
-        paidBookings: 0,
         initialError: error.message || "Revenue could not be loaded.",
       },
     };

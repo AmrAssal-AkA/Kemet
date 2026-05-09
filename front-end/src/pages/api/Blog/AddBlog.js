@@ -2,6 +2,8 @@ import axios from "axios";
 import multer from "multer";
 import FormData from "form-data";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
 export const config = {
   api: {
     bodyParser: false,
@@ -57,7 +59,7 @@ export default async function handler(req, res) {
     }
 
     const response = await axios.post(
-      "https://kemet-two.vercel.app/api/blog",
+      `${API_BASE_URL}/api/blog`,
       formData,
       {
         headers: {

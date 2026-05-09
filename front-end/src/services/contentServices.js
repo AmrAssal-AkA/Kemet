@@ -52,7 +52,7 @@ export async function getHiddenGems(cookie = "") {
     credentials: "include",
   });
   const data = await handleResponse(res, "Hidden gems could not be loaded.");
-  return getArray(data, "hiddenGems");
+  return getArray(data, "allHiddenGem");
 }
 
 export async function getOfferings(cookie = "") {

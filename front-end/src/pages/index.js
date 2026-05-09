@@ -283,34 +283,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══════ SEARCH ══════ */}
-        <div className="relative z-10 -mt-16 px-4 md:px-20 mb-6">
-          <motion.div
-            initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }}
-            transition={{ delay:0.5, duration:0.5 }}
-            className="search-box rounded-2xl p-5 md:p-6"
-          >
-            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
-              <div className="flex-1">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Destination</span>
-                <input placeholder="Where to?" className="search-input w-full bg-transparent text-sm font-bold text-gray-900 placeholder-gray-400" />
-              </div>
-              <div className="hidden md:block h-10 w-px bg-gray-100" />
-              <div className="flex-1">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Date</span>
-                <input type="date" className="search-input w-full cursor-pointer bg-transparent text-sm font-bold text-gray-900" />
-              </div>
-              <div className="hidden md:block h-10 w-px bg-gray-100" />
-              <div className="flex-1">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Travelers</span>
-                <input placeholder="Guests" className="search-input w-full bg-transparent text-sm font-bold text-gray-900 placeholder-gray-400" />
-              </div>
-              <Link href="/guide" className="w-full md:w-auto shrink-0">
-                <button className="btn-gold w-full md:w-auto rounded-full px-7 py-3 font-semibold text-black text-sm">Search</button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
+        
 
         {/* ══════ CITIES ══════ */}
         <section className="py-16 px-4 md:px-20">

@@ -1,9 +1,9 @@
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
 import { requireAdmin } from "@/services/adminService";
-import { getBlogs, getContacts, getHiddenGems, getOfferings } from "@/services/contentServices";
+import { getBlogs } from "@/services/contentServices";
 
-export default function AdminEditorial({ admin, blogs = [], contacts = [], hiddenGems = [], offerings = [], initialError = "" }) {
+export default function AdminEditorial({ admin, blogs = [], initialError = "" }) {
   const { logout } = useAuth();
 
   return (
@@ -17,11 +17,8 @@ export default function AdminEditorial({ admin, blogs = [], contacts = [], hidde
         )}
         <div className="mt-5 grid gap-4 md:grid-cols-4">
           <Summary title="Blogs" value={blogs.length} />
-          <Summary title="Contacts" value={contacts.length} />
-          <Summary title="Hidden Gems" value={hiddenGems.length} />
-          <Summary title="Offerings" value={offerings.length} />
         </div>
-        {blogs.length + contacts.length + hiddenGems.length + offerings.length === 0 && (
+        {blogs.length === 0 && (
           <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">
             No editorial API data found yet.
           </p>
@@ -45,20 +42,12 @@ export async function getServerSideProps(context) {
   if (adminSession.redirect) return adminSession;
 
   try {
-    const [blogs, contacts, hiddenGems, offerings] = await Promise.all([
-      getBlogs(adminSession.cookie),
-      getContacts(adminSession.cookie),
-      getHiddenGems(adminSession.cookie),
-      getOfferings(adminSession.cookie),
-    ]);
+    const blogs = await getBlogs(adminSession.cookie);
 
     return {
       props: {
         admin: adminSession.admin,
         blogs,
-        contacts,
-        hiddenGems,
-        offerings,
         initialError: "",
       },
     };
@@ -68,9 +57,6 @@ export async function getServerSideProps(context) {
       props: {
         admin: adminSession.admin,
         blogs: [],
-        contacts: [],
-        hiddenGems: [],
-        offerings: [],
         initialError: error.message || "Editorial data could not be loaded.",
       },
     };

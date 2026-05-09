@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://kemet-two.vercel.app/";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 async function handler(req, res) {
   if (req.method !== "PATCH") {
@@ -15,9 +15,6 @@ async function handler(req, res) {
 
   const endpoint = `${API_BASE_URL}/api/adminDashboard/upgradeUser/${userId}`;
 
-  console.log("[updateUserRole API] endpoint URL:", endpoint);
-  console.log("[updateUserRole API] payload:", { role });
-
   try {
     const response = await axios.patch(
       endpoint,
@@ -29,9 +26,6 @@ async function handler(req, res) {
         },
       },
     );
-
-    console.log("[updateUserRole API] response status:", response.status);
-    console.log("[updateUserRole API] response body:", response.data);
 
     return res.status(response.status).json(response.data);
   } catch (error) {
