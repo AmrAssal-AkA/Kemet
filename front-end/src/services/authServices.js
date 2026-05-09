@@ -35,18 +35,16 @@ export const apiRequest = async (path, options = {}) => {
 
 export const getCurrentUser = async () => {
   try {
-    const response = await axios({
-      url: "/api/auth/refresh",
+    const response = await apiRequest("api/auth/refresh", {
       method: "POST",
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     console.debug("[auth] refresh response", response.data);
     return extractUserFromAuthResponse(response.data);
   } catch (error) {
-    console.debug("[auth] refresh failed", error.response?.data || error.message);
+    console.debug(
+      "[auth] refresh failed",
+      error.response?.data || error.message,
+    );
     return null;
   }
 };
@@ -57,14 +55,9 @@ export const loginUser = async (formData) => {
   }
 
   try {
-    const res = await axios({
-      url: "/api/auth/login",
+    const res = await apiRequest("api/auth/login", {
       method: "POST",
       data: formData,
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     console.debug("[auth] login response", res.data);
     return res.data;
@@ -83,14 +76,9 @@ export const registerUser = async (formData) => {
   }
 
   try {
-    const res = await axios({
-      url: "/api/auth/register",
+    const res = await apiRequest("api/auth/register", {
       method: "POST",
       data: formData,
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     return res.data;
   } catch (error) {
@@ -108,14 +96,9 @@ export const completeGoogleLogin = async ({ token, user }) => {
   }
 
   try {
-    const res = await axios({
-      url: "/api/auth/google-session",
+    const res = await apiRequest("api/auth/google-session", {
       method: "POST",
       data: { token, user },
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     return res.data;
   } catch (error) {
@@ -125,13 +108,8 @@ export const completeGoogleLogin = async ({ token, user }) => {
 
 export const logout = async () => {
   try {
-    const res = await axios({
-      url: "/api/auth/logout",
+    const res = await apiRequest("api/auth/logout", {
       method: "POST",
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     return res.data;
   } catch (error) {
@@ -147,14 +125,9 @@ export const resetPassword = async (email) => {
   }
 
   try {
-    const res = await axios({
-      url: "/api/auth/reset-password",
+    const res = await apiRequest("api/auth/reset-password", {
       method: "POST",
       data: { email },
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     return res.data;
   } catch (error) {
@@ -172,14 +145,9 @@ export const confirmResetPassword = async (formData) => {
   }
 
   try {
-    const res = await axios({
-      url: "/api/auth/reset-password-confirm",
+    const res = await apiRequest("api/auth/reset-password-confirm", {
       method: "POST",
       data: { token: formData.token, newPassword: formData.newPassword },
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     return res.data;
   } catch (error) {
@@ -191,13 +159,8 @@ export const confirmResetPassword = async (formData) => {
 
 export const refreshToken = async () => {
   try {
-    const res = await axios({
-      url: "/api/auth/refresh",
+    const res = await apiRequest("api/auth/refresh", {
       method: "POST",
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
     });
     return res.data;
   } catch (error) {

@@ -144,7 +144,7 @@ const login = async (req, res, nxt) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -225,7 +225,7 @@ const googleCallback = async (req, res, nxt) => {
     });
 
     res.redirect(
-      `${process.env.DOMAIN}/auth/auth?token=${accessToken}&user=${user}`,
+      `http://localhost:3000/auth/auth?token=${accessToken}&user=${user}`,
     );
 
     const emailResult = await GoogleSignInTemplate(req.user.name);

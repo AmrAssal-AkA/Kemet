@@ -1,7 +1,7 @@
 import axios from "axios";
 import jwt from "jsonwebtoken";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL ="https://kemet-two.vercel.app/";
 
 function normalizeAuthCookies(cookies = [], req) {
   const host = req.headers.host || "";
@@ -80,7 +80,6 @@ async function handler(req, res) {
   }
 
   try {
-    console.log("Refreshing token with cookie:", req.headers.cookie);
 
     const response = await axios.post(
       `${API_BASE_URL}/api/auth/refresh`,
