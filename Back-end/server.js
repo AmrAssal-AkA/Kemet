@@ -53,7 +53,25 @@ app.use(
     cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
   }),
 );
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "cdnjs.cloudflare.com",
+          "fonts.googleapis.com",
+        ],
+        fontSrc: ["'self'", "fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "validator.swagger.io"],
+        connectSrc: ["'self'", "http:", "https:"],
+      },
+    },
+  }),
+);
 require("./controller/auth/authController");
 app.use(passport.initialize());
 
@@ -71,6 +89,23 @@ const swaggerUiOptions = {
   ],
   customSiteTitle: "Kemet Travel API Docs",
 };
+
+// Redirect static assets to CDN to avoid Vercel serving HTML for missing files
+app.get("/api-docs/swagger-ui-bundle.js", (req, res) =>
+  res.redirect(
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-bundle.min.js",
+  ),
+);
+app.get("/api-docs/swagger-ui-standalone-preset.js", (req, res) =>
+  res.redirect(
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-standalone-preset.min.js",
+  ),
+);
+app.get("/api-docs/swagger-ui.css", (req, res) =>
+  res.redirect(
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css",
+  ),
+);
 
 app.use(
   "/api-docs",

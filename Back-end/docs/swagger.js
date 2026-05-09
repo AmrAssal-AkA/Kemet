@@ -5,7 +5,7 @@ const getServerUrl = () => {
   if (process.env.NODE_ENV === "production") {
     return process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : "https://kemet-two.vercel.app";
+      : "https://kemet-gold.vercel.app";
   }
   return `http://localhost:${port}`;
 };
