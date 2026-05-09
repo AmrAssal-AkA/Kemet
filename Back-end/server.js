@@ -63,12 +63,18 @@ const swaggerUiOptions = {
     deepLinking: true,
   },
   customCss: ".swagger-ui { background-color: #fafafa; }",
+  customCssUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css",
+  customJs: [
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-bundle.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-standalone-preset.min.js",
+  ],
   customSiteTitle: "Kemet Travel API Docs",
 };
 
 app.use(
   "/api-docs",
-  swaggerUi.serveFiles(swaggerSpec, swaggerUiOptions),
+  swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, swaggerUiOptions),
 );
 
