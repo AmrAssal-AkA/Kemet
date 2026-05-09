@@ -45,7 +45,7 @@ const createBlog = async (req, res) => {
 // Get Blog
 const getAllBlog = async (req, res) => {
   try {
-    const allblogs = await blog.find().populate("author", "name email");
+    const allblogs = await blog.find();
     res.status(201).json(allblogs);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });

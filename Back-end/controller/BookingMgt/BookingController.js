@@ -1,12 +1,5 @@
-const { booking } = require("../../config/amadeus");
 const Booking = require("../../model/BookingSchema");
 const { stripeCheckout, refundPayment } = require("./paymentController");
-const guests = require("../../model/guestSchema");
-const {
-  BookingConfirmationTemplate,
-  sendEmail,
-} = require("../../services/miling");
-const passport = require("passport");
 const validatePassport = require("../auth/passportValidation");
 const cloudinary = require("../../config/cloudinary");
 
@@ -28,8 +21,8 @@ const createBooking = async (req, res, nxt) => {
     }
 
     const {
-      guests = [
-        {
+      guest = [
+         {
           firstName: "",
           lastName: "",
           nationality: "",
@@ -110,7 +103,6 @@ const createBooking = async (req, res, nxt) => {
                 ? "Hotel"
                 : "Mixed",
     };
-
     const newBooking = new Booking({
       userId,
       email,
@@ -136,15 +128,14 @@ const createBooking = async (req, res, nxt) => {
 
     const session = await stripeCheckout(req);
     if (!session) {
-      res.status(500).json({ error: "Failed to create Stripe session" });
-      return;
+      return res.status(500).json({ error: "Failed to create Stripe session" });
     }
 
     await Booking.findByIdAndUpdate(newBooking._id, {
       stripeSessionId: session.id,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Booking created successfully",
       status: "success",
       bookingId: newBooking._id,

@@ -101,6 +101,12 @@ function BlogDetailPage(props) {
             </div>
           </div>
         </div>
+
+        <div className="bg-gray-100 py-12">
+          <div className="mx-auto max-w-4xl text-center">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Comments Section</h2>
+          </div>
+        </div>
       </main>
     </>
   );
