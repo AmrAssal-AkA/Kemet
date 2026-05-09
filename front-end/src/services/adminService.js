@@ -20,9 +20,9 @@ function getHeaders(cookie) {
 }
 
 export async function getAdminFromSession(cookie = "") {
-  const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+  const res = await fetch(`/api/auth/refresh`, {
     method: "POST",
-    headers: getHeaders(cookie),
+    headers: cookie ? { Cookie: cookie } : {},
     credentials: "include",
   });
   const data = await handleResponse(res, "Admin session could not be verified.");

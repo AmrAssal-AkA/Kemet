@@ -6,28 +6,33 @@ async function handler(req, res) {
     return;
   }
 
-  const refreshToken = req.cookies["x-refresh-token"];
-  if (!refreshToken) {
-    return res.status(401).json({ message: "Refresh token missing" });
-  }
-
   try {
+    console.log("Refreshing token with cookie:", req.headers.cookie);
+
     const response = await axios.post(
       "https://kemet-two.vercel.app/api/auth/refresh",
       {},
       {
-        headers: { Cookie: req.headers.cookie },
+        headers: { 
+          Cookie: req.headers.cookie || "",
+        },
         withCredentials: true,
+        maxRedirects: 5,
       },
     );
+
     const cookies = response.headers["set-cookie"];
     if (cookies) {
       cookies.forEach((cookie) => {
         res.setHeader("Set-Cookie", cookie);
       });
     }
+
+    console.log("Token refresh successful");
     return res.status(200).json(response.data);
   } catch (error) {
+    console.error("Token refresh error:", error.response?.status, error.response?.data || error.message);
+    
     if (error.code === "ECONNREFUSED") {
       return res.status(503).json({ message: "Auth service unavailable" });
     }

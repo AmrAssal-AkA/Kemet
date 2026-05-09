@@ -1,10 +1,9 @@
 "use client";
 import axios from "axios";
-import {  useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
-
-export default function AddBlogForm({onSuccess}) {
+export default function AddBlogForm({ onSuccess }) {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -13,15 +12,14 @@ export default function AddBlogForm({onSuccess}) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!user) {
       setError("You must be logged in to submit a blog post");
       return;
     }
-    
+
     if (!title.trim()) {
       setError("Title is required");
       return;
@@ -60,7 +58,9 @@ export default function AddBlogForm({onSuccess}) {
       onSuccess();
     } catch (error) {
       setLoading(false);
-      const errorMessage = error.response?.data?.message || "Failed to submit blog post. Please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to submit blog post. Please try again.";
       setError(errorMessage);
       console.error("Form submission error:", error);
     }
@@ -68,7 +68,7 @@ export default function AddBlogForm({onSuccess}) {
 
   return (
     <>
-      <div className="bg-black opacity-60 "/>
+      <div className="bg-black opacity-60 " />
       <form className="w-full flex flex-col gap-6" onSubmit={handleSubmit}>
         <div>
           <label
