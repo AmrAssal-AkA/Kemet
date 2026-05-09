@@ -3,8 +3,10 @@ import axios from "axios";
 const API_BASE_URL = "https://kemet-two.vercel.app/"
 
 export const ApiCall = async (url, options = {}) => {
+  const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+  
   return axios({
-    url,
+    url: fullUrl,
     ...options,
     withCredentials: true,
     headers: {

@@ -11,8 +11,7 @@ async function handler(req, res) {
     try{
         const addComment = await axios.post(`https://kemet-two.vercel.app/blog/addComment/${blogId}` ,req.body, {
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Cookie': req.headers.cookie || '', 
+                    cookies: req.headers.cookie || '',
                 },
                 withCredentials: true,
             });

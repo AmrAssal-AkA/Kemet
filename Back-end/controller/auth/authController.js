@@ -119,7 +119,7 @@ const register = async (req, res, nxt) => {
       emailVerificationToken: verifyToken,
       emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
-    const verifyURL = `http://localhost:3000/auth/verifyaccount?token=${verifyToken}`;
+    const verifyURL = `${process.env.DOMAIN}/auth/verifyaccount?token=${verifyToken}`;
     const emailResult = await verifyEmailTemplate(name, verifyURL);
     await sendEmail({
       to: email,
@@ -225,7 +225,7 @@ const googleCallback = async (req, res, nxt) => {
     });
 
     res.redirect(
-      `http://localhost:3000/auth/auth?token=${accessToken}&user=${user}`,
+      `${process.env.DOMAIN}/auth/auth?token=${accessToken}&user=${user}`,
     );
 
     const emailResult = await GoogleSignInTemplate(req.user.name);

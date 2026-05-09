@@ -6,7 +6,7 @@ async function hundler(req, res) {
   }
 
   try {
-    const backendUrl ="https://kemet-two.vercel.app";
+    const backendUrl = "https://kemet-two.vercel.app";
     const authToken = req.cookies["x-auth-token"];
 
     await axios.post(
@@ -14,8 +14,8 @@ async function hundler(req, res) {
       {},
       {
         headers: {
-          Cookie: req.headers.cookie || "",
           Authorization: authToken ? `Bearer ${authToken}` : "",
+          cookies: req.headers.cookie || "",
         },
         withCredentials: true,
       },
