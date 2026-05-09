@@ -33,6 +33,8 @@ const upload = require("./middleware/PassportVarification");
 const validateImage = require("./middleware/passportImageValidation");
 const {PassportValidation} = require("./controller/auth/passportValidation");
 const passportRoutes = require("./routes/passportRoutes");
+const SearchRoute = require("./routes/searchRoutes");
+const newsletterRoute = require("./routes/newsletterRoute");
 
 // Connect to database
 connectDB();
@@ -101,6 +103,8 @@ app.use("/api/adminDashboard", adminRoute);
 app.use("/api/userdashboard", userRoutes);
 app.use("/api/passport", passportRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
+app.use("/api/searchHandler", SearchRoute);
+app.use("/api/newsletter", newsletterRoute);
 
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");

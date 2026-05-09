@@ -7,7 +7,7 @@ const {
   sendEmail,
 } = require("../../services/miling");
 const passport = require("passport");
-const validatePassport = require("../auth/passportValidation").validatePassport;
+const validatePassport = require("../auth/passportValidation");
 const cloudinary = require("../../config/cloudinary");
 
 const currencyMapping = {
@@ -28,7 +28,17 @@ const createBooking = async (req, res, nxt) => {
     }
 
     const {
-      guests,
+      guests = [
+        {
+          firstName: "",
+          lastName: "",
+          nationality: "",
+          dateOfBirth: "",
+          PassportNumber: "",
+          expiryDate: "",
+          type: ["adult", "child", "infant"],
+        },
+      ],
       flight,
       hotel,
       trip,
@@ -37,11 +47,25 @@ const createBooking = async (req, res, nxt) => {
       totalPrice,
     } = req.body;
 
-    const PassportImage = req.file ? req.file.buffer : null;
-
-    if (!PassportImage) {
-      res.status(400).json({ error: "Passport image is required" });
-      return;
+    const ChildAge = (guests) => {
+      const today = new Date();
+      const birthDate = new Date(guests.dateOfBirth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        return age - 1 < 16;
+      }
+      return age < 16;
+    };
+    const childerentAgeUnder16 = guests.some(
+      (g) => g.type === "child" && ChildAge(g),
+    );
+    if (!childerentAgeUnder16) {
+      const passportImage = req.file ? req.file.buffer : null;
+      if (!passportImage) {
+        res.status(400).json({ error: "Passport image is required" });
+        return;
+      }
     }
 
     const passportValidationResult = await validatePassport({
@@ -89,7 +113,7 @@ const createBooking = async (req, res, nxt) => {
 
     const newBooking = new Booking({
       userId,
-      email: email,
+      email,
       guests,
       flight,
       hotel,
@@ -100,10 +124,10 @@ const createBooking = async (req, res, nxt) => {
       details: bookingDetails,
       status: "Pending",
       paymentStatus: "Pending",
-      passportImages: uploadedPassports.map(upload => ({
+      passportImages: uploadedPassports.map((upload) => ({
         url: upload.secure_url,
         cloudinaryId: upload.public_id,
-      }))
+      })),
     });
     await newBooking.save();
 

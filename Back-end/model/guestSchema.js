@@ -1,4 +1,3 @@
-// models/Guest.js
 const mongoose = require("mongoose");
 const passport = require("passport");
 

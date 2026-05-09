@@ -28,8 +28,18 @@ const guideRequiredTrips = async (req, res, nxt) => {
     }
 }
 
+const guideFee = async (req, res, nxt) => {
+    try{
+        const getGuideFee = await Trip.findOne({guideAvailable: true}, {guideFee: 1, _id: 0}); 
+        res.json({ getGuideFee });
+    }catch (err) {
+        nxt(err);
+    }
+}
+
 
 module.exports = {
     setGuideSchedule,
-    guideRequiredTrips
+    guideRequiredTrips,
+    guideFee
 }

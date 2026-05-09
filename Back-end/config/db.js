@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const logger = require("../services/logger");
 dotenv.config();
 
 
@@ -9,8 +10,9 @@ const connectDB = async () => {
       family: 4,
       serverSelectionTimeoutMS: 5000,
     });
+    logger.info("MongoDB connected successfully");
   } catch (err) {
-    console.error("Error connecting to MongoDB:", err);
+    logger.error("Error connecting to MongoDB:", err);
   }
 };
 

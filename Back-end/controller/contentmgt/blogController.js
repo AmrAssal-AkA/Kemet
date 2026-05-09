@@ -103,10 +103,34 @@ const deleteBlogById = async (req, res) => {
   }
 };
 
+
+const WriteBlogComments = async (req, res) => {
+    const { blogId } = req.params;
+    const { comment } = req.body;
+    const userId = req.user.id;
+    try {
+        const blogPost = await blog.findById(blogId);
+        if (!blogPost) {
+            return res.status(404).json({ message: "Blog not found" });
+        }
+        const newComment = {
+           user: userId,
+            comment,
+            createdAt: new Date(),
+        };
+        blogPost.comments.push(newComment);
+        await blogPost.save();
+        res.status(201).json({ message: "Comment added successfully" });
+    }catch (error) {
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+}
+
 module.exports = {
   createBlog,
   getAllBlog,
   getOneBlogById,
   updateBlogById,
   deleteBlogById,
+  WriteBlogComments
 };

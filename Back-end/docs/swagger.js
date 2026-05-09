@@ -21,7 +21,10 @@ const definition = {
   servers: [
     {
       url: getServerUrl(),
-      description: process.env.NODE_ENV === "production" ? "Production server" : "Local development server",
+      description:
+        process.env.NODE_ENV === "production"
+          ? "Production server"
+          : "Local development server",
     },
   ],
   tags: [
@@ -43,6 +46,10 @@ const definition = {
     {
       name: "Guide Dashboard",
       description: "Endpoints for tour guides",
+    },
+    {
+      name: "Newsletter",
+      description: "Newsletter subscription and delivery endpoints",
     },
   ],
   components: {
@@ -184,6 +191,22 @@ const definition = {
           author: {
             oneOf: [{ type: "string" }, { $ref: "#/components/schemas/User" }],
           },
+          comments: {
+            type: "array",
+            items: { $ref: "#/components/schemas/BlogComment" },
+          },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      BlogComment: {
+        type: "object",
+        properties: {
+          user: {
+            oneOf: [{ type: "string" }, { $ref: "#/components/schemas/User" }],
+          },
+          comment: { type: "string" },
+          createdAt: { type: "string", format: "date-time" },
         },
       },
       CreateBlogRequest: {
@@ -196,6 +219,53 @@ const definition = {
             type: "array",
             items: { type: "string", format: "binary" },
           },
+        },
+      },
+      BlogCommentRequest: {
+        type: "object",
+        required: ["comment"],
+        properties: {
+          comment: { type: "string" },
+        },
+      },
+      GuideScheduleRequest: {
+        type: "object",
+        required: ["dayofweek", "startTime", "endTime"],
+        properties: {
+          dayofweek: { type: "string" },
+          startTime: {
+            type: "string",
+            example: "09:00",
+            description: "Guide start time.",
+          },
+          endTime: {
+            type: "string",
+            example: "17:00",
+            description: "Guide end time.",
+          },
+        },
+      },
+      NewsletterSubscriptionRequest: {
+        type: "object",
+        required: ["email"],
+        properties: {
+          email: { type: "string", format: "email" },
+        },
+      },
+      NewsletterSendRequest: {
+        type: "object",
+        required: ["subject", "content"],
+        properties: {
+          subject: { type: "string" },
+          content: { type: "string" },
+        },
+      },
+      NewsletterSubscription: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          email: { type: "string", format: "email" },
+          subscribedAt: { type: "string", format: "date-time" },
         },
       },
       HiddenGem: {
@@ -384,16 +454,11 @@ const definition = {
           checkOutDate: { type: "string", format: "date" },
           NumberOfGuests: { type: "integer", minimum: 1 },
           NumberOfrooms: { type: "integer", minimum: 1 },
-        },
-      },
-      HotelOfferRequest: {
-        type: "object",
-        required: ["hotelId", "checkInDate", "checkOutDate", "adults"],
-        properties: {
-          hotelId: { type: "string" },
-          checkInDate: { type: "string", format: "date" },
-          checkOutDate: { type: "string", format: "date" },
-          adults: { type: "integer", minimum: 1 },
+          provider: {
+            type: "string",
+            default: "all",
+            description: "Hotel provider to use for search",
+          },
         },
       },
       RoleUpdateRequest: {
@@ -506,7 +571,13 @@ const definition = {
           },
           paymentStatus: {
             type: "string",
-            enum: ["Pending", "Paid", "Failed", "Refunded", "PartiallyRefunded"],
+            enum: [
+              "Pending",
+              "Paid",
+              "Failed",
+              "Refunded",
+              "PartiallyRefunded",
+            ],
             default: "Pending",
           },
           refundedAmount: { type: "number", default: 0 },
@@ -529,13 +600,7 @@ const definition = {
             properties: {
               bookingType: {
                 type: "string",
-                enum: [
-                  "Flight",
-                  "Hotel",
-                  "Trip",
-                  "FlightAndHotel",
-                  "Mixed",
-                ],
+                enum: ["Flight", "Hotel", "Trip", "FlightAndHotel", "Mixed"],
               },
             },
           },
@@ -663,6 +728,12 @@ const definition = {
                 },
               },
             },
+          },
+          passportImage: {
+            type: "string",
+            format: "binary",
+            description:
+              "Passport image file, required if no child under 16 is in guests.",
           },
         },
       },
@@ -976,6 +1047,18 @@ const definition = {
         summary: "Search available flights",
         description:
           "Public flight search endpoint. Validates origin format, checks departure date and adult count, and restricts destination to supported Egyptian airport codes before querying Amadeus. Optional `children`, `infants`, `returnDate`, and `travelClass` are forwarded when provided.",
+        parameters: [
+          {
+            in: "query",
+            name: "provider",
+            schema: {
+              type: "string",
+              enum: ["all", "amadeus", "flightapi"],
+              default: "all",
+            },
+            description: "The flight provider to search with.",
+          },
+        ],
         requestBody: {
           required: true,
           content: {
@@ -985,7 +1068,7 @@ const definition = {
           },
         },
         responses: {
-          201: { description: "Flight offers returned" },
+          200: { description: "Flight offers returned" },
           400: { description: "Missing parameters or validation failed" },
           502: {
             description: "Upstream flight provider temporarily unavailable",
@@ -1056,7 +1139,7 @@ const definition = {
           },
         },
         responses: {
-          201: { description: "Hotel offers returned" },
+          200: { description: "Hotel offers returned" },
           400: { description: "Missing parameters" },
           404: { description: "No hotels or offers found" },
           401: { description: "Unauthorized" },
@@ -1069,16 +1152,33 @@ const definition = {
         tags: ["Hotels"],
         summary: "Get hotel offer details",
         security: [{ cookieAuth: [] }],
-        description:
-          "This route is implemented as GET, but the controller currently expects `hotelId`, `checkInDate`, `checkOutDate`, and `adults` in the request body after auth middleware succeeds.",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/HotelOfferRequest" },
-            },
+        description: "Fetch hotel offer details using query parameters.",
+        parameters: [
+          {
+            in: "query",
+            name: "hotelId",
+            required: true,
+            schema: { type: "string" },
           },
-        },
+          {
+            in: "query",
+            name: "checkInDate",
+            required: true,
+            schema: { type: "string", format: "date" },
+          },
+          {
+            in: "query",
+            name: "checkOutDate",
+            required: true,
+            schema: { type: "string", format: "date" },
+          },
+          {
+            in: "query",
+            name: "adults",
+            required: true,
+            schema: { type: "integer", minimum: 1 },
+          },
+        ],
         responses: {
           200: { description: "Hotel details returned" },
           400: { description: "Missing parameters" },
@@ -1248,6 +1348,36 @@ const definition = {
         },
       },
     },
+    "/api/blog/addComment/{blogId}": {
+      post: {
+        tags: ["Blogs"],
+        summary: "Add a comment to a blog post",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "blogId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/BlogCommentRequest" },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Comment added successfully" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Blog not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
     "/api/booking/create": {
       post: {
         tags: ["Bookings"],
@@ -1258,7 +1388,7 @@ const definition = {
         requestBody: {
           required: true,
           content: {
-            "application/json": {
+            "multipart/form-data": {
               schema: { $ref: "#/components/schemas/BookingRequest" },
             },
           },
@@ -1290,10 +1420,10 @@ const definition = {
         },
       },
     },
-    "/api/booking/refund/{bookingId}": {
-      get: {
+    "/api/booking/{bookingId}": {
+      delete: {
         tags: ["Bookings"],
-        summary: "Cancel a booking and process refund if applicable",
+        summary: "Cancel a booking and process refund",
         description:
           "Cancels a booking for the authenticated user. If the booking has already been paid and a Stripe payment intent exists, the endpoint attempts a Stripe refund before marking the booking as cancelled.",
         security: [{ cookieAuth: [] }],
@@ -1310,10 +1440,57 @@ const definition = {
           200: {
             description:
               "Booking cancelled successfully, with or without Stripe refund depending on payment state",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string" },
+                  },
+                },
+              },
+            },
           },
           400: {
             description: "Booking is already cancelled or cannot be cancelled",
           },
+          401: { description: "Unauthorized" },
+          404: { description: "Booking not found" },
+          500: { description: "Failed to cancel booking or process refund" },
+        },
+      },
+    },
+    "/api/flight/order": {
+      post: {
+        tags: ["Flights"],
+        summary: "Create a flight order",
+        security: [{ cookieAuth: [] }],
+        description:
+          "Creates a flight order with a priced offer and traveler details.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["pricedOffer", "travelers"],
+                properties: {
+                  pricedOffer: {
+                    type: "object",
+                    description: "The priced flight offer object",
+                  },
+                  travelers: {
+                    type: "array",
+                    items: { type: "object" },
+                    description: "Array of traveler details",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Flight order created successfully" },
           401: { description: "Unauthorized" },
           404: { description: "Booking not found" },
           500: { description: "Failed to cancel booking or process refund" },
@@ -1369,6 +1546,29 @@ const definition = {
           },
           400: { description: "Invalid checkout request or missing booking" },
           500: { description: "Stripe checkout creation failed" },
+        },
+      },
+    },
+    "/api/payments/webhook": {
+      post: {
+        tags: ["Payments"],
+        summary: "Stripe webhook endpoint",
+        description:
+          "Receives events from Stripe, such as `checkout.session.completed`, to update booking statuses and send confirmation emails. Stripe sends raw request body, so this endpoint must be configured to bypass `express.json()` parsing.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                description: "Raw Stripe event payload",
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Webhook received successfully" },
+          400: { description: "Webhook signature verification failed" },
         },
       },
     },
@@ -1822,14 +2022,7 @@ const definition = {
           required: true,
           content: {
             "application/json": {
-              schema: {
-                type: "object",
-                properties: {
-                  dayofweek: { type: "string" },
-                  startTime: { type: "string" },
-                  endTime: { type: "string" },
-                },
-              },
+              schema: { $ref: "#/components/schemas/GuideScheduleRequest" },
             },
           },
         },
@@ -1837,6 +2030,100 @@ const definition = {
           200: { description: "Guide schedule updated successfully" },
           401: { description: "Unauthorized" },
           404: { description: "Guide not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/guideDashboard/guideRequiredTrips": {
+      get: {
+        tags: ["Guide Dashboard"],
+        summary: "Get trips that require a guide",
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: "Guide-required trips returned" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/guideDashboard/guideFee": {
+      get: {
+        tags: ["Guide Dashboard"],
+        summary: "Get guide fee for guide-enabled trips",
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: "Guide fee returned" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/newsletter/subscribe": {
+      post: {
+        tags: ["Newsletter"],
+        summary: "Subscribe an email to the newsletter",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/NewsletterSubscriptionRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Subscribed successfully" },
+          400: { description: "Email is required or already subscribed" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/newsletter/send": {
+      post: {
+        tags: ["Newsletter"],
+        summary: "Send a newsletter to all subscribers",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/NewsletterSendRequest" },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Newsletter sent successfully" },
+          400: { description: "Subject and content are required" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/newsletter/unsubscribe": {
+      post: {
+        tags: ["Newsletter"],
+        summary: "Unsubscribe an authenticated user email from the newsletter",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/NewsletterSubscriptionRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Unsubscribed successfully" },
+          400: { description: "Email is required" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Email not found in subscription list" },
           500: { description: "Server error" },
         },
       },

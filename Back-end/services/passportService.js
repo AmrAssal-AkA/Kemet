@@ -3,6 +3,25 @@ const sharp = require("sharp");
 const MRZ_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<";
 const MRZ_WEIGHTS = [7, 3, 1];
 
+const PassportValidation = ({width, height, format, size}) => {
+  const aspectRatio = width / height;
+  const megapixels = (width * height) / 1_000_000;
+  const bytesPerPixel = size / (width * height);
+
+  const isBlurry = megapixels < 0.3;
+  const hasGlare = bytesPerPixel > 4.5;
+  const isComplete = aspectRatio >= 1.2 && aspectRatio <= 1.8;
+  const isReadable = !isBlurry && bytesPerPixel <= 5.5;
+
+  const issues = [];
+  if (isBlurry)    issues.push("Image is too blurry or low resolution");
+  if (hasGlare)    issues.push("Glare or reflection detected");
+  if (!isComplete) issues.push("Document appears cropped or incorrect orientation");
+  if (!isReadable) issues.push("Text may not be readable");
+
+  return {isBlurry, hasGlare, isComplete, isReadable, issues};
+}
+
 function computeCheckDigit(str) {
   let total = 0;
   for (let i = 0; i < str.length; i++) {
@@ -62,4 +81,5 @@ function checkExpiry(expiryDate) {
   return new Date(y, m - 1, d) < new Date();
 }
 
-module.exports = {analyzeImageQuality, validateMRZ, checkExpiry};
+
+module.exports = {analyzeImageQuality, validateMRZ, checkExpiry, PassportValidation};

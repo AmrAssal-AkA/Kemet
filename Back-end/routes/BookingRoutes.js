@@ -3,7 +3,7 @@ const router = express.Router();
 const BookingController = require("../controller/BookingMgt/BookingController");
 const authenticate = require("../middleware/authenticate");
 const authorize = require("../middleware/authorize");
-const validateTravelPassport = require("../middleware/PassportVarification");
+const validateTravelPassport = require("../middleware/passportImageValidation");
 
 
 

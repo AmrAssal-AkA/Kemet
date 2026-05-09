@@ -56,7 +56,23 @@ const BookingConfirmationTemplate = (name, bookingDetails) => `
   </div>
 `;
 
+const newsletterSubscriptionTemplate = (email) => `
+  <div style="font-family: Arial, sans-serif; color: #333;">
+    <h2 style="color: #decb00;">Newsletter Subscription</h2>
+    <p>Thank you for subscribing to our newsletter with the email: ${email}.</p>
+    <p>You will now receive updates on our latest travel deals and news.</p>
+    <p>Best regards,<br>Kemet Travel Team</p>
+  </div>
+`;
 
+const newsletterTemplate = (email, content) => `
+  <div style="font-family: Arial, sans-serif; color: #333;">
+    <h2 style="color: #decb00;">Kemet Travel Newsletter</h2>
+    <p>Hello ${email},</p>
+    <p>${content}</p>
+    <p>Best regards,<br>Kemet Travel Team</p>
+  </div>
+`;
 
 const sendEmail = async ({ to, subject, html, text }, res) => {
   try {
@@ -74,4 +90,4 @@ const sendEmail = async ({ to, subject, html, text }, res) => {
   }
 };
 
-module.exports = { sendEmail , verifyEmailTemplate, resetPasswordTemplate, GoogleSignInTemplate, BookingConfirmationTemplate};
+module.exports = { sendEmail , verifyEmailTemplate, resetPasswordTemplate, GoogleSignInTemplate, BookingConfirmationTemplate, newsletterSubscriptionTemplate, newsletterTemplate};
