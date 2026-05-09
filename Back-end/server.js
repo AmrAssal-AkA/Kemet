@@ -53,24 +53,12 @@ app.use(
     cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
   }),
 );
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-      },
-    },
-  }),
-);
+app.use(helmet());
 require("./controller/auth/authController");
 app.use(passport.initialize());
 
 const swaggerUiOptions = {
   swaggerOptions: {
-    url: "/api-docs.json",
     persistAuthorization: true,
     deepLinking: true,
   },
@@ -78,8 +66,11 @@ const swaggerUiOptions = {
   customSiteTitle: "Kemet Travel API Docs",
 };
 
-app.use("/api-docs", swaggerUi.serve);
-app.get("/api-docs", swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+app.use(
+  "/api-docs",
+  swaggerUi.serveFiles(swaggerSpec, swaggerUiOptions),
+  swaggerUi.setup(swaggerSpec, swaggerUiOptions),
+);
 
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
