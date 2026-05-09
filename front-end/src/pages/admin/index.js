@@ -213,14 +213,14 @@ function mapBooking(booking) {
   };
 }
 
-function calculateRevenueFromBookings(bookings) {
-  return bookings
-    .filter((booking) => {
-      const status = String(booking.status || "").toLowerCase();
-      const paymentStatus = String(booking.paymentStatus || "").toLowerCase();
-      return status === "confirmed" || paymentStatus === "paid";
-    })
-    .reduce((total, booking) => total + Number(booking.totalPrice || 0), 0);
+function getRealRevenueValue(revenueStats) {
+  const rawRevenue =
+    revenueStats?.totalRevenue ??
+    revenueStats?.revenue ??
+    revenueStats?.data?.totalRevenue ??
+    revenueStats?.data?.revenue;
+
+  return Number(rawRevenue || 0);
 }
 
 function buildActivityBars(bookings) {
@@ -296,15 +296,14 @@ export async function getServerSideProps(context) {
     const tripStats = results[3].status === "fulfilled" ? results[3].value : {};
     const blogStats = results[4].status === "fulfilled" ? results[4].value : {};
     const revenueStats = results[5].status === "fulfilled" ? results[5].value : {};
-    const bookingRevenue = calculateRevenueFromBookings(bookings);
-    const endpointRevenue = Number(revenueStats.totalRevenue || 0);
+    const endpointRevenue = getRealRevenueValue(revenueStats);
 
     const metrics = {
       bookings: Number(bookings.length || 0),
       trips: Number(tripStats.totalTrips || 0),
       users: Number(users.length || tripStats.totalUsers || 0),
       blogs: Number(blogStats.totalBlogs || 0),
-      revenue: bookingRevenue || endpointRevenue || 0,
+      revenue: endpointRevenue,
     };
 
     return {

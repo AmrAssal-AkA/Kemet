@@ -1,5 +1,7 @@
 import axios from "axios";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
 function parseCookies(cookieHeader) {
   const cookies = {};
   if (cookieHeader) {
@@ -29,7 +31,7 @@ async function handler(req, res) {
 
   try {
     const response = await axios.get(
-      "https://kemet-two.vercel.app/api/adminDashboard/AllUsers",
+      `${API_BASE_URL}/api/adminDashboard/AllUsers`,
       {
         headers: {
           Cookie: req.headers.cookie || "",
@@ -48,7 +50,7 @@ async function handler(req, res) {
       console.log("Token expired, attempting refresh with refresh token...");
       try {
         const refreshResponse = await axios.post(
-          "https://kemet-two.vercel.app/api/auth/refresh",
+          `${API_BASE_URL}/api/auth/refresh`,
           {},
           {
             headers: {
@@ -67,7 +69,7 @@ async function handler(req, res) {
 
         try {
           const retryResponse = await axios.get(
-            "https://kemet-two.vercel.app/api/adminDashboard/AllUsers",
+            `${API_BASE_URL}/api/adminDashboard/AllUsers`,
             {
               headers: {
                 Cookie: req.headers.cookie || "",

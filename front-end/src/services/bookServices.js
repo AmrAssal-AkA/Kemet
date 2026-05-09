@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://kemet-two.vercel.app/";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 export class BookingApiError extends Error {
   constructor(message, status, data) {
@@ -41,69 +41,109 @@ function getHotelOfferId(hotelOffer) {
   return hotelOffer?.offers?.[0]?.id || hotelOffer?.id || hotelOffer?.hotel?.hotelId;
 }
 
-function toBackendTraveler(traveler, index) {
+function toBackendGuest(traveler, index) {
   return {
-    id: String(index + 1),
-    dateOfBirth: traveler?.dateOfBirth || "1990-01-01",
-    name: {
-      firstName: traveler?.firstName || `Guest${index + 1}`,
-      lastName: traveler?.lastName || "Traveler",
-    },
-    gender: traveler?.gender || "MALE",
-    contact: {
-      emailAddress: traveler?.email || "traveler@example.com",
-      phones: traveler?.phone
-        ? [{ deviceType: "MOBILE", number: traveler.phone }]
-        : [],
-    },
-    documents: [],
+    type: traveler?.type || (index === 0 ? "adult" : "adult"),
+    firstName: traveler?.firstName,
+    lastName: traveler?.lastName,
+    nationality: traveler?.nationality,
+    passportNumber: traveler?.passportNumber,
+    dateOfBirth: traveler?.dateOfBirth,
+    expiryDate: traveler?.expiryDate,
   };
 }
 
-function toHotelGuest(traveler) {
-  return {
-    name: {
-      title: traveler?.gender === "FEMALE" ? "MS" : "MR",
-      firstName: traveler?.firstName || "KEMET",
-      lastName: traveler?.lastName || "Guest",
-    },
-    contact: {
-      phone: traveler?.phone || "+201000000000",
-      email: traveler?.email || "guest@example.com",
-    },
-  };
+function hasRequiredGuestFields(guest) {
+  return Boolean(
+    guest.firstName &&
+    guest.lastName &&
+    guest.nationality &&
+    guest.passportNumber &&
+    guest.dateOfBirth &&
+    guest.expiryDate,
+  );
+}
+
+function normalizeCheckoutItems(items = []) {
+  return items.map((item) => ({
+    name: item.name,
+    description: item.description,
+    image: item.image,
+    price: Number(item.price || 0),
+    quantity: Number(item.quantity || 1),
+  }));
 }
 
 function buildBookingRequest(payload) {
+  if (payload.guests && payload.PassportNumber && payload.totalPrice && payload.items) {
+    return {
+      ...payload,
+      items: normalizeCheckoutItems(payload.items),
+    };
+  }
+
   const travelers = payload.travelers?.length ? payload.travelers : [payload.traveler];
+  const guests = travelers.map(toBackendGuest);
+  const passportNumber = payload.PassportNumber || guests[0]?.passportNumber;
+
+  if (!passportNumber || guests.some((guest) => !hasRequiredGuestFields(guest))) {
+    throw new Error(
+      "Booking requires guest passport details: type, firstName, lastName, nationality, passportNumber, dateOfBirth, and expiryDate.",
+    );
+  }
+
   const request = {
-    tripIds: payload.tripId ? [payload.tripId] : [],
-    travelers,
+    guests,
+    PassportNumber: passportNumber,
+    totalPrice: Number(payload.totalPrice || 0),
+    currency: payload.currency || "EGP",
+    items: normalizeCheckoutItems(payload.items?.length ? payload.items : [
+      {
+        name: payload.tripName || "KEMET booking",
+        description: payload.notes || "KEMET travel booking",
+        image: payload.image,
+        price: Number(payload.totalPrice || 0),
+        quantity: 1,
+      },
+    ]),
   };
 
   if (payload.selectedFlight) {
-    request.flightOffer = payload.selectedFlight;
-    request.travelers = travelers.map(toBackendTraveler);
+    request.flight = { data: payload.selectedFlight };
   }
 
   if (payload.selectedHotel) {
-    request.hotelOffer = {
-      ...payload.selectedHotel,
-      id: getHotelOfferId(payload.selectedHotel),
-    };
-    request.guests = travelers.map(toHotelGuest);
-    request.payments = [
-      {
-        method: "creditCard",
+    request.hotel = {
+      data: {
+        ...payload.selectedHotel,
+        id: getHotelOfferId(payload.selectedHotel),
       },
-    ];
+    };
+  }
+
+  if (payload.tripId) {
+    request.trip = [payload.tripId];
+  }
+
+  if (!request.flight && !request.hotel && !request.trip) {
+    throw new Error("Booking must include a trip, flight, or hotel.");
   }
 
   return request;
 }
 
+function normalizeHotelSearchPayload(payload) {
+  return {
+    cityCode: payload.cityCode,
+    checkInDate: payload.checkInDate,
+    checkOutDate: payload.checkOutDate,
+    NumberOfGuests: Number(payload.NumberOfGuests || payload.adults || 1),
+    NumberOfrooms: Number(payload.NumberOfrooms || payload.rooms || 1),
+  };
+}
+
 export async function searchFlights(payload) {
-  const res = await fetch(`${API_BASE_URL}/api/flight/search`, {
+  const res = await fetch("/api/flight/search", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -115,15 +155,14 @@ export async function searchFlights(payload) {
 }
 
 export async function searchHotels(payload) {
-  const res = await fetch(`${API_BASE_URL}/api/hotels/search`, {
+  const res = await fetch("/api/hotels/search", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizeHotelSearchPayload(payload)),
   });
 
-  const data = await handleResponse(res, "Hotel search failed.");
-  return getArray(data);
+  return handleResponse(res, "Hotel search failed.");
 }
 
 export async function createBooking(payload) {

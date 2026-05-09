@@ -1,3 +1,5 @@
+import { extractUserFromAuthResponse, getUserRole } from "@/utils/authSession";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 async function handleResponse(res, fallbackMessage) {
@@ -26,13 +28,13 @@ export async function getAdminFromSession(cookie = "") {
     credentials: "include",
   });
   const data = await handleResponse(res, "Admin session could not be verified.");
-  return data?.user || null;
+  return extractUserFromAuthResponse(data);
 }
 
 export async function requireAdmin(context) {
   const cookie = context.req.headers.cookie || "";
 
-  if (!cookie.includes("x-auth-token") && !cookie.includes("x-refresh-token")) {
+  if (!cookie) {
     return {
       redirect: { destination: "/auth/auth", permanent: false },
     };
@@ -41,7 +43,7 @@ export async function requireAdmin(context) {
   try {
     const admin = await getAdminFromSession(cookie);
 
-    if (admin?.role !== "admin") {
+    if (getUserRole(admin) !== "admin") {
       return {
         redirect: { destination: "/", permanent: false },
       };

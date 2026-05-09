@@ -1,16 +1,112 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { FaUserCircle, FaChevronDown } from "react-icons/fa";
+import { FaChevronDown, FaUserCircle } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
+
+const headerStyles = `
+  .nav-link {
+    position: relative;
+    padding-bottom: 2px;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #FFCE2A;
+    border-radius: 2px;
+    transition: width 0.25s cubic-bezier(.4,0,.2,1);
+  }
+  .nav-link:hover::after,
+  .nav-link.active::after {
+    width: 100%;
+  }
+  .header-wrap {
+    transition: box-shadow 0.3s ease, background 0.3s ease, padding 0.3s ease;
+  }
+  .header-wrap.scrolled {
+    box-shadow: 0 4px 24px rgba(11,31,70,0.10);
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(10px);
+  }
+  .book-btn {
+    background: linear-gradient(135deg, #FFCE2A 0%, #f5b800 100%);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 0 2px 10px rgba(255,206,42,0.28);
+  }
+  .book-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(255,206,42,0.38);
+  }
+  .login-btn {
+    border: 1.5px solid #e2e8f0;
+    transition: border-color 0.18s, background 0.18s;
+  }
+  .login-btn:hover {
+    border-color: #FFCE2A;
+    background: #fffbea;
+  }
+  .user-btn {
+    transition: background 0.18s, transform 0.18s;
+  }
+  .user-btn:hover {
+    background: #f8fafc;
+    transform: scale(1.05);
+  }
+  .dropdown-menu {
+    animation: dropIn 0.18s cubic-bezier(.4,0,.2,1);
+    transform-origin: top right;
+  }
+  @keyframes dropIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-6px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .mobile-menu {
+    animation: slideDown 0.22s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .mobile-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 15px;
+    color: #334155;
+    transition: color 0.15s;
+  }
+  .mobile-link:hover { color: #FFCE2A; }
+  .mobile-link.active { color: #FFCE2A; font-weight: 600; }
+  .top-bar {
+    background: linear-gradient(90deg, #0b1f46 0%, #123c7a 50%, #0b1f46 100%);
+  }
+`;
+
+const navLinks = [
+  { href: "/", label: "Home", match: ["/", "/user-dashboard"] },
+  { href: "/offerings", label: "Offerings" },
+  { href: "/communities", label: "Communities" },
+  { href: "/Destination", label: "Destination" },
+  { href: "/hidden-gems", label: "Hidden Gems" },
+  { href: "/blogs", label: "Blog" },
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact Us" },
+];
 
 function Header() {
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const pathname = usePathname();
+  const pathname = usePathname() || "/";
   const menuRef = useRef(null);
   const { admin, user, logout } = useAuth();
 
@@ -20,6 +116,7 @@ function Header() {
         setMenuOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
@@ -32,242 +129,44 @@ function Header() {
 
   const handleLogout = async () => {
     setMenuOpen(false);
+    setOpen(false);
     await logout();
   };
 
   if (pathname.startsWith("/admin")) return null;
 
-  const navLinks = [
-    { href: user ? "/user-dashboard" : "/", label: "Home", match: ["/", "/user-dashboard"] },
-    { href: "/offerings", label: "Offerings" },
-    { href: "/communities", label: "Communities" },
-    { href: "/Destination", label: "Destination" },
-    { href: "/hidden-gems", label: "Hidden Gems" },
-    { href: "/blogs", label: "Blog" },
-    { href: "/about", label: "About Us" },
-    { href: "/contact", label: "Contact Us" },
-  ];
-
   const isActive = (link) =>
-    link.match
-      ? link.match.includes(pathname)
-      : pathname === link.href;
+    link.match ? link.match.includes(pathname) : pathname === link.href;
+  const homeHref = user ? "/user-dashboard" : "/";
 
   return (
     <>
-      <style>{`
-        .nav-link {
-          position: relative;
-          padding-bottom: 2px;
-        }
-        .nav-link::after {
-          content: '';
-          position: absolute;
-          bottom: -2px;
-          left: 0;
-          width: 0;
-          height: 2px;
-          background: #FFCE2A;
-          border-radius: 2px;
-          transition: width 0.25s cubic-bezier(.4,0,.2,1);
-        }
-        .nav-link:hover::after,
-        .nav-link.active::after {
-          width: 100%;
-        }
-        .header-wrap {
-          transition: box-shadow 0.3s ease, background 0.3s ease, padding 0.3s ease;
-        }
-        .header-wrap.scrolled {
-          box-shadow: 0 4px 24px rgba(11,31,70,0.10);
-          background: rgba(255,255,255,0.97);
-          backdrop-filter: blur(10px);
-        }
-        .book-btn {
-          background: linear-gradient(135deg, #FFCE2A 0%, #f5b800 100%);
-          transition: transform 0.18s ease, box-shadow 0.18s ease;
-          box-shadow: 0 2px 10px rgba(255,206,42,0.28);
-        }
-        .book-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 6px 18px rgba(255,206,42,0.38);
-        }
-        .login-btn {
-          border: 1.5px solid #e2e8f0;
-          transition: border-color 0.18s, background 0.18s;
-        }
-        .login-btn:hover {
-          border-color: #FFCE2A;
-          background: #fffbea;
-        }
-        .user-btn {
-          transition: background 0.18s, transform 0.18s;
-        }
-        .user-btn:hover {
-          background: #f8fafc;
-          transform: scale(1.05);
-        }
-        .dropdown-menu {
-          animation: dropIn 0.18s cubic-bezier(.4,0,.2,1);
-          transform-origin: top right;
-        }
-        @keyframes dropIn {
-          from { opacity: 0; transform: scale(0.95) translateY(-6px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .mobile-menu {
-          animation: slideDown 0.22s cubic-bezier(.4,0,.2,1);
-        }
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .mobile-link {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 0;
-          border-bottom: 1px solid #f1f5f9;
-          font-size: 15px;
-          color: #334155;
-          transition: color 0.15s;
-        }
-        .mobile-link:hover { color: #FFCE2A; }
-        .mobile-link.active { color: #FFCE2A; font-weight: 600; }
-        .top-bar {
-          background: linear-gradient(90deg, #0b1f46 0%, #123c7a 50%, #0b1f46 100%);
-        }
-      `}</style>
+      <style>{headerStyles}</style>
 
-        <nav className="hidden gap-7 text-[15px] font-medium tracking-[0.01em] text-slate-700 md:flex">
-          <Link
-            href={user ? "/user-dashboard" : "/"}
-            className={`transition-colors duration-200 ${pathname === "/" || pathname === "/user-dashboard" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
-          >
-            Home
-          </Link>
-
-          <Link
-            href="/offerings"
-            className={`transition-colors duration-200 ${pathname === "/offerings" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
-          >
-            Offerings
-          </Link>
-
-          <Link
-            href="/blogs"
-            className={`transition-colors duration-200 ${pathname === "/blogs" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
-          >
-            Blog
-          </Link>
-
-          <Link
-            href="/about"
-            className={`transition-colors duration-200 ${pathname === "/about" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
-          >
-            About Us
-          </Link>
-
-          <Link
-            href="/contact"
-            className={`transition-colors duration-200 ${pathname === "/contact" ? "font-semibold text-[#FFCE2A]" : "hover:text-[#FFCE2A]"}`}
-          >
-            Contact Us
-          </Link>
-        </nav>
-
-        <div className="hidden items-center gap-2 md:flex">
-          {!user ? (
-            <Link href="/auth/auth">
-              <button className="rounded-full bg-[#FFCE2A] px-4 py-1 font-medium text-black transition hover:brightness-95">
-                login
-              </button>
-            </Link>
-          ) : (
-            <div className="relative" ref={menuRef}>
-              <button
-                type="button"
-                onClick={() => setMenuOpen((prev) => !prev)}
-                className="grid h-10 w-10 place-items-center rounded-full border border-slate-300 text-slate-700 transition hover:bg-slate-100"
-                aria-label="User menu"
-              >
-                <FaUserCircle className="text-2xl" />
-              </button>
-
-              {menuOpen && (
-                <div className="absolute right-0 z-50 mt-2 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-                  {admin ? (
-                    <Link
-                      href="/admin/"
-                      className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Admin Panel
-                    </Link>
-                  ) : (
-                    <>
-                      <Link href="/user-dashboard" className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100" onClick={() => setMenuOpen(false)}>
-                        My Account
-                      </Link>
-                      <Link
-                        href="/account-setting"
-                        className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        Account Settings
-                      </Link>
-                    </>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          <Link href="/BookTrip">
-            <button className="rounded-full bg-[#FFCE2A] px-4 py-1 font-medium text-black transition hover:brightness-95">
-              Book Your Trip Now
-            </button>
-          </Link>
-        </div>
-
-        <button className="text-2xl md:hidden" onClick={() => setOpen(!open)}>
-          {open ? "✕" : "☰"}
-        </button>
-      {/* Top announcement bar */}
-      <div className="top-bar hidden md:flex items-center justify-center py-1.5 px-4 text-xs text-white/80 tracking-wide gap-1">
-        <span className="text-yellow-400">✦</span>
-        <span>Discover Egypt's Hidden Wonders — Book your journey today</span>
-        <span className="text-yellow-400">✦</span>
+      <div className="top-bar hidden items-center justify-center gap-1 px-4 py-1.5 text-xs tracking-wide text-white/80 md:flex">
+        <span className="text-yellow-400">*</span>
+        <span>Discover Egypt&apos;s Hidden Wonders - Book your journey today</span>
+        <span className="text-yellow-400">*</span>
       </div>
 
       <header className={`header-wrap sticky top-0 z-50 w-full bg-white ${scrolled ? "scrolled" : ""}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:py-2.5">
-
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image
               src="/logo.png"
-              alt="Logo"
+              alt="Kemet logo"
               width={120}
               height={50}
               className="inline-block"
             />
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden gap-5 text-[13.5px] font-medium tracking-[0.01em] text-slate-600 lg:flex xl:gap-6">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
-                className={`nav-link transition-colors duration-200 whitespace-nowrap ${
+                href={link.label === "Home" ? homeHref : link.href}
+                className={`nav-link whitespace-nowrap transition-colors duration-200 ${
                   isActive(link) ? "active font-semibold text-[#FFCE2A]" : "hover:text-slate-900"
                 }`}
               >
@@ -276,8 +175,7 @@ function Header() {
             ))}
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden items-center gap-2.5 lg:flex shrink-0">
+          <div className="hidden shrink-0 items-center gap-2.5 lg:flex">
             {!user ? (
               <Link href="/auth/auth">
                 <button className="login-btn rounded-full px-4 py-1.5 text-sm font-medium text-slate-700">
@@ -300,27 +198,27 @@ function Header() {
                   <div className="dropdown-menu absolute right-0 z-50 mt-2 w-48 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
                     {admin ? (
                       <Link
-                        href="/admin/"
-                        className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                        href="/admin"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                         onClick={() => setMenuOpen(false)}
                       >
-                        <span>🛡️</span> Admin Panel
+                        Admin Panel
                       </Link>
                     ) : (
                       <>
                         <Link
                           href="/user-dashboard"
-                          className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                          className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                           onClick={() => setMenuOpen(false)}
                         >
-                          <span>👤</span> My Account
+                          My Account
                         </Link>
                         <Link
                           href="/account-setting"
-                          className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                          className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                           onClick={() => setMenuOpen(false)}
                         >
-                          <span>⚙️</span> Account Setting
+                          Account Setting
                         </Link>
                       </>
                     )}
@@ -328,9 +226,9 @@ function Header() {
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-rose-500 hover:bg-rose-50 transition-colors"
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-rose-500 transition-colors hover:bg-rose-50"
                     >
-                      <span>↩</span> Logout
+                      Logout
                     </button>
                   </div>
                 )}
@@ -344,26 +242,24 @@ function Header() {
             </Link>
           </div>
 
-          {/* Mobile Hamburger */}
           <button
             className="flex flex-col gap-1.5 p-2 lg:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Toggle menu"
           >
-            <span className={`block h-0.5 w-6 bg-slate-700 rounded transition-all duration-200 ${open ? "rotate-45 translate-y-2" : ""}`} />
-            <span className={`block h-0.5 w-6 bg-slate-700 rounded transition-all duration-200 ${open ? "opacity-0" : ""}`} />
-            <span className={`block h-0.5 w-6 bg-slate-700 rounded transition-all duration-200 ${open ? "-rotate-45 -translate-y-2" : ""}`} />
+            <span className={`block h-0.5 w-6 rounded bg-slate-700 transition-all duration-200 ${open ? "translate-y-2 rotate-45" : ""}`} />
+            <span className={`block h-0.5 w-6 rounded bg-slate-700 transition-all duration-200 ${open ? "opacity-0" : ""}`} />
+            <span className={`block h-0.5 w-6 rounded bg-slate-700 transition-all duration-200 ${open ? "-translate-y-2 -rotate-45" : ""}`} />
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {open && (
           <div className="mobile-menu border-t border-slate-100 bg-white px-5 pb-5 pt-2 lg:hidden">
             <div className="flex flex-col">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={link.label === "Home" ? homeHref : link.href}
                   onClick={() => setOpen(false)}
                   className={`mobile-link ${isActive(link) ? "active" : ""}`}
                 >
@@ -380,12 +276,24 @@ function Header() {
                   </Link>
                 ) : (
                   <>
-                    <Link onClick={() => setOpen(false)} href="/account-setting">
-                      <button className="w-full rounded-full border border-slate-200 py-2.5 text-sm font-medium text-slate-700">
-                        Account Setting
-                      </button>
-                    </Link>
-                    <button type="button" onClick={handleLogout} className="w-full rounded-full border border-rose-200 py-2.5 text-sm font-medium text-rose-500">
+                    {admin ? (
+                      <Link onClick={() => setOpen(false)} href="/admin">
+                        <button className="w-full rounded-full border border-slate-200 py-2.5 text-sm font-medium text-slate-700">
+                          Admin Panel
+                        </button>
+                      </Link>
+                    ) : (
+                      <Link onClick={() => setOpen(false)} href="/account-setting">
+                        <button className="w-full rounded-full border border-slate-200 py-2.5 text-sm font-medium text-slate-700">
+                          Account Setting
+                        </button>
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full rounded-full border border-rose-200 py-2.5 text-sm font-medium text-rose-500"
+                    >
                       Logout
                     </button>
                   </>

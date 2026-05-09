@@ -1,10 +1,13 @@
 import axios from "axios";
+import { extractUserFromAuthResponse } from "@/utils/authSession";
 
-const API_BASE_URL = "https://kemet-two.vercel.app/"
+const API_BASE_URL = "https://kemet-two.vercel.app/";
 
 export const ApiCall = async (url, options = {}) => {
+  const requestUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+
   return axios({
-    url,
+    url: requestUrl,
     ...options,
     withCredentials: true,
     headers: {
@@ -32,9 +35,18 @@ export const apiRequest = async (path, options = {}) => {
 
 export const getCurrentUser = async () => {
   try {
-    const response = await apiRequest("/api/auth/refresh", { method: "POST" });
-    return response.data?.user || null;
+    const response = await axios({
+      url: "/api/auth/refresh",
+      method: "POST",
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    console.debug("[auth] refresh response", response.data);
+    return extractUserFromAuthResponse(response.data);
   } catch (error) {
+    console.debug("[auth] refresh failed", error.response?.data || error.message);
     return null;
   }
 };
@@ -45,10 +57,16 @@ export const loginUser = async (formData) => {
   }
 
   try {
-    const res = await ApiCall("/api/auth/login", {
+    const res = await axios({
+      url: "/api/auth/login",
       method: "POST",
       data: formData,
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
+    console.debug("[auth] login response", res.data);
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Login failed");
@@ -65,9 +83,14 @@ export const registerUser = async (formData) => {
   }
 
   try {
-    const res = await ApiCall("/api/auth/register", {
+    const res = await axios({
+      url: "/api/auth/register",
       method: "POST",
       data: formData,
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     return res.data;
   } catch (error) {
@@ -79,10 +102,36 @@ export const loginWithGoogle = async () => {
   window.location.href = `${API_BASE_URL}/api/auth/continueWithGoogle`;
 };
 
+export const completeGoogleLogin = async ({ token, user }) => {
+  if (!token || !user) {
+    throw new Error("Google login session is missing.");
+  }
+
+  try {
+    const res = await axios({
+      url: "/api/auth/google-session",
+      method: "POST",
+      data: { token, user },
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Google login failed");
+  }
+};
+
 export const logout = async () => {
   try {
-    const res = await ApiCall("/api/auth/logout", {
+    const res = await axios({
+      url: "/api/auth/logout",
       method: "POST",
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     return res.data;
   } catch (error) {
@@ -98,9 +147,14 @@ export const resetPassword = async (email) => {
   }
 
   try {
-    const res = await ApiCall("/api/auth/reset-password", {
+    const res = await axios({
+      url: "/api/auth/reset-password",
       method: "POST",
       data: { email },
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     return res.data;
   } catch (error) {
@@ -118,9 +172,14 @@ export const confirmResetPassword = async (formData) => {
   }
 
   try {
-    const res = await ApiCall("/api/auth/reset-password-confirm", {
+    const res = await axios({
+      url: "/api/auth/reset-password-confirm",
       method: "POST",
       data: { token: formData.token, newPassword: formData.newPassword },
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     return res.data;
   } catch (error) {
@@ -132,7 +191,14 @@ export const confirmResetPassword = async (formData) => {
 
 export const refreshToken = async () => {
   try {
-    const res = await ApiCall("/api/auth/refresh", { method: "POST" });
+    const res = await axios({
+      url: "/api/auth/refresh",
+      method: "POST",
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Session refresh failed");

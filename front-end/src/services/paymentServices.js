@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://kemet-two.vercel.app/";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 export class PaymentApiError extends Error {
   constructor(message, status, data) {
@@ -41,12 +41,19 @@ export async function createStripeCheckout(payload) {
 }
 
 export async function createPayment(payload) {
-  const amount = Number(payload.amount || 0);
+  const email = payload.email || payload.metadata?.email;
+
+  if (!payload.bookingId) {
+    throw new Error("Booking ID is required to create Stripe checkout.");
+  }
+
+  if (!email) {
+    throw new Error("Email is required to create Stripe checkout.");
+  }
+
   const checkoutPayload = {
     bookingId: payload.bookingId,
-    amount,
-    currency: payload.currency || "EGP",
-    metadata: payload.metadata || {},
+    email,
     items: payload.items?.length
       ? payload.items
       : [
@@ -54,7 +61,7 @@ export async function createPayment(payload) {
             name: payload.metadata?.tripName || "KEMET booking",
             description: payload.metadata?.description || "KEMET travel booking",
             image: payload.metadata?.image,
-            price: Math.max(Math.round(amount * 100), 0),
+            price: Number(payload.amount || 0),
             quantity: 1,
           },
         ],

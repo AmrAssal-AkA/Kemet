@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
+import { getAuthRedirectPath, getUserRole } from "@/utils/authSession";
 
 const popularCities = [
   {
@@ -62,7 +64,9 @@ const packages = [
   },
 ];
 
-export default function UserDashboard({ userName }) {
+export default function UserDashboard() {
+  const router = useRouter();
+  const { user, sessionReady } = useAuth();
   const [searchCity, setSearchCity] = useState("");
   const [selectedTag, setSelectedTag] = useState("Top Picks");
   const [activeSlide, setActiveSlide] = useState(0);
@@ -79,18 +83,33 @@ export default function UserDashboard({ userName }) {
     () => (filteredCities.length ? filteredCities : popularCities),
     [filteredCities],
   );
+  const userName = user?.name || "Traveler";
+  const userRole = getUserRole(user);
 
-  const handlePrevSlide = () => {
+  useEffect(() => {
+    if (!sessionReady) return;
+
+    if (!user) {
+      router.replace("/auth/auth");
+      return;
+    }
+
+    if (userRole === "admin" || userRole === "guide" || userRole === "localguide") {
+      router.replace(getAuthRedirectPath(user));
+    }
+  }, [router, sessionReady, user, userRole]);
+
+  const handlePrevSlide = useCallback(() => {
     setActiveSlide((prev) =>
       prev === 0 ? carouselCities.length - 1 : prev - 1,
     );
-  };
+  }, [carouselCities.length]);
 
-  const handleNextSlide = () => {
+  const handleNextSlide = useCallback(() => {
     setActiveSlide((prev) =>
       prev === carouselCities.length - 1 ? 0 : prev + 1,
     );
-  };
+  }, [carouselCities.length]);
 
   useEffect(() => {
     if (isUserInteracting || isCarouselPaused || carouselCities.length <= 1) return;
@@ -100,7 +119,7 @@ export default function UserDashboard({ userName }) {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isUserInteracting, isCarouselPaused, carouselCities.length]);
+  }, [handleNextSlide, isUserInteracting, isCarouselPaused, carouselCities.length]);
 
   const handleTouchStart = (e) => {
     touchStartXRef.current = e.touches[0].clientX;
@@ -127,6 +146,10 @@ export default function UserDashboard({ userName }) {
     touchStartXRef.current = null;
     setTimeout(() => setIsUserInteracting(false), 1200);
   };
+
+  if (!sessionReady || !user || ["admin", "guide", "localguide"].includes(userRole)) {
+    return null;
+  }
 
   return (
     <main className="min-h-screen bg-[#f8fafc] text-slate-900">
@@ -415,56 +438,4 @@ export default function UserDashboard({ userName }) {
       </section>
     </main>
   );
-}
-
-export async function getServerSideProps(context) {
-  const cookie = context.req.headers.cookie || "";
-
-  if (!cookie || !cookie.includes("x-auth-token")) {
-    return {
-      redirect: {
-        destination: "/auth/auth",
-        permanent: false,
-      },
-    };
-  }
-
-  try {
-    const response = await axios.post(
-      "http://localhost:3000/api/auth/refresh",
-      {},
-      {
-        headers: {
-          Cookie: cookie,
-        },
-      },
-    );
-
-    const userName = response.data.user?.name;
-    const userRole = response.data.user?.role;
-
-    if(userRole !== "user") {
-      return {
-        redirect: {
-          destination: "/",
-          permanent: false,
-        }
-      }
-    }
-
-    return {
-      props: {
-        userName,
-        userRole,
-      },
-    };
-  } catch (error) {
-    console.error("Session verification error:", error.message);
-    return {
-      redirect: {
-        destination: "/auth/auth",
-        permanent: false,
-      },
-    };
-  }
 }

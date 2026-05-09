@@ -2,11 +2,11 @@ import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
 import { getAdminBookings, requireAdmin } from "@/services/adminService";
 
-export default function AdminBookings({ bookingData, initialError = "" }) {
-  const {user, logout } = useAuth();
+export default function AdminBookings({ admin, bookingData, initialError = "" }) {
+  const { user, logout } = useAuth();
 
   return (
-    <AdminLayout adminName={user?.name} onLogout={logout}>
+    <AdminLayout adminName={user?.name || admin?.name} onLogout={logout}>
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">Bookings</h1>
         {initialError && (
@@ -59,16 +59,20 @@ export async function getServerSideProps(context) {
   const adminSession = await requireAdmin(context);
   if (adminSession.redirect) return adminSession;
 
-  try{
+  try {
     const bookings = await getAdminBookings(adminSession.cookie);
     return {
       props: {
-        bookingData:(data.bookings || []).map(mapBooking),
+        admin: adminSession.admin,
+        bookingData: bookings.map(mapBooking),
+        initialError: "",
+      },
     };
   } catch (error) {
     console.error("Error fetching booking details:", error);
     return {
       props: {
+        admin: adminSession.admin,
         bookingData: [],
         initialError: error.message || "Bookings could not be loaded.",
       },

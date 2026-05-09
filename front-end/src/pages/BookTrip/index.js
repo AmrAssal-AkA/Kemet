@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createBooking, searchFlights, searchHotels } from "@/services/bookServices";
 import { getCurrentUser } from "@/services/authServices";
 import { createPayment } from "@/services/paymentServices";
@@ -90,6 +90,7 @@ function getTripImage(trip) {
   if (trip?.imageUrl) return trip.imageUrl;
   if (typeof trip?.image === "string") return trip.image;
   if (Array.isArray(trip?.image) && trip.image[0]?.imageUrl) return trip.image[0].imageUrl;
+  if (Array.isArray(trip?.images) && trip.images[0]?.imageUrl) return trip.images[0].imageUrl;
   return "/siwa.jpeg";
 }
 
@@ -111,12 +112,49 @@ function getFlightId(flight, index) {
   return flight?.id || flight?.source || `flight-${index}`;
 }
 
+function getFlightSegments(flight) {
+  return flight?.itineraries?.flatMap((itinerary) => itinerary?.segments || []) || [];
+}
+
+function getOutboundSegments(flight) {
+  return flight?.itineraries?.[0]?.segments || [];
+}
+
+function getFlightAirport(location) {
+  return location?.airport || location?.iataCode || location?.code || null;
+}
+
+function formatFlightValue(value) {
+  return value || "Not available";
+}
+
+function getFlightOrigin(flight) {
+  const firstSegment = getOutboundSegments(flight)[0];
+  return getFlightAirport(firstSegment?.departure);
+}
+
+function getFlightDestination(flight) {
+  const segments = getOutboundSegments(flight);
+  const lastSegment = segments[segments.length - 1];
+  return getFlightAirport(lastSegment?.arrival);
+}
+
+function getFlightAirlineName(flight) {
+  const firstSegment = getFlightSegments(flight).find((segment) => segment?.airline?.name);
+  return firstSegment?.airline?.name || null;
+}
+
+function getFlightCabinClass(flight) {
+  const cabinSegment = getFlightSegments(flight).find((segment) => segment?.cabin);
+  return cabinSegment?.cabin || null;
+}
+
 function getFlightTitle(flight) {
   const segments = flight?.itineraries?.[0]?.segments || [];
   const firstSegment = segments[0];
   const lastSegment = segments[segments.length - 1] || firstSegment;
   if (!firstSegment) return "Flight offer";
-  return `${firstSegment.departure?.iataCode || "From"} to ${lastSegment.arrival?.iataCode || "Egypt"}`;
+  return `${getFlightAirport(firstSegment.departure) || "From"} to ${getFlightAirport(lastSegment.arrival) || "Egypt"}`;
 }
 
 function getFlightPrice(flight) {
@@ -128,19 +166,19 @@ function getHotelId(hotel, index) {
 }
 
 function getHotelTitle(hotel) {
-  return hotel?.hotel?.name || hotel?.hotel?.hotelId || "Hotel offer";
+  return hotel?.name || hotel?.hotel?.name || hotel?.hotel?.hotelId || "Hotel offer";
 }
 
 function getHotelPrice(hotel) {
   return Number(hotel?.offers?.[0]?.price?.total || hotel?.price?.total || 0);
 }
 
-function formatMoney(value, currency = "EGP") {
-  return `${currency} ${Number(value || 0).toLocaleString()}`;
+function getHotelLocation(hotel, fallbackCityCode) {
+  return hotel?.hotel?.cityCode || hotel?.cityCode || hotel?.source || fallbackCityCode;
 }
 
-function toStripeUnitAmount(value) {
-  return Math.max(Math.round(Number(value || 0) * 100), 0);
+function formatMoney(value, currency = "EGP") {
+  return `${currency} ${Number(value || 0).toLocaleString()}`;
 }
 
 function Field({ label, children }) {
@@ -199,6 +237,7 @@ function Section({ eyebrow, title, children }) {
 }
 
 export default function BookTripPage() {
+  const didLoadTrips = useRef(false);
   const [trips, setTrips] = useState([]);
   const [selectedTripId, setSelectedTripId] = useState("");
   const [numberOfGuests, setNumberOfGuests] = useState(1);
@@ -224,6 +263,9 @@ export default function BookTripPage() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
+    if (didLoadTrips.current) return;
+    didLoadTrips.current = true;
+
     async function loadTrips() {
       setLoadingTrips(true);
       setError("");
@@ -256,20 +298,6 @@ export default function BookTripPage() {
     loadCurrentUser();
   }, []);
 
-  useEffect(() => {
-    const extraGuestCount = Math.max(Number(numberOfGuests) - 1, 0);
-
-    setExtraGuests((current) => {
-      if (current.length === extraGuestCount) return current;
-      if (current.length > extraGuestCount) return current.slice(0, extraGuestCount);
-
-      return [
-        ...current,
-        ...Array.from({ length: extraGuestCount - current.length }, createEmptyGuest),
-      ];
-    });
-  }, [numberOfGuests]);
-
   const selectedTrip = useMemo(
     () => trips.find((trip) => getTripId(trip) === selectedTripId),
     [selectedTripId, trips],
@@ -298,6 +326,22 @@ export default function BookTripPage() {
   function updateTraveler(event) {
     const { name, value } = event.target;
     setTraveler((current) => ({ ...current, [name]: value }));
+  }
+
+  function updateNumberOfGuests(event) {
+    const value = event.target.value;
+    const extraGuestCount = Math.max(Number(value) - 1, 0);
+
+    setNumberOfGuests(value);
+    setExtraGuests((current) => {
+      if (current.length === extraGuestCount) return current;
+      if (current.length > extraGuestCount) return current.slice(0, extraGuestCount);
+
+      return [
+        ...current,
+        ...Array.from({ length: extraGuestCount - current.length }, createEmptyGuest),
+      ];
+    });
   }
 
   function updateExtraGuest(index, event) {
@@ -366,13 +410,16 @@ export default function BookTripPage() {
     setLoadingHotels(true);
 
     try {
-      const results = await searchHotels({
+      const result = await searchHotels({
         ...hotelSearch,
         NumberOfGuests: Number(hotelSearch.NumberOfGuests),
         NumberOfrooms: Number(hotelSearch.NumberOfrooms),
       });
+      const results = Array.isArray(result?.offers) ? result.offers : [];
       setHotelResults(results);
-      if (!results.length) setNotice("No hotel offers found for this search.");
+      if (!results.length) {
+        setNotice("No hotel offers found for this search.");
+      }
     } catch (error) {
       setError(error.message || "Hotel search failed.");
     } finally {
@@ -442,6 +489,7 @@ export default function BookTripPage() {
             metadata: {
               tripId: getTripId(selectedTrip),
               tripName: selectedTrip ? getTripTitle(selectedTrip) : "KEMET booking",
+              email: traveler.email,
               guestCount: Number(numberOfGuests),
               description: notes.trim() || "KEMET travel booking",
               image: getTripImage(selectedTrip),
@@ -451,7 +499,7 @@ export default function BookTripPage() {
                 name: selectedTrip ? getTripTitle(selectedTrip) : "KEMET booking",
                 description: notes.trim() || "KEMET travel booking",
                 image: getTripImage(selectedTrip),
-                price: toStripeUnitAmount(totals.totalPrice),
+                price: totals.totalPrice,
                 quantity: 1,
               },
             ],
@@ -578,7 +626,7 @@ export default function BookTripPage() {
                     type="number"
                     min="1"
                     value={numberOfGuests}
-                    onChange={(event) => setNumberOfGuests(event.target.value)}
+                    onChange={updateNumberOfGuests}
                     required
                   />
                 </Field>
@@ -714,6 +762,24 @@ export default function BookTripPage() {
                       <p className="mt-1 text-sm text-slate-500">
                         {flight.itineraries?.[0]?.duration || "Duration unavailable"}
                       </p>
+                      <dl className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
+                        <div>
+                          <dt className="font-bold uppercase tracking-wide text-slate-400">Airline</dt>
+                          <dd className="mt-0.5">{formatFlightValue(getFlightAirlineName(flight))}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-bold uppercase tracking-wide text-slate-400">Class</dt>
+                          <dd className="mt-0.5">{formatFlightValue(getFlightCabinClass(flight))}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-bold uppercase tracking-wide text-slate-400">Origin</dt>
+                          <dd className="mt-0.5">{formatFlightValue(getFlightOrigin(flight))}</dd>
+                        </div>
+                        <div>
+                          <dt className="font-bold uppercase tracking-wide text-slate-400">Destination</dt>
+                          <dd className="mt-0.5">{formatFlightValue(getFlightDestination(flight))}</dd>
+                        </div>
+                      </dl>
                       <p className="mt-2 text-sm font-bold text-amber-700">
                         {formatMoney(getFlightPrice(flight), flight.price?.currency || "EGP")}
                       </p>
@@ -764,7 +830,7 @@ export default function BookTripPage() {
                     >
                       <p className="font-extrabold">{getHotelTitle(hotel)}</p>
                       <p className="mt-1 text-sm text-slate-500">
-                        {hotel.hotel?.cityCode || hotelSearch.cityCode}
+                        {getHotelLocation(hotel, hotelSearch.cityCode)}
                       </p>
                       <p className="mt-2 text-sm font-bold text-amber-700">
                         {formatMoney(getHotelPrice(hotel))}

@@ -1,4 +1,6 @@
-const API_BASE_URL = "https://kemet-two.vercel.app/";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+let tripsCache = null;
+let tripsRequest = null;
 
 async function handleResponse(res, errorMessage) {
   const data = await res.json().catch(() => null);
@@ -26,6 +28,27 @@ function getArray(data) {
   if (Array.isArray(data?.result)) return data.result;
   if (Array.isArray(data?.results)) return data.results;
   return [];
+}
+
+function getTripObject(data) {
+  if (!data) return null;
+  if (Array.isArray(data)) return data[0] || null;
+  if (Array.isArray(data?.data)) return data.data[0] || null;
+  if (Array.isArray(data?.result)) return data.result[0] || null;
+  if (data?.trip && typeof data.trip === "object") return data.trip;
+  if (data?.data?.trip && typeof data.data.trip === "object") return data.data.trip;
+  if (data?.data && typeof data.data === "object") return data.data;
+  if (data?.result && typeof data.result === "object") return data.result;
+  return data;
+}
+
+function getTripIdentifier(trip) {
+  return trip?._id || trip?.id || trip?.tripId;
+}
+
+function findTripByIdentifier(trips, tripId) {
+  const normalizedId = String(tripId);
+  return trips.find((trip) => String(getTripIdentifier(trip)) === normalizedId) || null;
 }
 
 function getFileNameFromUrl(imageUrl) {
@@ -79,13 +102,23 @@ export async function createTrip(payload) {
   return handleResponse(res, "Trip could not be created.");
 }
 
-export async function getTrips() {
-  const res = await fetch(`${API_BASE_URL}/api/Trip`, {
-    credentials: "include",
-  });
+export async function getTrips({ force = false } = {}) {
+  if (!force && tripsCache) return tripsCache;
+  if (!force && tripsRequest) return tripsRequest;
 
-  const data = await handleResponse(res, "Trips could not be loaded.");
-  return getArray(data);
+  tripsRequest = fetch(`${API_BASE_URL}/api/Trip`, {
+    credentials: "include",
+  })
+    .then((res) => handleResponse(res, "Trips could not be loaded."))
+    .then((data) => {
+      tripsCache = getArray(data);
+      return tripsCache;
+    })
+    .finally(() => {
+      tripsRequest = null;
+    });
+
+  return tripsRequest;
 }
 
 export async function getAdminTrips(cookie = "") {
@@ -99,11 +132,26 @@ export async function getAdminTrips(cookie = "") {
 }
 
 export async function getTripById(id) {
-  const res = await fetch(`${API_BASE_URL}/api/Trip/${id}`, {
-    credentials: "include",
-  });
+  const tripId = Array.isArray(id) ? id[0] : id;
 
-  return handleResponse(res, "Trip could not be loaded.");
+  if (!tripId) {
+    throw new Error("Trip id is missing.");
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/Trip/${encodeURIComponent(tripId)}`, {
+      credentials: "include",
+    });
+
+    const data = await handleResponse(res, "Trip could not be loaded.");
+    return getTripObject(data);
+  } catch (error) {
+    const trips = await getTrips();
+    const trip = findTripByIdentifier(trips, tripId);
+
+    if (trip) return trip;
+    throw error;
+  }
 }
 
 export async function updateTrip(id, payload) {

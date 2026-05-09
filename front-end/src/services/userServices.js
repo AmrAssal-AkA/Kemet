@@ -9,6 +9,11 @@ function getUserArray(data) {
   return [];
 }
 
+function getUserRole(user) {
+  if (user?.isAdmin === true) return "admin";
+  return String(user?.role || user?.userRole || user?.type || "user").toLowerCase();
+}
+
 async function handleResponse(res, fallbackMessage, logLabel = "userServices") {
   const data = await res.json().catch(() => null);
 
@@ -32,7 +37,7 @@ export async function getAllUsers(cookie = "") {
   });
 
   const data = await handleResponse(res, "Users could not be loaded.", "getAllUsers");
-  return getUserArray(data).filter((user) => ["user", "guide"].includes(user.role));
+  return getUserArray(data).filter((user) => ["user", "guide"].includes(getUserRole(user)));
 }
 
 export async function updateUserRole(userId, role) {

@@ -1,5 +1,7 @@
 import axios from "axios";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+
 function parseCookies(cookieHeader) {
   const cookies = {};
 
@@ -30,7 +32,7 @@ async function handler(req, res) {
 
   try {
     const response = await axios.get(
-      "https://kemet-two.vercel.app/api/contact/contacts",
+      `${API_BASE_URL}/api/contact/contacts`,
       {
         headers: {
           Cookie: req.headers.cookie || "",
@@ -42,7 +44,7 @@ async function handler(req, res) {
     if (error.response?.status === 401 && refreshToken) {
       try {
         const refreshResponse = await axios.post(
-          "https://kemet-two.vercel.app/api/auth/refresh",
+          `${API_BASE_URL}/api/auth/refresh`,
           {},
           {
             headers: {
@@ -52,7 +54,7 @@ async function handler(req, res) {
         );
         token = refreshResponse.data.token;
         const retryResponse = await axios.get(
-          "https://kemet-two.vercel.app/api/contact/contacts",
+          `${API_BASE_URL}/api/contact/contacts`,
           {
             headers: {
               Cookie: req.headers.cookie || "",

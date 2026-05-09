@@ -5,13 +5,18 @@ import { useAuth } from "@/context/AuthContext";
 import { requireAdmin } from "@/services/adminService";
 import { getAllUsers, updateUserRole, USER_ROLES } from "@/services/userServices";
 
+function getRole(user) {
+  if (user?.isAdmin === true) return "admin";
+  return String(user?.role || user?.userRole || user?.type || "user").toLowerCase();
+}
+
 export default function AdminUsers({ admin, AllUser, initialError = "" }) {
   const { logout } = useAuth();
   const [users, setUsers] = useState(AllUser || []);
   const [roleStatus, setRoleStatus] = useState({});
   const [pageError, setPageError] = useState(initialError);
   const [isLoading, setIsLoading] = useState(false);
-  const canChangeRoles = admin?.role === "admin";
+  const canChangeRoles = getRole(admin) === "admin";
 
   const handleRefresh = async () => {
     setIsLoading(true);
@@ -110,18 +115,18 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          user.role === "guide"
+                          getRole(user) === "guide"
                             ? "bg-blue-50 text-blue-600"
                             : "bg-amber-50 text-amber-600"
                         }`}
                       >
-                        {user.role || "user"}
+                        {getRole(user)}
                       </span>
                       <span className="text-sm text-slate-500">
                         {user.isVerified ? "Verified" : "Unverified"}
                       </span>
                       <select
-                        value={user.role || "user"}
+                        value={getRole(user)}
                         disabled={!canChangeRoles || status.loading}
                         onChange={(event) => handleRoleChange(user._id, event.target.value)}
                         className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
