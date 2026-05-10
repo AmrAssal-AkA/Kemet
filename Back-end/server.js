@@ -36,7 +36,7 @@ const passportRoutes = require("./routes/passportRoutes");
 const SearchRoute = require("./routes/searchRoutes");
 const newsletterRoute = require("./routes/newsletterRoute");
 
-// Connect to database
+// Connect to databas
 connectDB();
 // Middleware
 app.use("/api/payments", paymentRoutes);
