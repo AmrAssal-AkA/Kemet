@@ -3,7 +3,7 @@ const sharp = require("sharp");
 const MRZ_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<";
 const MRZ_WEIGHTS = [7, 3, 1];
 
-const PassportValidation = ({width, height, format, size}) => {
+const PassportValidation = async ({width, height, format, size}) => {
   const aspectRatio = width / height;
   const megapixels = (width * height) / 1_000_000;
   const bytesPerPixel = size / (width * height);
@@ -82,4 +82,4 @@ function checkExpiry(expiryDate) {
 }
 
 
-module.exports = {analyzeImageQuality, validateMRZ, checkExpiry, PassportValidation};
+module.exports = {PassportValidation, computeCheckDigit, analyzeImageQuality, validateMRZ, checkExpiry};

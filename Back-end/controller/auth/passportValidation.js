@@ -4,7 +4,7 @@ const validatePassport = async (req, res) => {
   try {
     const {width, height, format, size} = req.imageMetadata;
  
-    const result = PassportValidation({width, height, format, size});
+    const result = await PassportValidation({width, height, format, size});
  
     return res.status(200).json({message: true, validation: result});
   } catch (err) {
@@ -14,4 +14,3 @@ const validatePassport = async (req, res) => {
 };
  
 module.exports = {validatePassport};
- 
