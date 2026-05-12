@@ -79,6 +79,23 @@ const OfferingCard = ({ title, text, price, oldPrice, image }) => (
   </div>
 );
 
+useEffect(() => {
+    const fetchOfferings = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/offerings`);
+        const data = await response.json();
+        
+        setMuseumData(data.filter(item => item.location === 'Museum' || item.location === 'Cairo'));
+        setGounaData(data.filter(item => item.location === 'Gouna'));
+        setAlexandriaData(data.filter(item => item.location === 'Alexandria'));
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchOfferings();
+  }, []);
+
 function Offerings() {
   return (
     <>
