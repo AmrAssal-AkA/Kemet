@@ -67,6 +67,26 @@ function HiddenGemsPage() {
 
     fetchHiddenGems();
   }, []);
+
+  const [tours, setTours] = useState([]);
+  const [gallery, setGallery] = useState([]);
+
+  useEffect(() => {
+    const fetchHiddenGems = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/hidden-gems`);
+        const data = await response.json();
+        
+        setTours(data.tours || []);
+        setGallery(data.gallery || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchHiddenGems();
+  }, []);
+  
   return (
     <>
       <Head>
