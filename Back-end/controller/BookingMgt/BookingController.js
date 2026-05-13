@@ -21,7 +21,7 @@ const createBooking = async (req, res, nxt) => {
     }
 
     const {
-      guest = [
+      guests = [
          {
           firstName: "",
           lastName: "",

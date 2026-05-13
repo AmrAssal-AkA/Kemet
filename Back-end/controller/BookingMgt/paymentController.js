@@ -71,6 +71,9 @@ const webhook = async (req, res, nxt) => {
     const session = event.data.object;
     const bookingId = session.metadata.BookingId;
     const email = session.metadata.Email;
+    const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
+    const charge = paymentIntent.charges.data[0];
+    const cardDetails = charge.payment_method_types.card;
 
     const updateBooking = await Booking.findByIdAndUpdate(
       bookingId,
@@ -79,6 +82,12 @@ const webhook = async (req, res, nxt) => {
         paymentStatus: "Paid",
         stripeSessionId: session.id,
         stripePaymentIntentId: session.payment_intent,
+        paymentCard: {
+          brand: cardDetails.brand,
+          last4: cardDetails.last4,
+          expiryMonth: cardDetails.exp_month,
+          expYear: cardDetails.exp_year,
+        }
       },
       { new: true },
     );

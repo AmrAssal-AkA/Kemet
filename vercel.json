@@ -5,5 +5,10 @@
     ],
     "routes": [
         {"src": "/(.*)", "dest": "Back-end/server.js"}
-    ]
+    ],
+    "functions": {
+        "Back-end/server.js": {
+                "maxDuration": 60
+        }
+    }
 }

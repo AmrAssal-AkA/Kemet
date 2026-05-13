@@ -37,7 +37,10 @@ const SearchRoute = require("./routes/searchRoutes");
 const newsletterRoute = require("./routes/newsletterRoute");
 
 // Connect to databas
-connectDB();
+const dbConnection = async () => {
+await connectDB();
+};
+dbConnection();
 // Middleware
 app.use("/api/payments", paymentRoutes);
 app.use(express.json());
