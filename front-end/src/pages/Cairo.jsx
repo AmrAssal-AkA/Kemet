@@ -43,7 +43,7 @@ const data = {
   gems: [
     { img: "/images/cairo/gem1.jpg", tag: "Hidden History", location: "Saqqara",        title: "Step Pyramid of Djoser",   desc: "Older than Giza and almost always empty. Egypt's first pyramid, standing for 4,700 years." },
     { img: "/images/cairo/gem2.jpg", tag: "Night View",     location: "Muqattam Hills",  title: "The Rooftop of Cairo",     desc: "Drive up at dusk. The entire city spreads beneath you — minarets, the Nile, and the pyramids in the distance." },
-    { img: "/images/cairo/gem3.jpg", tag: "Local Life",     location: "Zamalek Island",  title: "Cairo's Quiet Island",     desc: "Embassies, cafés, and tree-lined streets. A city within a city that tourists rarely find." },
+    { img: "/images/cairo/gem3.jpg", tag: "Local Life",     location: "  Shobra El-Mazallat",  title: "Al-Rahman Mosque at Al-Mazalat",     desc: "Embassies, cafés, and tree-lined streets. A city within a city that   ." },
   ],
 };
 
