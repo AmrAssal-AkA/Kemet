@@ -65,4 +65,3 @@ log/
 *.log
 *.tmp
 *.bak
-.env
