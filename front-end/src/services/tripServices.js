@@ -6,12 +6,10 @@ async function handleResponse(res, errorMessage) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    console.error("[tripServices]", {
-      url: res.url,
-      status: res.status,
-      body: data,
-    });
-    throw new Error(data?.message || data?.error || errorMessage);
+    const backendMessage = data?.message || data?.error;
+    throw new Error(
+      `Trip API ${res.status}: ${backendMessage || errorMessage}`,
+    );
   }
 
   return data;
@@ -23,6 +21,10 @@ function getHeaders(cookie) {
 
 function getArray(data) {
   if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data?.trips)) return data.data.trips;
+  if (Array.isArray(data?.data?.data)) return data.data.data;
+  if (Array.isArray(data?.data?.results)) return data.data.results;
+  if (Array.isArray(data?.data?.result)) return data.data.result;
   if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data?.trips)) return data.trips;
   if (Array.isArray(data?.result)) return data.result;
@@ -99,7 +101,9 @@ export async function createTrip(payload) {
     body: formData,
   });
 
-  return handleResponse(res, "Trip could not be created.");
+  const data = await handleResponse(res, "Trip could not be created.");
+  tripsCache = null;
+  return data;
 }
 
 export async function getTrips({ force = false } = {}) {
@@ -176,7 +180,9 @@ export async function updateTrip(id, payload) {
     body: formData,
   });
 
-  return handleResponse(res, "Trip could not be updated.");
+  const data = await handleResponse(res, "Trip could not be updated.");
+  tripsCache = null;
+  return data;
 }
 
 export async function deleteTrip(id) {
@@ -185,5 +191,7 @@ export async function deleteTrip(id) {
     credentials: "include",
   });
 
-  return handleResponse(res, "Trip could not be deleted.");
+  const data = await handleResponse(res, "Trip could not be deleted.");
+  tripsCache = null;
+  return data;
 }

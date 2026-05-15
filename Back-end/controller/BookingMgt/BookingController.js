@@ -1,6 +1,6 @@
 const Booking = require("../../model/BookingSchema");
 const { stripeCheckout, refundPayment } = require("./paymentController");
-const validatePassport = require("../auth/passportValidation");
+const { PassportValidation } = require("../../services/passportService");
 const cloudinary = require("../../config/cloudinary");
 
 const currencyMapping = {
@@ -8,6 +8,41 @@ const currencyMapping = {
   EG: "EGP",
   EUR: "EUR",
 };
+
+function parseJsonField(body, field) {
+  const value = body[field];
+
+  if (typeof value !== "string") {
+    return { value };
+  }
+
+  try {
+    return { value: JSON.parse(value) };
+  } catch {
+    return { error: `Invalid ${field} format` };
+  }
+}
+
+function parseMultipartJsonFields(req, res) {
+  const body = { ...req.body };
+  const fields = ["guests", "flight", "hotel", "trip", "tripDetails", "items"];
+
+  for (const field of fields) {
+    const parsed = parseJsonField(body, field);
+    if (parsed.error) {
+      const message = field === "guests" ? "Invalid guests format" : parsed.error;
+      return { error: res.status(400).json({ message }) };
+    }
+    body[field] = parsed.value;
+  }
+
+  return { body };
+}
+
+function getPassportImageDataUri(file) {
+  if (!file?.buffer) return null;
+  return `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+}
 
 const createBooking = async (req, res, nxt) => {
   try {
@@ -20,29 +55,27 @@ const createBooking = async (req, res, nxt) => {
         .json({ error: "Missing required fields: userId, email" });
     }
 
+    const parsed = parseMultipartJsonFields(req, res);
+    if (parsed.error) return parsed.error;
+    req.body = parsed.body;
+
     const {
-      guests = [
-         {
-          firstName: "",
-          lastName: "",
-          nationality: "",
-          dateOfBirth: "",
-          PassportNumber: "",
-          expiryDate: "",
-          type: ["adult", "child", "infant"],
-        },
-      ],
+      guests,
       flight,
       hotel,
       trip,
       tripDetails,
       PassportNumber,
       totalPrice,
-    } = req.body;
+    } = parsed.body;
 
-    const ChildAge = (guests) => {
+    if (!Array.isArray(guests)) {
+      return res.status(400).json({ message: "Guests must be an array" });
+    }
+
+    const ChildAge = (guest) => {
       const today = new Date();
-      const birthDate = new Date(guests.dateOfBirth);
+      const birthDate = new Date(guest.dateOfBirth);
       let age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
@@ -50,36 +83,45 @@ const createBooking = async (req, res, nxt) => {
       }
       return age < 16;
     };
+
     const childerentAgeUnder16 = guests.some(
       (g) => g.type === "child" && ChildAge(g),
     );
-    if (!childerentAgeUnder16) {
-      const passportImage = req.file ? req.file.buffer : null;
-      if (!passportImage) {
-        res.status(400).json({ error: "Passport image is required" });
-        return;
+
+    if (!childerentAgeUnder16 && !req.file?.buffer) {
+      return res.status(400).json({ error: "Passport image is required" });
+    }
+
+    const passportImages = req.file?.buffer ? [req.file.buffer] : [];
+
+    if (req.file?.buffer) {
+      const passportValidationResult = await PassportValidation({
+        width: req.imageMetadata?.width || 0,
+        height: req.imageMetadata?.height || 0,
+        format: req.imageMetadata?.format || "",
+        size: req.file.size || req.file.buffer.length,
+      });
+
+      if (!passportValidationResult.isReadable) {
+        return res.status(400).json({
+          error: "Passport image is not readable",
+          issues: passportValidationResult.issues,
+        });
       }
     }
 
-    const passportValidationResult = await validatePassport({
-      imageMetadata: { width: 0, height: 0, format: "", size: 0 },
-      file: { buffer: req.file.buffer },
-    });
-
-    if (!passportValidationResult.validation.isReadable) {
-      return res.status(400).json({
-        error: "Passport image is not readable",
-        issues: passportValidationResult.validation.issues,
-      });
-    }
     const uploadedPassports = await Promise.all(
-      PassportImages.map((buffer) =>
-        cloudinary.uploadImage(buffer, "guest_passport_images"),
-      ),
+      passportImages.map((buffer) => {
+        const dataUri = getPassportImageDataUri({
+          buffer,
+          mimetype: req.file?.mimetype || "image/jpeg",
+        });
+        return cloudinary.uploadImage(dataUri, "guest_passport_images");
+      }),
     );
 
-    let currency = req.body.currency;
-    if (!userId || !guests || guests.length === 0 || !totalPrice) {
+    let currency = parsed.body.currency;
+    if (!userId || guests.length === 0 || !totalPrice) {
       return res
         .status(400)
         .json({ error: "Missing required fields: userId, guests, totalPrice" });
@@ -110,6 +152,7 @@ const createBooking = async (req, res, nxt) => {
       flight,
       hotel,
       trip,
+      tripDetails,
       PassportNumber,
       totalPrice,
       currency,

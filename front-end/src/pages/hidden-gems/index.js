@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import { buildApiUrl } from '@/utils/apiBaseUrl';
 
 const ArrowRightIcon = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -55,7 +54,7 @@ function HiddenGemsPage() {
   useEffect(() => {
     const fetchHiddenGems = async () => {
       try {
-        const response = await fetch(buildApiUrl('/api/hidden-gems'));
+        const response = await fetch("http://localhost:8000/api/hiddenGem");
         const data = await response.json();
         setHiddenGems(data);
         setIsLoading(false);
@@ -68,25 +67,6 @@ function HiddenGemsPage() {
     fetchHiddenGems();
   }, []);
 
-  const [tours, setTours] = useState([]);
-  const [gallery, setGallery] = useState([]);
-
-  useEffect(() => {
-    const fetchHiddenGems = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/hidden-gems`);
-        const data = await response.json();
-        
-        setTours(data.tours || []);
-        setGallery(data.gallery || []);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchHiddenGems();
-  }, []);
-  
   return (
     <>
       <Head>

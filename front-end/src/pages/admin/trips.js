@@ -20,7 +20,7 @@ const initialForm = {
 
 export default function AdminTrips({ admin, initialTrips = [], initialError = "" }) {
   const { logout } = useAuth();
-  const [trips] = useState(initialTrips);
+  const [trips, setTrips] = useState(initialTrips);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: initialError ? "error" : "", message: initialError });
@@ -64,7 +64,7 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
 
     setLoading(true);
     try {
-      await createTrip({
+      const created = await createTrip({
         ...form,
         name: form.title,
         price: pricePreview.basePrice,
@@ -72,6 +72,10 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
         guidefees: pricePreview.guideCost,
         guestCapacity: Number(form.guestCapacity),
       });
+      const createdTrip = created?.trip || created?.data?.trip;
+      if (createdTrip) {
+        setTrips((current) => [createdTrip, ...current]);
+      }
       setStatus({ type: "success", message: "Trip created successfully." });
       setForm(initialForm);
     } catch (error) {

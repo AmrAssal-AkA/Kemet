@@ -21,7 +21,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (userId, done) => {
   try {
-    const user = await User.findById(userId);
+    const user = await User.findOne({ userId });
     done(null, user);
   } catch (err) {
     done(err, null);
@@ -53,6 +53,11 @@ passport.use(
               profilePhoto: profile.photos[0]?.value,
             });
           }
+        }
+
+        if (!user.userId && user._id) {
+          user.userId = user._id.toString();
+          await user.save();
         }
 
         return done(null, user);
