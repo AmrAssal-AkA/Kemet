@@ -9,7 +9,6 @@ const currencyMapping = {
   EUR: "EUR",
 };
 
-
 const createBooking = async (req, res, nxt) => {
   try {
     const userId = req.user?.id;
@@ -30,11 +29,20 @@ const createBooking = async (req, res, nxt) => {
       PassportNumber,
       totalPrice,
     } = req.body;
-    
+
     if (!Array.isArray(guests)) {
       return res.status(400).json({ message: "Guests must be an array" });
     }
-
+    const hasValidGuest = guests.every(
+      (g) =>
+        g.name && g.nationality && g.type && g.dateOfBirth,
+    );
+    if (!hasValidGuest) {
+      return res.status(400).json({
+        message:
+          "Each guest must have name, nationality, type, and dateOfBirth fields",
+      });
+    }
     const ChildAge = (guest) => {
       const today = new Date();
       const birthDate = new Date(guest.dateOfBirth);
@@ -50,24 +58,33 @@ const createBooking = async (req, res, nxt) => {
       (g) => g.type === "child" && ChildAge(g),
     );
 
-    if (!childerentAgeUnder16 && !req.file?.buffer) {
+    if (!childerentAgeUnder16 && (!req.files || req.files.length === 0)) {
       return res.status(400).json({ error: "Passport image is required" });
     }
 
-    const passportImages = req.files || [];
 
-if (req.files && req.files.length > 0) {
-  const passportValidationResult = await PassportValidation({
-    width: req.imageMetadata?.width || 0,
-    height: req.imageMetadata?.height || 0,
-    format: req.imageMetadata?.format || "",
-    size: req.files[0].size
-    });
-  }
-    const passportImage = await Promise.all(
-      req.files.map((file) => cloudinary.uploadImage(file.path, "passport_images")),
-    )
+    if (req.files && req.files.length > 0) {
+      const passportValidationResult = await PassportValidation({
+        width: req.imageMetadata?.width || 0,
+        height: req.imageMetadata?.height || 0,
+        format: req.imageMetadata?.format || "",
+        size: req.files[0].size,
+      });
 
+      if (!passportValidationResult.valid) {
+        return res
+          .status(400)
+          .json({ error: passportValidationResult.message });
+      }
+    }
+    let passportImage = [];
+    if (req.files && req.files.length > 0) {
+      passportImage = await Promise.all(
+        req.files.map((file) =>
+          cloudinary.uploadImage(file.buffer, "passport_images"),
+        ),
+      );
+    }
 
     let currency = req.body.currency;
     if (!userId || guests.length === 0 || !totalPrice) {
