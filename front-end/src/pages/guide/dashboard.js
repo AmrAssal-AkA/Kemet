@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { getUserRole } from "@/utils/authSession";
 import {
   getGuideAvailability,
   getGuideBookings,
@@ -87,7 +88,7 @@ function BookingCard({ booking }) {
 
 export default function GuideDashboard() {
   const router = useRouter();
-  const { logout, user, loading: authLoading } = useAuth();
+  const { logout, user, sessionReady } = useAuth();
   const [profile, setProfile] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -99,14 +100,15 @@ export default function GuideDashboard() {
   const [saveStatus, setSaveStatus] = useState({ type: "", message: "" });
 
   useEffect(() => {
-    if (authLoading) return;
+    if (!sessionReady) return;
 
     if (!user) {
       router.replace("/auth/auth");
       return;
     }
 
-    if (user.role !== "guide") {
+    const role = getUserRole(user);
+    if (role !== "guide" && role !== "localguide") {
       router.replace("/");
       return;
     }
@@ -119,7 +121,8 @@ export default function GuideDashboard() {
       try {
         const guideProfile = await getGuideProfile();
 
-        if (!guideProfile || guideProfile.role !== "guide") {
+        const guideRole = getUserRole(guideProfile);
+        if (!guideProfile || (guideRole !== "guide" && guideRole !== "localguide")) {
           setError("Please login as a local guide to access this dashboard.");
           setProfile(guideProfile);
           return;
@@ -144,7 +147,7 @@ export default function GuideDashboard() {
     }
 
     loadDashboard();
-  }, [authLoading, router, user]);
+  }, [sessionReady, router, user]);
 
   const stats = useMemo(() => {
     const upcoming = bookings.filter((booking) =>
@@ -200,9 +203,13 @@ export default function GuideDashboard() {
     }
   }
 
+  if (!sessionReady) {
+    return null;
+  }
+
   if (loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#F6F3EE] px-4">
+      <main className="grid min-h-screen place-items-center bg-[#f8fafc] px-4">
         <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
           <p className="text-sm font-bold text-[#162766]">Loading guide dashboard...</p>
         </div>
@@ -212,7 +219,7 @@ export default function GuideDashboard() {
 
   if (error) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#F6F3EE] px-4">
+      <main className="grid min-h-screen place-items-center bg-[#f8fafc] px-4">
         <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow-sm">
           <h1 className="text-2xl font-extrabold text-[#0F172A]">Guide Access</h1>
           <p className="mt-3 text-sm text-[#162766]">{error}</p>
@@ -229,7 +236,7 @@ export default function GuideDashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F6F3EE] px-4 py-8 text-[#0F172A] md:px-8">
+    <main className="min-h-screen bg-[#f8fafc] px-4 py-8 text-[#0F172A] md:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <section className="rounded-3xl bg-[#0F172A] p-6 text-white shadow-sm md:p-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">

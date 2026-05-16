@@ -1,5 +1,6 @@
 import axios from "axios";
 
+const API_BASE_URL = "https://kemet-gold.vercel.app/";
 
 
 async function handler(req, res){
@@ -10,14 +11,14 @@ async function handler(req, res){
     const {blogId} = req.query;
 
     try{
-        const response = await axios.get(`https://kemet-two.vercel.app/api/blog/${blogId}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/blog/${blogId}`, {
                 withCredentials: true,
         });
         res.status(200).json(response.data);
 
     }catch(error){
         console.error("Error fetching blog:", error);
-        res.status(500).json({message: "Internal server error"});
+        res.status(error.response?.status || 500).json(error.response?.data || {message: "Internal server error"});
     }
 }
 

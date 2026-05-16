@@ -1,5 +1,7 @@
 import axios from "axios";
 
+const API_BASE_URL = "https://kemet-gold.vercel.app/";
+
 async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
@@ -12,10 +14,9 @@ async function handler(req, res) {
   if (!token) {
     return res.status(400).json({ message: "Token is required" });
   }
-  console.log("proxy received token:", token, "and new password:", newPassword);
   try {
     const response = await axios.post(
-      `https://kemet-two.vercel.app/api/auth/reset-password-confirm`,
+      `${API_BASE_URL}/api/auth/reset-password-confirm`,
       { token, newPassword },
       {
         headers: {

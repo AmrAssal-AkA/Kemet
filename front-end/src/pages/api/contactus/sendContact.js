@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+const API_BASE_URL = "https://kemet-gold.vercel.app/";
 
 async function sendconstactus(req, res){
     if(req.method !== 'POST'){
@@ -10,17 +11,17 @@ async function sendconstactus(req, res){
         return res.status(400).json({message: "Please fill all the fields"});
     }
     try{
-        const response  = await axios.post("https://kemet-two.vercel.app/api/contact/", {
+        const response  = await axios.post(`${API_BASE_URL}/api/contact`, {
             name,
             email,
             subject,
             message
         });
 
-        res.status(200).json(response.data);
+        res.status(response.status).json(response.data);
     }catch(error){
         console.error("Error sending contact form:", error);
-        res.status(500).json({message: "Server Error", error: error.message});
+        res.status(error.response?.status || 500).json(error.response?.data || {message: "Server Error", error: error.message});
     }
 }
 

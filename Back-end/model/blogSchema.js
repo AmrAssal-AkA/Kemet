@@ -39,16 +39,27 @@ const blogSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    reviews: [{
-        type: String,
-        required: true,
-        trim: true,
-        validate: {
-            validator: (v) => {
-                return /^[a-zA-Z\s]+$/.test(v);
-            },
-            message: "Review must contain only letters and spaces."
-        }
+    comments: [{
+       user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+       },
+         comment: {
+            type: String,
+            required: true,
+            trim: true,
+            validate: {
+                validator: (v) => {
+                    return /^[a-zA-Z\s]+$/.test(v);
+                },
+                message: "Comment must contain only letters and spaces."
+            }
+         },
+         createdAt: {
+            type: Date,
+            default: Date.now
+         }
     }]
 
 }, { timestamps: true }

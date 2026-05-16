@@ -4,40 +4,49 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { getTripById } from "@/services/tripServices";
 
+const NOT_AVAILABLE = "Not available";
+
 function getTripTitle(trip) {
-  return trip?.title || trip?.name || "KEMET Trip";
+  return trip?.title || trip?.name || NOT_AVAILABLE;
 }
 
 function getTripImage(trip) {
+  if (Array.isArray(trip?.images) && trip.images[0]?.imageUrl) return trip.images[0].imageUrl;
+  if (Array.isArray(trip?.images) && trip.images[0]?.url) return trip.images[0].url;
   if (trip?.imageUrl) return trip.imageUrl;
   if (typeof trip?.image === "string") return trip.image;
   if (Array.isArray(trip?.image) && trip.image[0]?.imageUrl) return trip.image[0].imageUrl;
+  if (Array.isArray(trip?.image) && trip.image[0]?.url) return trip.image[0].url;
   return "/siwa.jpeg";
 }
 
 function getTripPrice(trip) {
-  return Number(trip?.finalPrice || trip?.basePrice || trip?.price || 0);
+  const value = trip?.finalPrice ?? trip?.finalProce ?? trip?.basePrice ?? trip?.price;
+  if (value === undefined || value === null || value === "") return null;
+  return Number(value);
 }
 
 function formatMoney(value) {
-  return `EGP ${Number(value || 0).toLocaleString()}`;
+  if (value === null || Number.isNaN(Number(value))) return NOT_AVAILABLE;
+  return `EGP ${Number(value).toLocaleString()}`;
 }
 
 export default function TripDetailsPage() {
   const router = useRouter();
   const { id } = router.query;
+  const tripId = Array.isArray(id) ? id[0] : id;
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!id) return;
+    if (!tripId) return;
 
     async function loadTrip() {
       setLoading(true);
       setError("");
       try {
-        setTrip(await getTripById(id));
+        setTrip(await getTripById(tripId));
       } catch (error) {
         setTrip(null);
         setError(error.message || "Trip could not be loaded.");
@@ -47,15 +56,15 @@ export default function TripDetailsPage() {
     }
 
     loadTrip();
-  }, [id]);
+  }, [tripId]);
 
   const details = useMemo(() => {
     if (!trip) return [];
     return [
-      ["Location", trip.location || trip.city || "Egypt"],
-      ["Category", trip.category || "Trip"],
-      ["Duration", trip.duration || "N/A"],
-      ["Rating", trip.rating || "N/A"],
+      ["Location", trip.location || trip.city || NOT_AVAILABLE],
+      ["Category", trip.category || NOT_AVAILABLE],
+      ["Duration", trip.duration || NOT_AVAILABLE],
+      ["Rating", trip.rating || NOT_AVAILABLE],
       ["Price", formatMoney(getTripPrice(trip))],
     ];
   }, [trip]);
@@ -119,13 +128,13 @@ export default function TripDetailsPage() {
         <div className="relative mx-auto flex min-h-[420px] max-w-6xl items-end px-4 py-10 sm:px-6 lg:px-8">
           <div className="max-w-3xl text-white">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">
-              {trip.category || "KEMET Trip"}
+              {trip.category || NOT_AVAILABLE}
             </p>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight sm:text-6xl">
               {getTripTitle(trip)}
             </h1>
             <p className="mt-4 text-base font-semibold text-slate-200">
-              {trip.location || trip.city || "Egypt"}
+              {trip.location || trip.city || NOT_AVAILABLE}
             </p>
           </div>
         </div>
@@ -138,7 +147,7 @@ export default function TripDetailsPage() {
           </p>
           <h2 className="mt-2 text-2xl font-extrabold text-slate-900">About This Trip</h2>
           <p className="mt-5 leading-8 text-slate-600">
-            {trip.description || "No description available for this trip yet."}
+            {trip.description || NOT_AVAILABLE}
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">

@@ -1,10 +1,14 @@
-import jwt from "jsonwebtoken";
-import { parse } from "cookie";
 import { useState } from "react";
 
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
+import { requireAdmin } from "@/services/adminService";
 import { getAllUsers, updateUserRole, USER_ROLES } from "@/services/userServices";
+
+function getRole(user) {
+  if (user?.isAdmin === true) return "admin";
+  return String(user?.role || user?.userRole || user?.type || "user").toLowerCase();
+}
 
 export default function AdminUsers({ admin, AllUser, initialError = "" }) {
   const { logout } = useAuth();
@@ -12,7 +16,7 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
   const [roleStatus, setRoleStatus] = useState({});
   const [pageError, setPageError] = useState(initialError);
   const [isLoading, setIsLoading] = useState(false);
-  const canChangeRoles = admin?.role === "admin";
+  const canChangeRoles = getRole(admin) === "admin";
 
   const handleRefresh = async () => {
     setIsLoading(true);
@@ -111,18 +115,18 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          user.role === "guide"
+                          getRole(user) === "guide"
                             ? "bg-blue-50 text-blue-600"
                             : "bg-amber-50 text-amber-600"
                         }`}
                       >
-                        {user.role || "user"}
+                        {getRole(user)}
                       </span>
                       <span className="text-sm text-slate-500">
                         {user.isVerified ? "Verified" : "Unverified"}
                       </span>
                       <select
-                        value={user.role || "user"}
+                        value={getRole(user)}
                         disabled={!canChangeRoles || status.loading}
                         onChange={(event) => handleRoleChange(user._id, event.target.value)}
                         className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
@@ -158,38 +162,20 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
 }
 
 export async function getServerSideProps(context) {
-  const { req } = context;
-  const cookie = parse(req.headers.cookie || "");
-  const token = cookie["x-auth-token"];
-
-  if (!token) {
-    return {
-      redirect: { destination: "/auth/auth", permanent: false },
-    };
-  }
+  const adminSession = await requireAdmin(context);
+  if (adminSession.redirect) return adminSession;
 
   try {
-    const user = jwt.verify(
-      token,
-      process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
-    );
-
-    if (user.role !== "admin") {
-      return {
-        redirect: { destination: "/", permanent: false },
-      };
-    }
-
-    const AllUser = await getAllUsers(req.headers.cookie || "");
+    const AllUser = await getAllUsers(adminSession.cookie);
 
     return {
-      props: { admin: user, AllUser, initialError: "" },
+      props: { admin: adminSession.admin, AllUser, initialError: "" },
     };
   } catch (error) {
     console.error("Error fetching users:", error.message);
     return {
       props: {
-        admin: {},
+        admin: adminSession.admin,
         AllUser: [],
         initialError: error.message || "Users could not be loaded.",
       },

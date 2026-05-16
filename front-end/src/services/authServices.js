@@ -1,10 +1,12 @@
 import axios from "axios";
-
-const API_BASE_URL = "https://kemet-two.vercel.app/"
+import { extractUserFromAuthResponse } from "@/utils/authSession";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 export const ApiCall = async (url, options = {}) => {
+  const requestUrl = buildApiUrl(url);
+
   return axios({
-    url,
+    url: requestUrl,
     ...options,
     withCredentials: true,
     headers: {
@@ -15,7 +17,7 @@ export const ApiCall = async (url, options = {}) => {
 };
 
 export const apiRequest = async (path, options = {}) => {
-  const url = path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
+  const url = buildApiUrl(path);
 
   return axios({
     url,
@@ -32,9 +34,16 @@ export const apiRequest = async (path, options = {}) => {
 
 export const getCurrentUser = async () => {
   try {
-    const response = await apiRequest("/api/auth/refresh", { method: "POST" });
-    return response.data?.user || null;
+    const response = await apiRequest("api/auth/refresh", {
+      method: "POST",
+    });
+    console.debug("[auth] refresh response", response.data);
+    return extractUserFromAuthResponse(response.data);
   } catch (error) {
+    console.debug(
+      "[auth] refresh failed",
+      error.response?.data || error.message,
+    );
     return null;
   }
 };
@@ -45,10 +54,11 @@ export const loginUser = async (formData) => {
   }
 
   try {
-    const res = await ApiCall("/api/auth/login", {
+    const res = await apiRequest("api/auth/login", {
       method: "POST",
       data: formData,
     });
+    console.debug("[auth] login response", res.data);
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Login failed");
@@ -65,7 +75,7 @@ export const registerUser = async (formData) => {
   }
 
   try {
-    const res = await ApiCall("/api/auth/register", {
+    const res = await apiRequest("api/auth/register", {
       method: "POST",
       data: formData,
     });
@@ -76,12 +86,28 @@ export const registerUser = async (formData) => {
 };
 
 export const loginWithGoogle = async () => {
-  window.location.href = `${API_BASE_URL}/api/auth/continueWithGoogle`;
+      window.location.href = "https://kemet-gold.vercel.app/api/auth/google/callback";
+};
+
+export const completeGoogleLogin = async ({ token, user }) => {
+  if (!token || !user) {
+    throw new Error("Google login session is missing.");
+  }
+
+  try {
+    const res = await apiRequest("api/auth/google-session", {
+      method: "POST",
+      data: { token, user },
+    });
+    return res.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Google login failed");
+  }
 };
 
 export const logout = async () => {
   try {
-    const res = await ApiCall("/api/auth/logout", {
+    const res = await apiRequest("api/auth/logout", {
       method: "POST",
     });
     return res.data;
@@ -98,7 +124,7 @@ export const resetPassword = async (email) => {
   }
 
   try {
-    const res = await ApiCall("/api/auth/reset-password", {
+    const res = await apiRequest("api/auth/reset-password", {
       method: "POST",
       data: { email },
     });
@@ -118,7 +144,7 @@ export const confirmResetPassword = async (formData) => {
   }
 
   try {
-    const res = await ApiCall("/api/auth/reset-password-confirm", {
+    const res = await apiRequest("api/auth/reset-password-confirm", {
       method: "POST",
       data: { token: formData.token, newPassword: formData.newPassword },
     });
@@ -132,7 +158,9 @@ export const confirmResetPassword = async (formData) => {
 
 export const refreshToken = async () => {
   try {
-    const res = await ApiCall("/api/auth/refresh", { method: "POST" });
+    const res = await apiRequest("api/auth/refresh", {
+      method: "POST",
+    });
     return res.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Session refresh failed");

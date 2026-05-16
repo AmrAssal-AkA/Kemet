@@ -1,5 +1,7 @@
 import axios from "axios";
 
+const API_BASE_URL = "https://kemet-gold.vercel.app/";
+
 async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
@@ -10,7 +12,7 @@ async function handler(req, res) {
   }
   try {
     const response = await axios.post(
-      "https://kemet-two.vercel.app/api/auth/reset-password",
+      `${API_BASE_URL}/api/auth/reset-password`,
       { email },
       {
         headers: {

@@ -10,6 +10,7 @@ router.get("/", blogController.getAllBlog);
 router.get("/:blogId", blogController.getOneBlogById);
 router.put("/updateBlog/:blogId", authenticate,authorize("user"),upload.single("image"),blogController.updateBlogById);
 router.delete("/deleteBlog/:blogId", authenticate,authorize("admin", "user"), blogController.deleteBlogById);
+router.post("/addComment/:blogId", authenticate,authorize("user"), blogController.WriteBlogComments);
 
 
 module.exports = router;

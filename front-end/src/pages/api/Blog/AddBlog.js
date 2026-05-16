@@ -2,6 +2,8 @@ import axios from "axios";
 import multer from "multer";
 import FormData from "form-data";
 
+const API_BASE_URL = "https://kemet-gold.vercel.app/";
+
 export const config = {
   api: {
     bodyParser: false,
@@ -29,12 +31,18 @@ export default async function handler(req, res) {
   try {
     await runMiddleware(req, res, upload.array("images", 5));
 
-    const { title, content } = req.body;
+    const { title, content, userId } = req.body;
 
     if (!title || !content) {
       return res
         .status(400)
         .json({ message: "Title and content are required" });
+    }
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ message: "User ID is required" });
     }
 
     const formData = new FormData();
@@ -51,7 +59,7 @@ export default async function handler(req, res) {
     }
 
     const response = await axios.post(
-      "https://kemet-two.vercel.app/api/blog",
+      `${API_BASE_URL}/api/blog`,
       formData,
       {
         headers: {

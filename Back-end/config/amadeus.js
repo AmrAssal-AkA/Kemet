@@ -7,9 +7,7 @@ if (!process.env.Amadeus_API_KEY || !process.env.Amadeus_API_SECRET) {
   process.exit(1);
 }
 
-const baseURL = process.env.NODE_ENV === "production"
-  ? "https://api.amadeus.com"
-  : "https://test.api.amadeus.com";
+const baseURL = "https://test.api.amadeus.com";
 
 let accessToken = null;
 let tokenExpiration = null;

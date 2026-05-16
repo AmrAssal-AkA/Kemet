@@ -1,11 +1,7 @@
-const { booking } = require("../../config/amadeus");
 const Booking = require("../../model/BookingSchema");
 const { stripeCheckout, refundPayment } = require("./paymentController");
-const guest = require("../../model/guestSchema");
-const {
-  BookingConfirmationTemplate,
-  sendEmail,
-} = require("../../services/miling");
+const validatePassport = require("../auth/passportValidation");
+const cloudinary = require("../../config/cloudinary");
 
 const currencyMapping = {
   USA: "USD",
@@ -15,15 +11,27 @@ const currencyMapping = {
 
 const createBooking = async (req, res, nxt) => {
   try {
-      const userId = req.user?.userId;
-      const email = req.email?.email;
+    const userId = req.user?.userId;
+    const email = req.email?.email;
 
-      if(!userId && !email){
-        return res.status(400).json({ error: "Missing required fields: userId, email" });
-      }
+    if (!userId && !email) {
+      return res
+        .status(400)
+        .json({ error: "Missing required fields: userId, email" });
+    }
 
     const {
-      guests,
+      guest = [
+         {
+          firstName: "",
+          lastName: "",
+          nationality: "",
+          dateOfBirth: "",
+          PassportNumber: "",
+          expiryDate: "",
+          type: ["adult", "child", "infant"],
+        },
+      ],
       flight,
       hotel,
       trip,
@@ -31,6 +39,44 @@ const createBooking = async (req, res, nxt) => {
       PassportNumber,
       totalPrice,
     } = req.body;
+
+    const ChildAge = (guests) => {
+      const today = new Date();
+      const birthDate = new Date(guests.dateOfBirth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        return age - 1 < 16;
+      }
+      return age < 16;
+    };
+    const childerentAgeUnder16 = guests.some(
+      (g) => g.type === "child" && ChildAge(g),
+    );
+    if (!childerentAgeUnder16) {
+      const passportImage = req.file ? req.file.buffer : null;
+      if (!passportImage) {
+        res.status(400).json({ error: "Passport image is required" });
+        return;
+      }
+    }
+
+    const passportValidationResult = await validatePassport({
+      imageMetadata: { width: 0, height: 0, format: "", size: 0 },
+      file: { buffer: req.file.buffer },
+    });
+
+    if (!passportValidationResult.validation.isReadable) {
+      return res.status(400).json({
+        error: "Passport image is not readable",
+        issues: passportValidationResult.validation.issues,
+      });
+    }
+    const uploadedPassports = await Promise.all(
+      PassportImages.map((buffer) =>
+        cloudinary.uploadImage(buffer, "guest_passport_images"),
+      ),
+    );
 
     let currency = req.body.currency;
     if (!userId || !guests || guests.length === 0 || !totalPrice) {
@@ -57,10 +103,9 @@ const createBooking = async (req, res, nxt) => {
                 ? "Hotel"
                 : "Mixed",
     };
-
     const newBooking = new Booking({
       userId,
-      email: email,
+      email,
       guests,
       flight,
       hotel,
@@ -71,6 +116,10 @@ const createBooking = async (req, res, nxt) => {
       details: bookingDetails,
       status: "Pending",
       paymentStatus: "Pending",
+      passportImages: uploadedPassports.map((upload) => ({
+        url: upload.secure_url,
+        cloudinaryId: upload.public_id,
+      })),
     });
     await newBooking.save();
 
@@ -79,15 +128,14 @@ const createBooking = async (req, res, nxt) => {
 
     const session = await stripeCheckout(req);
     if (!session) {
-      res.status(500).json({ error: "Failed to create Stripe session" });
-      return;
+      return res.status(500).json({ error: "Failed to create Stripe session" });
     }
 
     await Booking.findByIdAndUpdate(newBooking._id, {
       stripeSessionId: session.id,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Booking created successfully",
       status: "success",
       bookingId: newBooking._id,

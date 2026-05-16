@@ -6,7 +6,7 @@ export default function AccountSettingPage() {
   return (
     <main className="min-h-screen bg-[#f8fafc] px-4 py-10">
       <section className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="text-2xl font-bold text-slate-900">Account Setting</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Account Settings</h1>
         <p className="mt-2 text-sm text-slate-600">
           Manage your profile information and account preferences.
         </p>

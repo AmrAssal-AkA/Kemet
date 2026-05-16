@@ -1,5 +1,5 @@
 import axios from "axios";
-import { redirect } from "next/dist/server/api-utils";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 function verifyaccount({ response }) {
   const { success } = response || {};
@@ -38,7 +38,7 @@ export async function getServerSideProps(context) {
     
   try {
     const response = await axios.get(
-      "http://localhost:8000/api/auth/verify-email",
+      buildApiUrl("/api/auth/verify-email"),
       {
         params: { token },  
       },

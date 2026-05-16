@@ -1,11 +1,15 @@
 import { getCurrentUser } from "./authServices";
-
-const API_BASE_URL = "https://kemet-two.vercel.app/";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 async function handleResponse(res, fallbackMessage) {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    console.error("[guideServices]", {
+      url: res.url,
+      status: res.status,
+      body: data,
+    });
     throw new Error(data?.message || data?.error || fallbackMessage);
   }
 
@@ -31,7 +35,7 @@ export async function getGuideAvailability() {
 }
 
 export async function updateGuideAvailability(payload) {
-  const res = await fetch(`${API_BASE_URL}/api/guideDashboard/setGuideSchedule`, {
+  const res = await fetch(buildApiUrl("/api/guideDashboard/setGuideSchedule"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

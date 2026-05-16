@@ -1,5 +1,6 @@
 import Head from "next/head";
 import { useState, useEffect } from "react";
+import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 const ArrowRightIcon = () => (
   <svg
@@ -95,7 +96,7 @@ function DestinationPage() {
   useEffect(() => {
     const fetchDestinationData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/destinations");
+        const response = await fetch(buildApiUrl("/api/destinations"));
         const result = await response.json();
         if (result && result.length > 0) {
           setData(result[0]);
@@ -104,6 +105,22 @@ function DestinationPage() {
         console.error(error);
       }
     };
+    fetchDestinationData();
+  }, []);
+
+  useEffect(() => {
+    const fetchDestinationData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/destinations`);
+        const result = await response.json();
+        if (result && result.length > 0) {
+          setData(result[0]);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    
     fetchDestinationData();
   }, []);
 

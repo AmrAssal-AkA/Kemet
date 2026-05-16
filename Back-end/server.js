@@ -29,8 +29,14 @@ const userRoutes = require("./routes/userdashboardRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const guideDashboardRoute = require("./routes/guideDashboardRoute");
 const errorHandlerMW = require("./middleware/ErrorMW");
+const upload = require("./middleware/PassportVarification");
+const validateImage = require("./middleware/passportImageValidation");
+const { PassportValidation } = require("./controller/auth/passportValidation");
+const passportRoutes = require("./routes/passportRoutes");
+const SearchRoute = require("./routes/searchRoutes");
+const newsletterRoute = require("./routes/newsletterRoute");
 
-// Connect to database
+// Connect to databas
 connectDB();
 // Middleware
 app.use("/api/payments", paymentRoutes);
@@ -47,27 +53,65 @@ app.use(
     cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
   }),
 );
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "cdnjs.cloudflare.com",
+          "fonts.googleapis.com",
+        ],
+        fontSrc: ["'self'", "fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "validator.swagger.io"],
+        connectSrc: ["'self'", "http:", "https:"],
+      },
+    },
+  }),
+);
 require("./controller/auth/authController");
 app.use(passport.initialize());
 
 const swaggerUiOptions = {
   swaggerOptions: {
-    url: "/api-docs.json",
     persistAuthorization: true,
     deepLinking: true,
   },
   customCss: ".swagger-ui { background-color: #fafafa; }",
-  customCssUrl: "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css",
+  customCssUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css",
   customJs: [
-    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-bundle.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-standalone-preset.min.js",
   ],
   customSiteTitle: "Kemet Travel API Docs",
 };
 
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+// Redirect static assets to CDN to avoid Vercel serving HTML for missing files
+app.get("/api-docs/swagger-ui-bundle.js", (req, res) =>
+  res.redirect(
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-bundle.min.js",
+  ),
+);
+app.get("/api-docs/swagger-ui-standalone-preset.js", (req, res) =>
+  res.redirect(
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-standalone-preset.min.js",
+  ),
+);
+app.get("/api-docs/swagger-ui.css", (req, res) =>
+  res.redirect(
+    "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css",
+  ),
+);
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, swaggerUiOptions),
+);
 
 app.get("/api-docs.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
@@ -95,7 +139,10 @@ app.use("/api/booking", BookingRoute);
 app.use("/api/auth", authLimiter, authRoute);
 app.use("/api/adminDashboard", adminRoute);
 app.use("/api/userdashboard", userRoutes);
+app.use("/api/passport", passportRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
+app.use("/api/searchHandler", SearchRoute);
+app.use("/api/newsletter", newsletterRoute);
 
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");

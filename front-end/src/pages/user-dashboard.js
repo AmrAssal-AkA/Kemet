@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import axios from "axios";
 import { motion } from "framer-motion";
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
+import { getAuthRedirectPath, getUserRole } from "@/utils/authSession";
 import { getTrips } from "@/services/tripServices";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
 const popularCities = [
-  { name: "Alexandria",    image: "/images/cities/alexandria.jpg",  href: "/Alexandria" },
-  { name: "Cairo",         image: "/images/cities/cairo.jpeg",      href: "/Cairo" },
-  { name: "Luxor",         image: "/images/cities/luxor.jpeg",      href: "/Luxor" },
-  { name: "Aswan",         image: "/images/cities/aswan.webp",      href: "/Aswan" },
-  { name: "Siwa",          image: "/images/cities/siwa.jpg",        href: "/Siwa" },
-  { name: "Sharm",         image: "/sharm.jpeg",                    href: "/SharmElSheikh" },
+  { name: "Alexandria", image: "/images/cities/alexandria.jpg", href: "/Alexandria" },
+  { name: "Cairo",      image: "/images/cities/cairo.jpeg",     href: "/Cairo" },
+  { name: "Luxor",      image: "/images/cities/luxor.jpeg",     href: "/Luxor" },
+  { name: "Aswan",      image: "/images/cities/aswan.webp",     href: "/Aswan" },
+  { name: "Siwa",       image: "/images/cities/siwa.jpg",       href: "/Siwa" },
+  { name: "Sharm",      image: "/sharm.jpeg",                   href: "/SharmElSheikh" },
 ];
 
 const LEVELS = [
@@ -24,12 +26,12 @@ const LEVELS = [
 ];
 
 const QUICK_LINKS = [
-  { icon: "🗺️", label: "Destinations",  href: "/Destination" },
-  { icon: "🎒", label: "Book a Trip",    href: "/BookTrip" },
-  { icon: "💎", label: "Hidden Gems",    href: "/hidden-gems" },
-  { icon: "👥", label: "Community",      href: "/communities" },
-  { icon: "📖", label: "Travel Blogs",   href: "/blogs" },
-  { icon: "🎁", label: "Offerings",      href: "/offerings" },
+  { icon: "🗺️", label: "Destinations", href: "/Destination" },
+  { icon: "🎒", label: "Book a Trip",   href: "/BookTrip" },
+  { icon: "💎", label: "Hidden Gems",   href: "/hidden-gems" },
+  { icon: "👥", label: "Community",     href: "/communities" },
+  { icon: "📖", label: "Travel Blogs",  href: "/blogs" },
+  { icon: "🎁", label: "Offerings",     href: "/offerings" },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -41,42 +43,65 @@ const fadeUp = (delay = 0) => ({
 });
 
 function getUserLevel(points) {
-  return [...LEVELS].reverse().find(l => points >= l.minPoints) || LEVELS[0];
+  return [...LEVELS].reverse().find((l) => points >= l.minPoints) || LEVELS[0];
 }
 
 function getNextLevel(points) {
-  return LEVELS.find(l => l.minPoints > points) || null;
+  return LEVELS.find((l) => l.minPoints > points) || null;
 }
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
-export default function UserDashboard({ userName }) {
+export default function UserDashboard() {
+  const router = useRouter();
+  const { user, sessionReady } = useAuth();
+
   const [searchCity, setSearchCity]           = useState("");
   const [selectedTag, setSelectedTag]         = useState("Top Picks");
   const [activeSlide, setActiveSlide]         = useState(0);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const [isCarouselPaused, setIsCarouselPaused]   = useState(false);
   const [trips, setTrips]                     = useState([]);
   const [tripsLoading, setTripsLoading]       = useState(true);
-  const touchStartXRef                        = useRef(null);
+
+  const touchStartXRef = useRef(null);
+
+  const userName = user?.name || "Traveler";
+  const userRole = getUserRole(user);
 
   // mock user points — replace with real API when available
-  const userPoints = 180;
+  const userPoints   = 180;
   const currentLevel = getUserLevel(userPoints);
   const nextLevel    = getNextLevel(userPoints);
   const progressPct  = nextLevel
     ? ((userPoints - currentLevel.minPoints) / (nextLevel.minPoints - currentLevel.minPoints)) * 100
     : 100;
 
-  // fetch trips
+  // ── Auth guard ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!sessionReady) return;
+
+    if (!user) {
+      router.replace("/auth/auth");
+      return;
+    }
+
+    if (userRole === "admin" || userRole === "guide" || userRole === "localguide") {
+      router.replace(getAuthRedirectPath(user));
+    }
+  }, [router, sessionReady, user, userRole]);
+
+  // ── Fetch trips ─────────────────────────────────────────────────────────────
   useEffect(() => {
     getTrips()
-      .then(data => setTrips(data))
+      .then((data) => setTrips(data))
       .catch(() => setTrips([]))
       .finally(() => setTripsLoading(false));
   }, []);
 
-  const filteredCities = popularCities.filter(c =>
+  // ── City filtering ──────────────────────────────────────────────────────────
+  const filteredCities = popularCities.filter((c) =>
     c.name.toLowerCase().includes(searchCity.toLowerCase())
   );
 
@@ -85,21 +110,20 @@ export default function UserDashboard({ userName }) {
     [filteredCities]
   );
 
-  const handlePrevSlide = useCallback(() =>
-    setActiveSlide(p => (p === 0 ? carouselCities.length - 1 : p - 1)),
-    [carouselCities.length]
-  );
+  // ── Carousel controls ───────────────────────────────────────────────────────
+  const handlePrevSlide = useCallback(() => {
+    setActiveSlide((prev) => (prev === 0 ? carouselCities.length - 1 : prev - 1));
+  }, [carouselCities.length]);
 
-  const handleNextSlide = useCallback(() =>
-    setActiveSlide(p => (p === carouselCities.length - 1 ? 0 : p + 1)),
-    [carouselCities.length]
-  );
+  const handleNextSlide = useCallback(() => {
+    setActiveSlide((prev) => (prev === carouselCities.length - 1 ? 0 : prev + 1));
+  }, [carouselCities.length]);
 
   useEffect(() => {
     if (isUserInteracting || isCarouselPaused || carouselCities.length <= 1) return;
     const interval = setInterval(handleNextSlide, 4000);
     return () => clearInterval(interval);
-  }, [isUserInteracting, isCarouselPaused, carouselCities.length, handleNextSlide]);
+  }, [handleNextSlide, isUserInteracting, isCarouselPaused, carouselCities.length]);
 
   const handleTouchStart = (e) => {
     touchStartXRef.current = e.touches[0].clientX;
@@ -116,6 +140,12 @@ export default function UserDashboard({ userName }) {
 
   const displayTrips = trips.slice(0, 4);
 
+  // ── Guard render ────────────────────────────────────────────────────────────
+  if (!sessionReady || !user || ["admin", "guide", "localguide"].includes(userRole)) {
+    return null;
+  }
+
+  // ── UI ──────────────────────────────────────────────────────────────────────
   return (
     <main className="min-h-screen bg-[#f8fafc] text-slate-900 pb-20">
 
@@ -125,9 +155,9 @@ export default function UserDashboard({ userName }) {
           className="relative min-h-80 overflow-hidden rounded-3xl bg-cover bg-center p-8 lg:p-12"
           style={{ backgroundImage: "url('/images/BlogPageImages/hero.jpg')" }}
         >
-          <div className="absolute inset-0 rounded-3xl" style={{ background: "linear-gradient(105deg,rgba(6,18,46,.88) 0%,rgba(11,31,70,.6) 55%,rgba(0,0,0,.15) 100%)" }} />
-          {/* gold line */}
-          <div className="absolute bottom-0 left-0 w-full h-0.75"
+          <div className="absolute inset-0 rounded-3xl"
+            style={{ background: "linear-gradient(105deg,rgba(6,18,46,.88) 0%,rgba(11,31,70,.6) 55%,rgba(0,0,0,.15) 100%)" }} />
+          <div className="absolute bottom-0 left-0 w-full h-[3px]"
             style={{ background: "linear-gradient(90deg,transparent,#FFCE2A 40%,#f5b800 60%,transparent)" }} />
 
           <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
@@ -158,9 +188,9 @@ export default function UserDashboard({ userName }) {
               </motion.div>
             </div>
 
-            {/* Level card inside hero */}
+            {/* Level card */}
             <motion.div {...fadeUp(0.5)}
-              className="shrink-0 rounded-2xl p-5 w-full lg:w-64"
+              className="flex-shrink-0 rounded-2xl p-5 w-full lg:w-64"
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", backdropFilter: "blur(12px)" }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
@@ -189,7 +219,8 @@ export default function UserDashboard({ userName }) {
                 </div>
                 {nextLevel && (
                   <p className="text-[10px] text-gray-400 mt-1.5">
-                    {nextLevel.minPoints - userPoints} pts to <span className="text-yellow-400 font-semibold">{nextLevel.name}</span>
+                    {nextLevel.minPoints - userPoints} pts to{" "}
+                    <span className="text-yellow-400 font-semibold">{nextLevel.name}</span>
                   </p>
                 )}
               </div>
@@ -228,7 +259,7 @@ export default function UserDashboard({ userName }) {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Location</p>
                 <input
                   value={searchCity}
-                  onChange={e => setSearchCity(e.target.value)}
+                  onChange={(e) => setSearchCity(e.target.value)}
                   placeholder="Where to?"
                   className="w-full bg-transparent text-sm font-semibold text-gray-900 outline-none placeholder-gray-400"
                 />
@@ -254,7 +285,7 @@ export default function UserDashboard({ userName }) {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Category</p>
                 <select
                   value={selectedTag}
-                  onChange={e => setSelectedTag(e.target.value)}
+                  onChange={(e) => setSelectedTag(e.target.value)}
                   className="w-full bg-transparent text-sm font-semibold text-gray-900 outline-none">
                   <option>Top Picks</option>
                   <option>Family Trips</option>
@@ -297,10 +328,7 @@ export default function UserDashboard({ userName }) {
                 <div className="relative mx-auto h-20 w-20 sm:h-24 sm:w-24">
                   <div
                     className="w-full h-full rounded-full bg-cover bg-center shadow-md transition-all duration-300 group-hover:scale-105"
-                    style={{
-                      backgroundImage: `url('${city.image}')`,
-                      boxShadow: "0 0 0 3px #fff, 0 0 0 5px transparent",
-                    }}
+                    style={{ backgroundImage: `url('${city.image}')`, boxShadow: "0 0 0 3px #fff, 0 0 0 5px transparent" }}
                   />
                   <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all duration-200">
                     <span className="text-white text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">View</span>
@@ -325,16 +353,16 @@ export default function UserDashboard({ userName }) {
         </div>
 
         <div
-          className="group relative h-80 sm:h-105 w-full overflow-hidden rounded-3xl shadow-xl"
-          onMouseEnter={() => setIsCarouselPaused(true)}
-          onMouseLeave={() => setIsCarouselPaused(false)}
+          className="group relative h-80 sm:h-[420px] w-full overflow-hidden rounded-3xl shadow-xl"
+          onMouseEnter={() => { setIsCarouselHovered(true); setIsCarouselPaused(true); }}
+          onMouseLeave={() => { setIsCarouselHovered(false); setIsCarouselPaused(false); }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           {carouselCities.map((city, index) => (
             <div
               key={city.name}
-              className={`absolute inset-0 transition-opacity duration-700 ${activeSlide === index ? "opacity-100" : "opacity-0"}`}
+              className={`absolute inset-0 transition-opacity duration-500 ${activeSlide === index ? "opacity-100" : "opacity-0"}`}
             >
               <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url('${city.image}')` }} />
               <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(6,18,46,.8) 0%,transparent 60%)" }} />
@@ -352,32 +380,28 @@ export default function UserDashboard({ userName }) {
             </div>
           ))}
 
-          {/* arrows */}
-          {["prev","next"].map(dir => (
-            <button key={dir} type="button"
-              onClick={dir === "prev" ? handlePrevSlide : handleNextSlide}
-              className="absolute top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all opacity-0 group-hover:opacity-100"
-              style={{ [dir === "prev" ? "left" : "right"]: 16, background: "rgba(0,0,0,0.4)" }}>
-              {dir === "prev" ? "‹" : "›"}
-            </button>
-          ))}
+          <button type="button" onClick={handlePrevSlide}
+            className={`absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center text-white text-xl transition-all ${isCarouselHovered || isUserInteracting ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            style={{ background: "rgba(0,0,0,0.4)" }}>
+            ‹
+          </button>
+          <button type="button" onClick={handleNextSlide}
+            className={`absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center text-white text-xl transition-all ${isCarouselHovered || isUserInteracting ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            style={{ background: "rgba(0,0,0,0.4)" }}>
+            ›
+          </button>
 
-          {/* dots */}
           <div className="absolute bottom-4 right-6 flex gap-2">
             {carouselCities.map((_, index) => (
               <button key={index} onClick={() => setActiveSlide(index)}
                 className="rounded-full transition-all"
-                style={{
-                  width: activeSlide === index ? 28 : 8,
-                  height: 8,
-                  background: activeSlide === index ? "#FFCE2A" : "rgba(255,255,255,0.5)",
-                }} />
+                style={{ width: activeSlide === index ? 28 : 8, height: 8, background: activeSlide === index ? "#FFCE2A" : "rgba(255,255,255,0.5)" }} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══════ TRIPS FROM API ══════ */}
+      {/* ══════ PACKAGES ══════ */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-6">
           <div>
@@ -417,17 +441,11 @@ export default function UserDashboard({ userName }) {
                   )}
                 </div>
                 <div className="flex flex-col flex-1 p-5">
-                  <h3 className="font-bold text-sm text-gray-900 mb-1 leading-snug">
-                    {trip.title || trip.name}
-                  </h3>
-                  <p className="text-xs text-gray-400 mb-1">{trip.duration} {trip.duration ? "days" : ""}</p>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-2 flex-1">
-                    {trip.description}
-                  </p>
+                  <h3 className="font-bold text-sm text-gray-900 mb-1 leading-snug">{trip.title || trip.name}</h3>
+                  <p className="text-xs text-gray-400 mb-1">{trip.duration}{trip.duration ? " days" : ""}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-2 flex-1">{trip.description}</p>
                   <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
-                    <span className="text-base font-extrabold text-yellow-500">
-                      ${trip.price || trip.finalPrice}
-                    </span>
+                    <span className="text-base font-extrabold text-yellow-500">${trip.price || trip.finalPrice}</span>
                     <Link href="/BookTrip"
                       className="text-xs font-bold text-black rounded-full px-4 py-2 transition hover:opacity-90"
                       style={{ background: "linear-gradient(135deg,#FFCE2A,#e8b800)" }}>
@@ -464,50 +482,20 @@ export default function UserDashboard({ userName }) {
                 Discover Egypt's Hidden Gems
               </h3>
               <p className="text-gray-400 text-sm leading-relaxed max-w-md">
-                Visit secret places, upload your photo as proof, and earn points for real rewards. You're currently a <span className="text-yellow-400 font-semibold">{currentLevel.name} {currentLevel.icon}</span>.
+                Visit secret places, upload your photo as proof, and earn points for real rewards.
+                You're currently a{" "}
+                <span className="text-yellow-400 font-semibold">{currentLevel.name} {currentLevel.icon}</span>.
               </p>
             </div>
-            <div className="flex gap-3 shrink-0">
-              <Link href="/hidden-gems"
-                className="rounded-full px-7 py-3.5 font-bold text-sm text-black whitespace-nowrap transition hover:opacity-90"
-                style={{ background: "linear-gradient(135deg,#FFCE2A,#e8b800)", boxShadow: "0 4px 14px rgba(255,206,42,.35)" }}>
-                Start Exploring
-              </Link>
-            </div>
+            <Link href="/hidden-gems"
+              className="flex-shrink-0 rounded-full px-7 py-3.5 font-bold text-sm text-black whitespace-nowrap transition hover:opacity-90"
+              style={{ background: "linear-gradient(135deg,#FFCE2A,#e8b800)", boxShadow: "0 4px 14px rgba(255,206,42,.35)" }}>
+              Start Exploring
+            </Link>
           </div>
         </div>
       </section>
 
     </main>
   );
-}
-
-// ─── SERVER SIDE ──────────────────────────────────────────────────────────────
-
-export async function getServerSideProps(context) {
-  const cookie = context.req.headers.cookie || "";
-
-  if (!cookie || !cookie.includes("x-auth-token")) {
-    return { redirect: { destination: "/auth/auth", permanent: false } };
-  }
-
-  try {
-    const response = await axios.post(
-      "http://localhost:3000/api/auth/refresh",
-      {},
-      { headers: { Cookie: cookie } }
-    );
-
-    const userName = response.data.user?.name;
-    const userRole = response.data.user?.role;
-
-    if (userRole !== "user") {
-      return { redirect: { destination: "/", permanent: false } };
-    }
-
-    return { props: { userName, userRole } };
-  } catch (error) {
-    console.error("Session verification error:", error.message);
-    return { redirect: { destination: "/auth/auth", permanent: false } };
-  }
 }

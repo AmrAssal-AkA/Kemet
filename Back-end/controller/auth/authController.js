@@ -21,7 +21,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (userId, done) => {
   try {
-    const user = await User.findOne({ userId });
+    const user = await User.findById(userId);
     done(null, user);
   } catch (err) {
     done(err, null);
@@ -34,6 +34,7 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      session: false,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -118,7 +119,7 @@ const register = async (req, res, nxt) => {
       emailVerificationToken: verifyToken,
       emailVerificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
     });
-    const verifyURL = `http://localhost:3000/auth/verifyaccount?token=${verifyToken}`;
+    const verifyURL = `${process.env.DOMAIN}/auth/verifyaccount?token=${verifyToken}`;
     const emailResult = await verifyEmailTemplate(name, verifyURL);
     await sendEmail({
       to: email,
