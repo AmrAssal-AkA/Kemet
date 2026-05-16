@@ -1,40 +1,9 @@
 import Head from "next/head";
 import { useState, useEffect } from "react";
+import axios from "axios";
 
-const ArrowRightIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="w-4 h-4 ml-1"
-  >
-    <path
-      d="M5 12H19M19 12L13 6M19 12L13 18"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="w-5 h-5 text-[#FBBF24]"
-  >
-    <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.2" />
-    <path
-      d="M8 12L11 15L16 9"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+import { ArrowRightIcon } from "@/components/ui/ArrowRightIcon";
+import { CheckIcon } from "@/components/ui//CheckIcon";
 
 const defaultDestinationData = {
   hero: {
@@ -89,8 +58,9 @@ const defaultDestinationData = {
   },
 };
 
-function DestinationPage() {
+function DestinationPage(props) {
   const [data, setData] = useState(defaultDestinationData);
+  const { trips } = props;
 
   useEffect(() => {
     const fetchDestinationData = async () => {
@@ -119,7 +89,7 @@ function DestinationPage() {
             src={data.hero.bgImage}
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-black/60"></div>
+          <div className="absolute inset-0 bg-linear-to-t from-white via-white/40 to-black/60"></div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-8 md:px-16 w-full mt-20">
             <span className="bg-[#FBBF24] text-white px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-widest shadow-sm">
@@ -156,7 +126,7 @@ function DestinationPage() {
               </span>
             </div>
           </div>
-          <div className="relative h-[650px] w-full">
+          <div className="relative h-162.5 w-full">
             <img
               src={data.narrative.image1}
               className="absolute top-0 left-0 w-[65%] h-[80%] object-cover rounded-[40px] shadow-2xl z-10"
@@ -179,44 +149,55 @@ function DestinationPage() {
         <section className="max-w-7xl mx-auto px-8 md:px-16 py-24">
           <div className="flex items-end justify-between mb-16">
             <div>
-              <span className="text-[#FBBF24] font-black text-xs uppercase tracking-widest">
+              <span className="text-[#FBBF24] font-black text-xs uppercase tracking-widest inline-block mb-4 bg-[#FBBF24]/10 px-4 py-2 rounded-full">
                 Curated Experiences
               </span>
-              <h2 className="text-5xl font-black text-[#111827] mt-3">
-                Curated Moments.
+              <h2 className="text-5xl md:text-6xl font-black text-[#111827] mt-3 leading-tight">
+                Unforgettable <br />
+                <span className="text-[#FBBF24]">Moments Await</span>
               </h2>
-            </div>
-            <div className="flex gap-4">
-              <button className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center hover:bg-[#FBBF24] hover:text-white transition-all duration-300 text-xl font-black text-[#111827]">
-                {"<"}
-              </button>
-              <button className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center hover:bg-[#FBBF24] hover:text-white transition-all duration-300 text-xl font-black text-[#111827]">
-                {">"}
-              </button>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {data.curated.map((item) => (
+            {trips.map((trip) => (
               <div
-                key={item.id}
-                className="bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 group cursor-pointer pb-8 flex flex-col h-full"
+                key={trip.id}
+                className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-500 group cursor-pointer pb-8 flex flex-col h-full hover:-translate-y-2"
               >
-                <div className="w-full aspect-[4/3] overflow-hidden p-4">
+                <div className="relative w-full aspect-4/3 overflow-hidden p-4">
                   <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover rounded-[24px] transform group-hover:scale-105 transition-transform duration-700"
+                    src={trip.image}
+                    alt={trip.name}
+                    className="w-full h-full object-cover rounded-2xl transform group-hover:scale-110 transition-transform duration-700"
                   />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+                  <span className="absolute top-6 right-6 bg-[#FBBF24] text-white px-3 py-1 rounded-full font-bold text-xs uppercase tracking-widest shadow-lg">
+                    Featured
+                  </span>
                 </div>
-                <div className="px-8 pt-4 flex flex-col grow">
-                  <h3 className="font-black text-2xl text-[#111827] mb-3">
-                    {item.title}
+                <div className="px-8 pt-6 flex flex-col grow">
+                  <span className="text-[#FBBF24] font-bold text-xs uppercase tracking-wider mb-2">
+                    {trip.category}
+                  </span>
+                  <h3 className="font-black text-2xl text-[#111827] mb-3 group-hover:text-[#FBBF24] transition-colors">
+                    {trip.name}
                   </h3>
-                  <p className="text-gray-500 text-sm leading-relaxed mb-8 grow">
-                    {item.desc}
+                  <p className="text-gray-600 text-sm leading-relaxed mb-6 grow">
+                    {trip.description}
                   </p>
-                  <div className="flex items-center text-[#FBBF24] font-black text-xs uppercase tracking-widest group-hover:text-[#e5a913] transition-colors">
-                    {item.duration} <ArrowRightIcon />
+                  <div className="w-full h-px bg-gray-100 mb-6"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-400 mb-1">
+                        Starting from
+                      </span>
+                      <p className="text-xl font-black text-[#FBBF24]">
+                        {trip.price}. EGP
+                      </p>
+                    </div>
+                    <button className="text-[#111827] bg-gray-100 hover:bg-[#FBBF24] hover:text-white rounded-full p-3 transition-all duration-300 group/btn">
+                      <ArrowRightIcon className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -225,18 +206,18 @@ function DestinationPage() {
         </section>
 
         <section className="max-w-7xl mx-auto px-8 md:px-16 py-24">
-          <div className="bg-[#f4f4f5] rounded-[48px] overflow-hidden flex flex-col md:flex-row shadow-lg">
-            <div className="w-full md:w-[45%] h-[600px]">
+          <div className="bg-linear-to-br from-[#f9f9f9] to-[#f0f0f0] rounded-[48px] overflow-hidden flex flex-col md:flex-row shadow-xl hover:shadow-2xl transition-all duration-500">
+            <div className="w-full md:w-[45%] h-150 overflow-hidden group">
               <img
                 src={data.hotel.image}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
             </div>
             <div className="w-full md:w-[55%] p-16 md:p-24 flex flex-col justify-center">
-              <span className="text-[#FBBF24] font-black text-xs uppercase tracking-widest mb-6">
+              <span className="text-[#FBBF24] font-black text-xs uppercase tracking-widest mb-6 inline-block bg-[#FBBF24]/10 px-4 py-2 rounded-full w-max">
                 Featured Stay
               </span>
-              <h3 className="text-5xl font-black text-[#111827] mb-8 leading-tight">
+              <h3 className="text-4xl md:text-5xl font-black text-[#111827] mb-8 leading-tight">
                 {data.hotel.title}
               </h3>
               <p className="text-gray-600 mb-12 leading-relaxed text-lg max-w-lg">
@@ -246,13 +227,16 @@ function DestinationPage() {
                 {data.hotel.features.map((feature, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-4 text-base font-bold text-[#111827]"
+                    className="flex items-center gap-4 text-base font-bold text-[#111827] hover:text-[#FBBF24] transition-colors"
                   >
-                    <CheckIcon /> {feature}
+                    <div className="w-5 h-5 rounded-full bg-[#FBBF24] flex items-center justify-center">
+                      <CheckIcon />
+                    </div>
+                    {feature}
                   </li>
                 ))}
               </ul>
-              <button className="bg-[#111827] text-white px-10 py-5 rounded-full font-bold text-sm uppercase tracking-widest w-max hover:bg-black transition-all shadow-md transform hover:-translate-y-1">
+              <button className="bg-[#111827] text-white px-10 py-5 rounded-full font-bold text-sm uppercase tracking-widest w-max hover:bg-[#FBBF24] hover:text-[#111827] transition-all shadow-lg transform hover:-translate-y-1 hover:shadow-2xl">
                 View Itinerary
               </button>
             </div>
@@ -260,10 +244,10 @@ function DestinationPage() {
         </section>
 
         <section className="max-w-7xl mx-auto px-8 md:px-16 py-12 mb-32">
-          <div className="relative bg-[#201c2c] rounded-[48px] p-24 text-center overflow-hidden flex flex-col items-center justify-center shadow-2xl">
-            <div className="absolute inset-6 border-2 border-[#FBBF24]/20 rounded-[40px] pointer-events-none"></div>
+          <div className="relative bg-linear-to-br from-[#201c2c] via-[#2a2438] to-[#1a1620] rounded-[48px] p-24 text-center overflow-hidden flex flex-col items-center justify-center shadow-2xl hover:shadow-[0_20px_60px_rgba(251,191,36,0.3)] transition-all duration-500">
+            <div className="absolute inset-6 border-2 border-[#FBBF24]/30 rounded-[40px] pointer-events-none"></div>
 
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[800px] h-[800px] opacity-10 pointer-events-none">
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-200 h-200 opacity-5 pointer-events-none">
               <svg
                 viewBox="0 0 100 100"
                 fill="none"
@@ -284,16 +268,18 @@ function DestinationPage() {
             </div>
 
             <div className="relative z-10 flex flex-col items-center">
-              <h2 className="text-6xl font-black text-white mb-8 leading-tight tracking-tight">
+              <h2 className="text-5xl md:text-6xl font-black text-white mb-8 leading-tight tracking-tight">
                 Ready to write your own <br />
-                chapter?
+                <span className="text-[#FBBF24]">chapter?</span>
               </h2>
-              <p className="text-gray-300 mb-12 max-w-xl mx-auto text-lg leading-relaxed">
-                Join us to explore the hidden gems and timeless monuments of
-                Alexandria.
+              <p className="text-gray-300 mb-12 max-w-2xl mx-auto text-lg leading-relaxed">
+                Join thousands of travelers who've discovered the magic of Egypt
+                with EG-KEMET. From ancient wonders to hidden gems, your
+                adventure starts here.
               </p>
-              <button className="bg-[#FBBF24] text-[#111827] px-12 py-5 rounded-full font-black text-sm uppercase tracking-widest hover:bg-[#e5a913] hover:shadow-lg hover:shadow-[#FBBF24]/20 transition-all transform hover:-translate-y-1">
+              <button className="bg-[#FBBF24] text-[#111827] px-12 py-5 rounded-full font-black text-sm uppercase tracking-widest hover:bg-white hover:shadow-2xl hover:shadow-[#FBBF24]/40 transition-all transform hover:-translate-y-2 group">
                 Book Your Expedition
+                <ArrowRightIcon className="w-4 h-4 inline-block ml-2 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>
@@ -304,3 +290,24 @@ function DestinationPage() {
 }
 
 export default DestinationPage;
+
+export async function getStaticProps() {
+  try {
+    const response = await axios.get("http://localhost:8000/api/Trip");
+
+    return {
+      props: {
+        trips: response.data,
+      },
+      revalidate: 60,
+    };
+  } catch (error) {
+    console.log("An error occured when fetching trips: " + error);
+    return {
+      props: {
+        trips: [],
+      },
+      revalidate: 10,
+    };
+  }
+}

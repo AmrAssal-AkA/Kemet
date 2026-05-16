@@ -100,7 +100,7 @@ export async function createTrip(payload) {
     credentials: "include",
     body: formData,
   });
-
+  console.log("Create Trip Response:", res);
   const data = await handleResponse(res, "Trip could not be created.");
   tripsCache = null;
   return data;

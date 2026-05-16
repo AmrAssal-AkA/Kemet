@@ -272,8 +272,8 @@ const definition = {
         type: "object",
         properties: {
           _id: { type: "string" },
-          location: { type: "string" },
-          reviews: { type: "string" },
+          placeName: { type: "string" },
+          description: { type: "string" },
           images: {
             type: "array",
             items: {
@@ -283,6 +283,40 @@ const definition = {
                 cloudinaryId: { type: "string" },
               },
             },
+          },
+        },
+      },
+      HiddenGemCreateRequest: {
+        type: "object",
+        required: ["PlaceName", "Description", "image"],
+        properties: {
+          PlaceName: {
+            type: "string",
+            description: "Hidden gem name as currently read by the controller.",
+          },
+          Description: {
+            type: "string",
+            description:
+              "Hidden gem description as currently read by the controller.",
+          },
+          image: {
+            type: "array",
+            description: "Up to 5 uploaded images.",
+            items: { type: "string", format: "binary" },
+          },
+        },
+      },
+      HiddenGemUpdateRequest: {
+        type: "object",
+        properties: {
+          PlaceName: {
+            type: "string",
+            description: "Hidden gem name as currently read by the controller.",
+          },
+          Description: {
+            type: "string",
+            description:
+              "Hidden gem description as currently read by the controller.",
           },
         },
       },
@@ -1788,29 +1822,31 @@ const definition = {
       post: {
         tags: ["Hidden Gems"],
         summary: "Create a hidden gem",
+        description:
+          "Admin-only endpoint that accepts multipart form data with `PlaceName`, `Description`, and up to 5 files under the `image` field.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
             "multipart/form-data": {
               schema: {
-                type: "object",
-                required: ["location", "reviews", "images"],
-                properties: {
-                  location: { type: "string" },
-                  reviews: { type: "string" },
-                  images: {
-                    type: "array",
-                    items: { type: "string", format: "binary" },
-                  },
+                $ref: "#/components/schemas/HiddenGemCreateRequest",
+              },
+              encoding: {
+                image: {
+                  style: "form",
+                  explode: true,
                 },
               },
             },
           },
         },
         responses: {
-          201: { description: "Hidden gem created" },
-          400: { description: "Validation failed" },
+          200: { description: "Hidden gem created" },
+          400: {
+            description:
+              "Missing `PlaceName`, `Description`, or at least one uploaded image.",
+          },
           401: { description: "Unauthorized" },
           500: { description: "Server error" },
         },
@@ -1818,6 +1854,8 @@ const definition = {
       get: {
         tags: ["Hidden Gems"],
         summary: "Get all hidden gems",
+        description:
+          "Returns all hidden gem documents in the `allHiddenGem` response property.",
         responses: {
           200: { description: "Hidden gems returned" },
           500: { description: "Server error" },
@@ -1836,6 +1874,8 @@ const definition = {
             schema: { type: "string" },
           },
         ],
+        description:
+          "Fetches a single hidden gem by route id. The current controller implementation uses a different param name internally, so this route may need a backend fix if requests fail unexpectedly.",
         responses: {
           200: { description: "Hidden gem returned" },
           404: { description: "Hidden gem not found" },
@@ -1858,15 +1898,7 @@ const definition = {
           content: {
             "application/json": {
               schema: {
-                type: "object",
-                properties: {
-                  location: { type: "string" },
-                  reviews: { type: "string" },
-                  images: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                },
+                $ref: "#/components/schemas/HiddenGemUpdateRequest",
               },
             },
           },
@@ -1881,6 +1913,8 @@ const definition = {
       delete: {
         tags: ["Hidden Gems"],
         summary: "Delete a hidden gem by id",
+        description:
+          "Deletes a hidden gem by route id. The current controller implementation uses a different param name internally, so this route may need a backend fix if requests fail unexpectedly.",
         security: [{ cookieAuth: [] }],
         parameters: [
           {

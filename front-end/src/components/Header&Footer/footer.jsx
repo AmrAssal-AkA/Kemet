@@ -1,4 +1,6 @@
+import axios from "axios";
 import Link from "next/link";
+import { useRef } from "react";
 import {
   FaEnvelope,
   FaFacebookF,
@@ -10,13 +12,43 @@ import {
   FaYoutube,
   FaArrowRight,
 } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 function Footer() {
+  const emailRef = useRef();
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+
+    const email = emailRef.current.value;
+
+    if (!email || typeof email !== "string") {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      const res = await axios.post("/api/newsletter/subscribe", { email });
+      
+      if (res.status === 200) {
+        toast.error("Email is already subscribed.");
+        emailRef.current.value = "";
+      } else if(res.status === 201){
+        toast.success("You have been subscribed to the newsletter!");
+        emailRef.current.value = "";
+      }else{
+        throw error
+      }
+    }catch (error) {
+      console.error("Subscription error:", error);
+      toast.error(error.response?.data?.message || "An error occurred while subscribing. Please try again.");
+    }
+  }
   return (
     <footer className="mt-10 text-white antialiased" style={{ background: "linear-gradient(160deg, #06122e 0%, #0b1f46 40%, #102554 70%, #06122e 100%)" }}>
 
       {/* Top accent line */}
-      <div className="h-[3px] w-full" style={{ background: "linear-gradient(90deg, transparent, #FFCE2A 30%, #f5b800 70%, transparent)" }} />
+      <div className="h-0.75 w-full" style={{ background: "linear-gradient(90deg, transparent, #FFCE2A 30%, #f5b800 70%, transparent)" }} />
 
       {/* Newsletter strip */}
       <div className="border-b border-white/10">
@@ -31,10 +63,12 @@ function Footer() {
                 type="email"
                 placeholder="your@email.com"
                 className="flex-1 rounded-full bg-white/10 px-5 py-2.5 text-sm text-white placeholder-white/40 outline-none border border-white/10 focus:border-yellow-400/60 transition-colors"
+                ref={emailRef}
               />
               <button
                 className="flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-black transition-all hover:-translate-y-0.5 active:translate-y-0"
                 style={{ background: "linear-gradient(135deg,#FFCE2A,#f5b800)", boxShadow: "0 4px 14px rgba(255,206,42,.30)" }}
+                onClick={handleNewsletterSubmit}
               >
                 Subscribe <FaArrowRight className="text-xs" />
               </button>
@@ -61,17 +95,17 @@ function Footer() {
 
             <ul className="mt-6 space-y-3 text-sm text-slate-300">
               <li className="flex items-start gap-3">
-                <FaMapMarkerAlt className="mt-0.5 flex-shrink-0 text-yellow-400" />
+                <FaMapMarkerAlt className="mt-0.5 shrink-0 text-yellow-400" />
                 <span>123 Egypt St, Cairo</span>
               </li>
               <li className="flex items-center gap-3">
-                <FaEnvelope className="flex-shrink-0 text-yellow-400" />
+                <FaEnvelope className="shrink-0 text-yellow-400" />
                 <a href="mailto:kemet3003@gmail.com" className="transition-colors hover:text-yellow-400">
                   kemet3003@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <FaPhoneAlt className="flex-shrink-0 text-yellow-400" />
+                <FaPhoneAlt className="shrink-0 text-yellow-400" />
                 <a href="tel:+201234567890" className="transition-colors hover:text-yellow-400">
                   +20 123 456 7890
                 </a>

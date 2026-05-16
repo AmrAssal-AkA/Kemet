@@ -17,7 +17,7 @@ const createTrip = async (req, res) => {
   } = req.body;
 
   const StartPrice = guideAvailable ? parseFloat(price) + parseFloat(guidefees) : parseFloat(price); 
-  const finalPrice = StartPrice * parseFloat("1.14"); // final price with 14% tax
+  const finalPrice = StartPrice * parseFloat("1.14"); 
 
   if (!req.file) {
     return res.status(400).json({ message: "Please upload an image" });
@@ -31,18 +31,15 @@ const createTrip = async (req, res) => {
     !description ||
     !price ||
     !duration ||
-    !location ||
-    !imagepath ||
-    !guidefees ||
-    !guestCapacity
+    !location 
+
   ) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
 
   try {
-    const imageResult = await Promise.all(
-      req.files.map((file) => cloudinary.uploadImage(file.path, "trip_images")),
-    );
+    const imageResult = await cloudinary.uploadImage(imagepath, "trip_images");
+
     const newTrip = new trip({
       name,
       city,
@@ -62,10 +59,7 @@ const createTrip = async (req, res) => {
     });
     await newTrip.save();
 
-    res.status(201).json({
-      message: "Trip created successfully",
-      trip: newTrip,
-    });
+    res.status(201).json({message: "Trip created successfully"});
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }

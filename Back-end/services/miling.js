@@ -1,4 +1,5 @@
 const nodeMiller = require("nodemailer");
+const logger = require("./logger");
 
 const transporter = nodeMiller.createTransport({
   service: "gmail",
@@ -74,7 +75,7 @@ const newsletterTemplate = (email, content) => `
   </div>
 `;
 
-const sendEmail = async ({ to, subject, html, text }, res) => {
+const sendEmail = async ({ to, subject, html, text }) => {
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -83,7 +84,7 @@ const sendEmail = async ({ to, subject, html, text }, res) => {
       text: text || "",
       html: html,
     });
-   res.status(200).json({ message: "Email sent successfully" });
+    logger.info(`Email sent to ${to} with subject "${subject}"`);
   } catch (error) {
       res.status(500).json({ message: "Failed to send email", error: error.message });
     throw error;

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Head from "next/head";
+import axios from "axios";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -170,7 +171,8 @@ function SectionHeading({ eyebrow, title, subtitle, light = false }) {
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
-export default function Home() {
+export default function Home(props) {
+  const {trips} = props
   return (
     <>
       <Head>
@@ -372,7 +374,7 @@ export default function Home() {
             subtitle="Hand-picked tours and experiences for every kind of traveler."
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {packages.map((pkg, i) => (
+            {trips.map((pkg, i) => (
               <Link href="/BookTrip" key={i}>
                 <motion.div
                   initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
@@ -386,8 +388,8 @@ export default function Home() {
                     <span className="inline-block mb-2 bg-yellow-50 text-yellow-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-yellow-200">
                       From {pkg.price}
                     </span>
-                    <h4 className="font-bold text-sm text-gray-900 mb-1 leading-snug">{pkg.title}</h4>
-                    <p className="text-xs text-gray-400 mb-3">{pkg.sub}</p>
+                    <h4 className="font-bold text-sm text-gray-900 mb-1 leading-snug">{pkg.name}</h4>
+                    <p className="text-xs text-gray-400 mb-3">{pkg.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-yellow-500 font-extrabold text-base">{pkg.price}</span>
                       <span className="text-xs font-semibold text-gray-500 border border-gray-200 rounded-full px-3 py-1 hover:border-yellow-400 hover:text-yellow-600 transition-colors">
@@ -697,4 +699,25 @@ export default function Home() {
       </main>
     </>
   );
+}
+
+export async function getStaticProps() {
+  try{
+    const response = await axios.get("http://localhost:8000/api/Trip/");
+
+    return {
+      props:{
+        trips: response.data
+      },
+      revalidate: 60
+    }
+  }catch(error){
+    console.log("faled fetching data" + error);
+    return{
+      props: {
+        trips: [],
+        revalidate: 10
+      }
+    }
+  }
 }

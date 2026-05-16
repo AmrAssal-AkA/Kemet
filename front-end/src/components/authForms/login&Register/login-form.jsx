@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 import { useAuth } from "@/context/AuthContext";
 import { loginWithGoogle } from "@/services/authServices";
@@ -24,11 +25,22 @@ export default function LoginForm() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-   await login(formData);
+    try{
+      await login(formData);
+      toast.success("login successfull")
+    }catch(error){
+      toast.error("Login failed")
+    }
   };
 
   const handleGoogleLogin = () => {
-    loginWithGoogle();
+    try{
+      loginWithGoogle();
+      toast.success("login with google successful");
+    }catch(error){
+      toast.error("Login with google failed")
+    }
+    
   };
 
   

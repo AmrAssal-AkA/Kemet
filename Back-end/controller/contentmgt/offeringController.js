@@ -2,7 +2,7 @@ const offer = require("../../model/offeringSchema");
 
 // Create Offering Post
 const createOffers = async (req, res) => {
-    const {title, description, reviews, price} = req.body;
+    const {title, city ,description, reviews, price} = req.body;
     if (!title || !description) {
         return res.status(400).json({message: "Please fill the offer"});
     }if (!req.files || req.files.length === 0) {
@@ -12,6 +12,7 @@ const createOffers = async (req, res) => {
     const imageResult = await Promise.all(req.files.map((file) => cloudinary.uploadImage(file.path, "offers_images")));
     const offering = new offer({
           title,
+          city,
           description,
           reviews,
           price,
@@ -21,7 +22,7 @@ const createOffers = async (req, res) => {
           })),
         });
         await offering.save();
-    res.status(200).json({message: "Offer Created"});
+    res.status(201).json({message: "Offer Created"});
     } catch (error) {
     res.status(500).json({message: "Server Error" , error: error.message});
     }
@@ -53,11 +54,11 @@ const getOneOfferById = async (req, res) => {
 
 // Update Offering Post
 const updateOffersById = async (req, res) => {
-    const {title, image, description, reviews, price} = req.body;
+    const {title, city, description, reviews, price} = req.body;
     try {
         const offerUpdate = await offer.findByIdAndUpdate(
         req.params.id,
-        {title, image, description, reviews, price},
+        {title, city, description, reviews, price},
         {new: true},
         );
         if (!offerUpdate) {
