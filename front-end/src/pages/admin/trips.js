@@ -3,6 +3,7 @@ import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
 import { requireAdmin } from "@/services/adminService";
 import { createTrip, getAdminTrips } from "@/services/tripServices";
+import toast from "react-hot-toast";
 
 const initialForm = {
   title: "",
@@ -20,7 +21,7 @@ const initialForm = {
 
 export default function AdminTrips({ admin, initialTrips = [], initialError = "" }) {
   const { logout } = useAuth();
-  const [trips] = useState(initialTrips);
+  const [trips, setTrips] = useState(initialTrips);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: initialError ? "error" : "", message: initialError });
@@ -64,7 +65,7 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
 
     setLoading(true);
     try {
-      await createTrip({
+      const created = await createTrip({
         ...form,
         name: form.title,
         price: pricePreview.basePrice,
@@ -72,9 +73,15 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
         guidefees: pricePreview.guideCost,
         guestCapacity: Number(form.guestCapacity),
       });
+      const createdTrip = created?.trip || created?.data?.trip;
+      if (createdTrip) {
+        setTrips((current) => [createdTrip, ...current]);
+      }
+      toast.success("Trip created successfully.");
       setStatus({ type: "success", message: "Trip created successfully." });
       setForm(initialForm);
     } catch (error) {
+      toast.error("Failed to create trip.");
       setStatus({ type: "error", message: error.message || "Trip could not be created." });
     } finally {
       setLoading(false);
@@ -198,6 +205,7 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
                   <p className="mt-1 text-xs text-slate-500">
                     Capacity: {trip.guestCapacity || 0} | Guide: {trip.guideAvailable ? "Available" : "Unavailable"}
                   </p>
+                  <button>Edit Trips details</button>
                 </article>
               ))}
             </div>

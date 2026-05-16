@@ -47,7 +47,7 @@ export default function BlogPage(props) {
             backgroundImage: `url(${heroImage.src})`,
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/55 to-black/65" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/65 via-black/55 to-black/65" />
 
           <div className="relative z-10 mx-auto w-full max-w-4xl text-white">
             <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">

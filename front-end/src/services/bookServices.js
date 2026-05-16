@@ -132,6 +132,27 @@ function buildBookingRequest(payload) {
   return request;
 }
 
+function appendBookingFormData(formData, key, value) {
+  if (value === undefined || value === null) return;
+  if (Array.isArray(value) || typeof value === "object") {
+    formData.append(key, JSON.stringify(value));
+    return;
+  }
+  formData.append(key, String(value));
+}
+
+function buildBookingFormData(payload) {
+  const request = buildBookingRequest(payload);
+  const formData = new FormData();
+
+  formData.append("passportImage", payload.passportImage);
+  Object.entries(request).forEach(([key, value]) => {
+    appendBookingFormData(formData, key, value);
+  });
+
+  return formData;
+}
+
 function normalizeHotelSearchPayload(payload) {
   return {
     cityCode: payload.cityCode,
@@ -166,11 +187,19 @@ export async function searchHotels(payload) {
 }
 
 export async function createBooking(payload) {
+  const hasPassportImage = Boolean(payload.passportImage);
+  const body = hasPassportImage
+    ? buildBookingFormData(payload)
+    : JSON.stringify(buildBookingRequest(payload));
+  const headers = hasPassportImage
+    ? undefined
+    : { "Content-Type": "application/json" };
+
   const res = await fetch(buildApiUrl("/api/booking/create"), {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     credentials: "include",
-    body: JSON.stringify(buildBookingRequest(payload)),
+    body,
   });
 
   return handleResponse(res, "Booking creation failed.");

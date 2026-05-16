@@ -1,12 +1,66 @@
 import axios from "axios";
-import { extractUserFromAuthResponse } from "@/utils/authSession";
 import { buildApiUrl } from "@/utils/apiBaseUrl";
 
-export const ApiCall = async (url, options = {}) => {
-  const requestUrl = buildApiUrl(url);
+export const normalizeRole = (user) => {
+  if (user?.isAdmin === true) return "admin";
 
+  const rawRole = String(user?.role || user?.userRole || user?.type || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
+  if (rawRole === "localguide" || rawRole === "guide") return "guide";
+  return rawRole || "user";
+};
+
+export const normalizeAuthUser = (data) => {
+  const candidates = [
+    data?.user,
+    data?.data?.user,
+    data?.data?.data?.user,
+    data?.profile,
+    data?.data?.profile,
+    data?.currentUser,
+    data?.data?.currentUser,
+    data?.loggedInUser,
+    data?.data?.loggedInUser,
+    data?.data,
+    data,
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object") continue;
+
+    const nestedUser = candidate.user;
+    if (nestedUser && typeof nestedUser === "object") {
+      return { ...nestedUser, role: normalizeRole(nestedUser) };
+    }
+
+    if (
+      candidate.email ||
+      candidate.name ||
+      candidate._id ||
+      candidate.userId ||
+      candidate.role ||
+      candidate.userRole ||
+      candidate.type ||
+      candidate.isAdmin
+    ) {
+      return { ...candidate, role: normalizeRole(candidate) };
+    }
+  }
+
+  return null;
+};
+
+const normalizeAuthResponse = (data) => {
+  const user = normalizeAuthUser(data);
+  return user ? { ...data, user } : data;
+};
+
+export const ApiCall = async (url, options = {}) => {
   return axios({
-    url: requestUrl,
+    url,
     ...options,
     withCredentials: true,
     headers: {
@@ -17,7 +71,7 @@ export const ApiCall = async (url, options = {}) => {
 };
 
 export const apiRequest = async (path, options = {}) => {
-  const url = buildApiUrl(path);
+  const url = path.startsWith("http") ? path : buildApiUrl(path);
 
   return axios({
     url,
@@ -34,16 +88,9 @@ export const apiRequest = async (path, options = {}) => {
 
 export const getCurrentUser = async () => {
   try {
-    const response = await apiRequest("api/auth/refresh", {
-      method: "POST",
-    });
-    console.debug("[auth] refresh response", response.data);
-    return extractUserFromAuthResponse(response.data);
+    const response = await ApiCall("/api/auth/refresh", { method: "POST" });
+    return normalizeAuthUser(response.data);
   } catch (error) {
-    console.debug(
-      "[auth] refresh failed",
-      error.response?.data || error.message,
-    );
     return null;
   }
 };
@@ -54,12 +101,11 @@ export const loginUser = async (formData) => {
   }
 
   try {
-    const res = await apiRequest("api/auth/login", {
+    const res = await ApiCall("/api/auth/login", {
       method: "POST",
       data: formData,
     });
-    console.debug("[auth] login response", res.data);
-    return res.data;
+    return normalizeAuthResponse(res.data);
   } catch (error) {
     throw new Error(error.response?.data?.message || "Login failed");
   }
@@ -75,39 +121,23 @@ export const registerUser = async (formData) => {
   }
 
   try {
-    const res = await apiRequest("api/auth/register", {
+    const res = await ApiCall("/api/auth/register", {
       method: "POST",
       data: formData,
     });
-    return res.data;
+    return normalizeAuthResponse(res.data);
   } catch (error) {
     throw new Error(error.response?.data?.message || "Registration failed");
   }
 };
 
 export const loginWithGoogle = async () => {
-      window.location.href = "https://kemet-gold.vercel.app/api/auth/google/callback";
-};
-
-export const completeGoogleLogin = async ({ token, user }) => {
-  if (!token || !user) {
-    throw new Error("Google login session is missing.");
-  }
-
-  try {
-    const res = await apiRequest("api/auth/google-session", {
-      method: "POST",
-      data: { token, user },
-    });
-    return res.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Google login failed");
-  }
+  window.location.href = buildApiUrl("/api/auth/continueWithGoogle");
 };
 
 export const logout = async () => {
   try {
-    const res = await apiRequest("api/auth/logout", {
+    const res = await ApiCall("/api/auth/logout", {
       method: "POST",
     });
     return res.data;
@@ -124,7 +154,7 @@ export const resetPassword = async (email) => {
   }
 
   try {
-    const res = await apiRequest("api/auth/reset-password", {
+    const res = await ApiCall("/api/auth/reset-password", {
       method: "POST",
       data: { email },
     });
@@ -144,7 +174,7 @@ export const confirmResetPassword = async (formData) => {
   }
 
   try {
-    const res = await apiRequest("api/auth/reset-password-confirm", {
+    const res = await ApiCall("/api/auth/reset-password-confirm", {
       method: "POST",
       data: { token: formData.token, newPassword: formData.newPassword },
     });
@@ -158,10 +188,8 @@ export const confirmResetPassword = async (formData) => {
 
 export const refreshToken = async () => {
   try {
-    const res = await apiRequest("api/auth/refresh", {
-      method: "POST",
-    });
-    return res.data;
+    const res = await ApiCall("/api/auth/refresh", { method: "POST" });
+    return normalizeAuthResponse(res.data);
   } catch (error) {
     throw new Error(error.response?.data?.message || "Session refresh failed");
   }

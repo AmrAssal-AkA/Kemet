@@ -31,7 +31,7 @@ exports.search = async (params) => {
   return offers.map((offer) => {
     const carriers = dict.carriers || {};
 
-    // Build fare lookup for cabin info
+
     const fareMap = {};
     for (const fd of offer.travelerPricings?.[0]?.fareDetailsBySegment || []) {
       fareMap[fd.segmentId] = fd;

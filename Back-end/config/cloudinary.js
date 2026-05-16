@@ -8,16 +8,31 @@ cloudinary.config({
   secure: true,
 });
 
-const uploadImage = async (filePath) => {
+const getUploadOptions = (folder = "KEMET") => ({
+  folder,
+  transformation: [
+    { width: 800, height: 600, crop: "fill" },
+    { quality: "auto" },
+  ],
+});
+
+const uploadImage = async (file, folder = "KEMET") => {
   try {
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder: "KEMET",
-      transformation: [
-        { width: 800, height: 600, crop: "fill" },
-        { quality: "auto" },
-      ],
-    });
-    return result;
+    if (Buffer.isBuffer(file)) {
+      return await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          getUploadOptions(folder),
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          },
+        );
+
+        stream.end(file);
+      });
+    }
+
+    return await cloudinary.uploader.upload(file, getUploadOptions(folder));
   } catch (error) {
     throw error;
   }

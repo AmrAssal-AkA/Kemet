@@ -46,8 +46,27 @@ const upgradeUser = async (req, res, nxt) => {
   }
 };
 
+const confirmBooking = async (req, res, nxt) => {
+  const bookingId = req.params.bookingId;
+  try{
+    const confirmedBooking = await Booking.findByIdAndUpdate(
+      bookingId,
+      { $set: { status: "confirmed" } },
+      { new: true, runValidators: true, context: "query" },
+    );
+    if (!confirmedBooking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+    res.status(200).json({ message: "Booking confirmed", booking: confirmedBooking });
+  }catch(error){
+    nxt(error);
+  }
+}
+
+
 module.exports = {
   getAllUsers,
   getBookingsDetails,
   upgradeUser,
+  confirmBooking
 };

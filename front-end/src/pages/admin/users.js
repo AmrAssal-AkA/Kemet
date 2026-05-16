@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
@@ -25,6 +26,7 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
       setUsers(await getAllUsers());
     } catch (error) {
       setPageError(error.message || "Users could not be loaded.");
+      toast.error("Failed to load users.");
     } finally {
       setIsLoading(false);
     }
@@ -47,6 +49,7 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
         ...current,
         [userId]: { loading: false, success: "Role updated.", error: "" },
       }));
+      toast.success("Role updated successfully.");
     } catch (error) {
       setRoleStatus((current) => ({
         ...current,
@@ -56,6 +59,7 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
           error: error.message || "Role update failed.",
         },
       }));
+      toast.error("Failed to update role.");
     }
   };
 

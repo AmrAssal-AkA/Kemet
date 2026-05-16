@@ -20,10 +20,18 @@ function getHeaders(cookie) {
   return cookie ? { Cookie: cookie } : {};
 }
 
-export async function getAdminFromSession(cookie = "") {
-  const res = await fetch(`/api/auth/refresh`, {
+function getRequestOrigin(context) {
+  const host = context.req.headers.host;
+  const proto = context.req.headers["x-forwarded-proto"] || "http";
+  return `${proto}://${host}`;
+}
+
+export async function getAdminFromSession(cookie = "", origin = "") {
+  const sessionUrl = origin ? `${origin}/api/auth/refresh` : "/api/auth/refresh";
+
+  const res = await fetch(sessionUrl, {
     method: "POST",
-    headers: cookie ? { Cookie: cookie } : {},
+    headers: getHeaders(cookie),
     credentials: "include",
   });
   const data = await handleResponse(res, "Admin session could not be verified.");
@@ -40,7 +48,7 @@ export async function requireAdmin(context) {
   }
 
   try {
-    const admin = await getAdminFromSession(cookie);
+    const admin = await getAdminFromSession(cookie, getRequestOrigin(context));
 
     if (getUserRole(admin) !== "admin") {
       return {

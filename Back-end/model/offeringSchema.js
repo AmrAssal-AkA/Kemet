@@ -26,6 +26,10 @@ const offeringSchema = new mongoose.Schema({
     price: {
         type: Number,
         required: true
+    },
+    city: {
+        type: String,
+        required: true
     }
 });
 
