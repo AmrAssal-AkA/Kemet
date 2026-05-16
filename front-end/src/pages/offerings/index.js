@@ -1,5 +1,6 @@
-import axios from "axios";
 import Head from "next/head";
+import Link from "next/link";
+import { getOfferings } from "@/services/contentServices";
 
 import { PeopleIcon } from "@/components/ui/PeopleIcon";
 import { MenuIcon } from "@/components/ui/MenuIcon";
@@ -114,6 +115,8 @@ const testimonialsData = [
 
 function Offerings(props) {
   const { Offerings } = props;
+  const offerings = Array.isArray(Offerings) ? Offerings : [];
+
   return (
     <>
       <Head>
@@ -135,7 +138,7 @@ function Offerings(props) {
 
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full px-4 z-10">
               <h1 className="text-6xl md:text-8xl font-black mb-2 tracking-tight drop-shadow-lg">
-                <span className="text-white">It's more than </span>
+                <span className="text-white">It&apos;s more than </span>
                 <span className="text-[#FBBF24]">just a trip</span>
               </h1>
               <p className="text-xl text-white font-medium drop-shadow-md">
@@ -196,12 +199,12 @@ function Offerings(props) {
                     />
                   </div>
                 </div>
-                <a
+                <Link
                   href="/Destination"
                   className="bg-[#FBBF24] text-white px-10 py-5 rounded-full font-bold text-sm tracking-widest hover:bg-[#e5a913] transition-colors ml-2 shadow-sm text-center"
                 >
                   FIND
-                </a>
+                </Link>
               </div>
             </div>
             <div className="absolute inset-0 bg-black opacity-20 pointer-events-none"></div>
@@ -221,29 +224,28 @@ function Offerings(props) {
               </a>
             </div>
 
-            {Offerings.length > 0 ? (
+            {offerings.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {Offerings.map((offer) => (
+                {offerings.map((offer) => (
                   <div
-                    key={offer.id}
+                    key={offer._id}
                     className="bg-white border border-gray-200 rounded-[20px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col h-full"
                   >
                     <div className="overflow-hidden h-52">
                       <img
-                        src={offer.image}
-                        alt={offer.name}
+                        src={offer.images?.[0]?.imageUrl}
+                        alt={offer.title}
                         className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                     <div className="p-6 flex flex-col grow">
                       <h3 className="font-bold text-lg text-[#111827] mb-2 leading-tight">
-                        {offer.name}
+                        {offer.title}
                       </h3>
-                      <p className="text-gray-600 text-lg">{offer.location}</p>
+                      <p className="text-gray-600 text-lg">{offer.city}</p>
                       <p className="text-black text-lg mb-6 leading-relaxed grow">
                         {offer.description}
                       </p>
-                      <p className="text-gray-600 text-lg">{offer.category}</p>
                       <div className="w-full h-px bg-gray-100 mb-4"></div>
                       <div className="flex items-end justify-between">
                         <div className="flex flex-col">
@@ -291,7 +293,7 @@ function Offerings(props) {
                   timeless temples of Luxor and Aswan drifting by your window.
                   From the golden hues of sunset over the water to the
                   star-filled desert sky at night, a Nile cruise is more than a
-                  vacation – it's magic brought to life.
+                  vacation – it&apos;s magic brought to life.
                 </p>
               </div>
               <a
@@ -308,31 +310,30 @@ function Offerings(props) {
               wonderful adavanture in Alexandria{" "}
               <span className="text-[#FBBF24]">KEMET</span>
             </h2>
-            {Offerings.length > 0 ? (
+            {offerings.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {Offerings
+                {offerings
                   .filter((offer) => offer.city === "Alexandria")
                   .map((offer) => (
                     <div
-                      key={offer.id}
+                      key={offer._id}
                       className="bg-white border border-gray-200 rounded-[20px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col h-full"
                     >
                       <div className="overflow-hidden h-52">
                         <img
-                          src={offer.image}
-                          alt={offer.name}
+                          src={offer.images?.[0]?.imageUrl}
+                          alt={offer.title}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
                       <div className="p-6 flex flex-col grow">
                         <h3 className="font-bold text-lg text-[#111827] mb-2 leading-tight">
-                          {offer.name}
+                          {offer.title}
                         </h3>
-                        <p className="text-gray-600 text-lg">{offer.location}</p>
+                        <p className="text-gray-600 text-lg">{offer.city}</p>
                         <p className="text-black text-lg mb-6 leading-relaxed grow">
                           {offer.description}
                         </p>
-                        <p className="text-gray-600 text-lg">{offer.category}</p>
                         <div className="w-full h-px bg-gray-100 mb-4"></div>
                         <div className="flex items-end justify-between">
                           <div className="flex flex-col">
@@ -421,10 +422,11 @@ export default Offerings;
 
 export async function getStaticProps() {
   try {
-    const response = await axios.get("http://localhost:8000/api/offering/");
+    const offerings = await getOfferings();
+
     return {
       props: {
-        Offerings: response.data,
+        Offerings: offerings,
       },
       revalidate: 60,
     };

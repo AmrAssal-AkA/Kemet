@@ -35,6 +35,8 @@ const { PassportValidation } = require("./controller/auth/passportValidation");
 const passportRoutes = require("./routes/passportRoutes");
 const SearchRoute = require("./routes/searchRoutes");
 const newsletterRoute = require("./routes/newsletterRoute");
+const offeringsRoute = require("./routes/offeringsRoutes");
+const hiddenGemRoute = require("./routes/hiddenGemRoutes");
 
 // Connect to databas
 connectDB();
@@ -143,6 +145,8 @@ app.use("/api/passport", passportRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
 app.use("/api/searchHandler", SearchRoute);
 app.use("/api/newsletter", newsletterRoute);
+app.use("/api/offerings", offeringsRoute);
+app.use("/api/hiddenGem", hiddenGemRoute);
 
 
 app.get("/", (req, res) => {
