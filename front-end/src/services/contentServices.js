@@ -61,5 +61,24 @@ export async function getOfferings(cookie = "") {
     credentials: "include",
   });
   const data = await handleResponse(res, "Offerings could not be loaded.");
-  return getArray(data, "offerings");
+  const offerings = getArray(data, "allOfferings");
+  return offerings.length > 0 ? offerings : getArray(data, "offerings");
+}
+
+export async function createOffering(formData) {
+  const res = await fetch(buildApiUrl("/api/offerings"), {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  return handleResponse(res, "Offering could not be created.");
+}
+
+export async function createHiddenGem(formData) {
+  const res = await fetch(buildApiUrl("/api/hiddenGem"), {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  return handleResponse(res, "Hidden gem could not be created.");
 }

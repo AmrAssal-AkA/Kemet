@@ -1,304 +1,292 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { createHiddenGem, createOffering } from "@/services/contentServices";
+import { createTrip } from "@/services/tripServices";
+
+const initialTripForm = {
+  name: "",
+  city: "",
+  location: "",
+  price: "",
+  duration: "",
+  description: "",
+  AdvantureType: "",
+  AdvantureDescription: "",
+  guideAvailable: false,
+  guidefees: "0",
+  guestCapacity: "1",
+  image: null,
+};
+
+const initialOfferingForm = {
+  title: "",
+  city: "",
+  description: "",
+  price: "",
+  image: null,
+};
+
+const initialHiddenGemForm = {
+  PlaceName: "",
+  Description: "",
+  image: null,
+};
+
+const tabs = [
+  { id: "trip", label: "Trip" },
+  { id: "offerings", label: "Offerings" },
+  { id: "hiddenGems", label: "Hidden Gems" },
+];
+
+function buildFormData(values, fields) {
+  const formData = new FormData();
+
+  fields.forEach((field) => {
+    const value = values[field];
+    if (field === "image") {
+      if (value) formData.append("image", value);
+      return;
+    }
+    formData.append(field, String(value ?? ""));
+  });
+
+  return formData;
+}
+
+function FormField({ label, children, className = "" }) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+const inputClass =
+  "mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100";
 
 export default function AddContent() {
-  const [selectedType, setSelectedType] = useState("trips");
-  const [tripName, setTripName] = useState("");
-  const [city, setCity] = useState("");
-  const [location, setLocation] = useState("");
-  const [category, setCategory] = useState("");
-  const [duration, setDuration] = useState("");
-  const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null);
+  const [selectedType, setSelectedType] = useState("trip");
+  const [tripForm, setTripForm] = useState(initialTripForm);
+  const [offeringForm, setOfferingForm] = useState(initialOfferingForm);
+  const [hiddenGemForm, setHiddenGemForm] = useState(initialHiddenGemForm);
+  const [loadingType, setLoadingType] = useState("");
+  const [status, setStatus] = useState({ type: "", message: "" });
 
-  const contentTypes = [
-    { id: "trips", label: "Trips", icon: "🧳" },
-    { id: "offerings", label: "Offerings", icon: "🎁" },
-    { id: "hiddenGems", label: "Hidden Gems", icon: "💎" },
-  ];
+  function updateForm(setter) {
+    return (event) => {
+      const { name, value, type, checked, files } = event.target;
+      setter((current) => ({
+        ...current,
+        [name]: type === "checkbox" ? checked : type === "file" ? files?.[0] || null : value,
+      }));
+    };
+  }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  async function handleTripSubmit(event) {
+    event.preventDefault();
+    setStatus({ type: "", message: "" });
+    setLoadingType("trip");
 
+    try {
+      const formData = buildFormData(tripForm, [
+        "name",
+        "city",
+        "location",
+        "price",
+        "duration",
+        "description",
+        "AdvantureType",
+        "AdvantureDescription",
+        "guideAvailable",
+        "guidefees",
+        "guestCapacity",
+        "image",
+      ]);
 
-  };
+      await createTrip(formData);
+      setTripForm(initialTripForm);
+      setStatus({ type: "success", message: "Trip created successfully." });
+      window.dispatchEvent(new Event("kemet:trips-updated"));
+    } catch (error) {
+      setStatus({ type: "error", message: error.message || "Trip could not be created." });
+    } finally {
+      setLoadingType("");
+    }
+  }
+
+  async function handleOfferingSubmit(event) {
+    event.preventDefault();
+    setStatus({ type: "", message: "" });
+    setLoadingType("offerings");
+
+    try {
+      const formData = buildFormData(offeringForm, [
+        "title",
+        "city",
+        "description",
+        "price",
+        "image",
+      ]);
+
+      await createOffering(formData);
+      setOfferingForm(initialOfferingForm);
+      setStatus({ type: "success", message: "Offering created successfully." });
+    } catch (error) {
+      setStatus({ type: "error", message: error.message || "Offering could not be created." });
+    } finally {
+      setLoadingType("");
+    }
+  }
+
+  async function handleHiddenGemSubmit(event) {
+    event.preventDefault();
+    setStatus({ type: "", message: "" });
+    setLoadingType("hiddenGems");
+
+    try {
+      const formData = buildFormData(hiddenGemForm, [
+        "PlaceName",
+        "Description",
+        "image",
+      ]);
+
+      await createHiddenGem(formData);
+      setHiddenGemForm(initialHiddenGemForm);
+      setStatus({ type: "success", message: "Hidden gem created successfully." });
+    } catch (error) {
+      setStatus({ type: "error", message: error.message || "Hidden gem could not be created." });
+    } finally {
+      setLoadingType("");
+    }
+  }
 
   return (
-    <div>
-      <div className="bg-white rounded-xl w-full">
-        <h2 className="text-3xl font-black mb-2 text-center text-[#111827]">
-          Add New Content
-        </h2>
-        <p className="text-gray-500 mb-8 text-center text-base">
-          Select the type of content you want to add
-        </p>
+    <div className="bg-white">
+      <h2 className="text-center text-2xl font-black text-slate-950 sm:text-3xl">
+        Add New Content
+      </h2>
+      <p className="mt-2 text-center text-sm text-slate-500">
+        Choose a content type and publish it to the live backend.
+      </p>
 
-        {/* Horizontal Content Type Selection */}
-        <div className="grid grid-cols-3 gap-3 mb-10 bg-linear-to-br from-gray-50 to-gray-100 p-4 rounded-xl">
-          {contentTypes.map((content) => (
-            <button
-              key={content.id}
-              onClick={() => setSelectedType(content.id)}
-              type="button"
-              className={`p-5 rounded-xl font-bold text-center transition-all duration-300 transform hover:scale-105 border-2 ${
-                selectedType === content.id
-                  ? "bg-linear-to-br from-[#FBBF24] to-[#e5a913] text-white shadow-xl scale-105 border-[#FBBF24]"
-                  : "bg-white text-gray-700 hover:bg-white border-gray-200 hover:border-[#FBBF24]/50 hover:shadow-md"
-              }`}
-            >
-              <div className="text-5xl mb-2 drop-shadow-sm">{content.icon}</div>
-              <div className="text-xs uppercase tracking-widest font-black">
-                {content.label}
-              </div>
-            </button>
-          ))}
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {selectedType === "trips" && (
-            <>
-              <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                <label className="block text-xs font-black text-gray-700 mb-2.5 uppercase tracking-wider">
-                  Trip Name
-                </label>
-                <input
-                  type="text"
-                  value={tripName}
-                  onChange={(e) => setTripName(e.target.value)}
-                  placeholder="Enter trip name"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all bg-white hover:border-gray-300"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-black text-gray-700 mb-2.5 uppercase tracking-wider">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Enter city"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all bg-white hover:border-gray-300"
-                    required
-                  />
-                </div>
-
-                <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-black text-gray-700 mb-2.5 uppercase tracking-wider">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Enter location"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all bg-white hover:border-gray-300"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-black text-gray-700 mb-2.5 uppercase tracking-wider">
-                    Category
-                  </label>
-                  <input
-                    type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="Enter category"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all bg-white hover:border-gray-300"
-                    required
-                  />
-                </div>
-
-                <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                  <label className="block text-xs font-black text-gray-700 mb-2.5 uppercase tracking-wider">
-                    Duration
-                  </label>
-                  <input
-                    type="text"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    placeholder="e.g., 3 days"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all bg-white hover:border-gray-300"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                <label className="block text-xs font-black text-gray-700 mb-2.5 uppercase tracking-wider">
-                  Price
-                </label>
-                <input
-                  type="text"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="e.g., $2,500"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all bg-white hover:border-gray-300"
-                  required
-                />
-              </div>
-              <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                <label for="guestCapacity">Guest Capacity</label>
-                <input
-                  type="number"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <label for="guideFee">Guide Fee</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all"
-                  required
-                />
-
-                <label for="guideAvailable">guide Avalable</label>
-                <input
-                  type="checkbox"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all"
-                  required
-                />
-              </div>
-
-              <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                <label className="block text-xs font-black text-gray-700 mb-2.5 uppercase tracking-wider">
-                  Description
-                </label>
-                <textarea
-                  rows={5}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter trip description"
-                  maxLength={2000}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all resize-none bg-white hover:border-gray-300"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  {description.length}/2000 characters
-                </p>
-              </div>
-
-              <div className="bg-linear-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-100">
-                <label className="block text-xs font-black text-gray-700 mb-2.5 uppercase tracking-wider">
-                  Image Upload
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setImage(e.target.files?.[0] || null)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all bg-white hover:border-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#FBBF24] file:text-white hover:file:bg-[#e5a913]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-linear-to-br from-[#FBBF24] to-[#e5a913] text-white font-black py-3.5 rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 text-base tracking-wide"
-              >
-                Add Trip
-              </button>
-            </>
-          )}
-
-          {selectedType === "offerings" && (
-            <>
-              <div>
-                <label for="title" className="block text-gray-700">
-                  Offering Name
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  id="title"
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label for="description" className="block text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  name="description"
-                  id="description"
-                  rows={20}
-                  cols={50}
-                  placeholder="Enter description"
-                  maxLength={5000}
-                  required
-                  className="w-full px-3 py-2 border rounded-lg resize-vertical"
-                />
-              </div>
-              <div>
-                <label for="price" className="block text-gray-700">
-                  Price
-                </label>
-                <input
-                  type="number"
-                  name="price"
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-              <div>
-                <input
-                  type="file"
-                  name="image"
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-[#FBBF24] text-white font-black py-3 rounded-lg hover:bg-[#e5a913] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg text-lg tracking-wide"
-              >
-                Add offer
-              </button>
-            </>
-          )}
-          {selectedType == "hiddenGems" && (
-            <>
-              <div>
-                <label for="placename">PlaceName</label>
-                <input
-                  type="text"
-                  name="text"
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label for="decription">Description</label>
-              <textarea
-                  rows={5}
-                  placeholder="Enter trip description"
-                  maxLength={2000}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[#FBBF24] focus:ring-2 focus:ring-[#FBBF24]/20 transition-all resize-none bg-white hover:border-gray-300"
-                  required
-                />
-              </div>
-              <div>
-                <label for="location">images</label>
-                <input
-                  type="file"
-                  name="images/*"
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-[#FBBF24] text-white font-black py-3 rounded-lg hover:bg-[#e5a913] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg text-lg tracking-wide"
-              >
-                Add Hidden Gem
-              </button>
-            </>
-          )}
-        </form>
+      <div className="mt-6 grid grid-cols-3 gap-2 rounded-2xl bg-slate-50 p-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => {
+              setSelectedType(tab.id);
+              setStatus({ type: "", message: "" });
+            }}
+            className={`rounded-xl px-3 py-3 text-xs font-extrabold uppercase tracking-[0.12em] transition sm:text-sm ${
+              selectedType === tab.id
+                ? "bg-amber-400 text-slate-950 shadow-sm"
+                : "text-slate-500 hover:bg-white hover:text-slate-900"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      {status.message && (
+        <p
+          className={`mt-5 rounded-2xl px-4 py-3 text-sm font-semibold ${
+            status.type === "success"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-600"
+          }`}
+        >
+          {status.message}
+        </p>
+      )}
+
+      {selectedType === "trip" && (
+        <form onSubmit={handleTripSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
+          <FormField label="Trip Name">
+            <input name="name" value={tripForm.name} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="City">
+            <input name="city" value={tripForm.city} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Location">
+            <input name="location" value={tripForm.location} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Price">
+            <input name="price" type="number" min="1" value={tripForm.price} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Duration">
+            <input name="duration" type="number" min="1" value={tripForm.duration} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Advanture Type">
+            <input name="AdvantureType" value={tripForm.AdvantureType} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Guest Capacity">
+            <input name="guestCapacity" type="number" min="1" value={tripForm.guestCapacity} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Guide Fee">
+            <input name="guidefees" type="number" min="0" value={tripForm.guidefees} onChange={updateForm(setTripForm)} className={inputClass} />
+          </FormField>
+          <FormField label="Advanture Description" className="sm:col-span-2">
+            <textarea name="AdvantureDescription" rows={3} value={tripForm.AdvantureDescription} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Description" className="sm:col-span-2">
+            <textarea name="description" rows={4} value={tripForm.description} onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Image" className="sm:col-span-2">
+            <input name="image" type="file" accept="image/*" onChange={updateForm(setTripForm)} required className={inputClass} />
+          </FormField>
+          <label className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 sm:col-span-2">
+            Guide available
+            <input name="guideAvailable" type="checkbox" checked={tripForm.guideAvailable} onChange={updateForm(setTripForm)} className="h-4 w-4 accent-amber-400" />
+          </label>
+          <button type="submit" disabled={loadingType === "trip"} className="rounded-full bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300 sm:col-span-2">
+            {loadingType === "trip" ? "Creating..." : "Create Trip"}
+          </button>
+        </form>
+      )}
+
+      {selectedType === "offerings" && (
+        <form onSubmit={handleOfferingSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
+          <FormField label="Offering Title">
+            <input name="title" value={offeringForm.title} onChange={updateForm(setOfferingForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="City">
+            <input name="city" value={offeringForm.city} onChange={updateForm(setOfferingForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Price">
+            <input name="price" type="number" min="1" value={offeringForm.price} onChange={updateForm(setOfferingForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Description" className="sm:col-span-2">
+            <textarea name="description" rows={5} value={offeringForm.description} onChange={updateForm(setOfferingForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Image" className="sm:col-span-2">
+            <input name="image" type="file" accept="image/*" onChange={updateForm(setOfferingForm)} required className={inputClass} />
+          </FormField>
+          <button type="submit" disabled={loadingType === "offerings"} className="rounded-full bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300 sm:col-span-2">
+            {loadingType === "offerings" ? "Creating..." : "Create Offering"}
+          </button>
+        </form>
+      )}
+
+      {selectedType === "hiddenGems" && (
+        <form onSubmit={handleHiddenGemSubmit} className="mt-6 grid gap-4">
+          <FormField label="Place Name">
+            <input name="PlaceName" value={hiddenGemForm.PlaceName} onChange={updateForm(setHiddenGemForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Description">
+            <textarea name="Description" rows={5} value={hiddenGemForm.Description} onChange={updateForm(setHiddenGemForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="Image">
+            <input name="image" type="file" accept="image/*" onChange={updateForm(setHiddenGemForm)} required className={inputClass} />
+          </FormField>
+          <button type="submit" disabled={loadingType === "hiddenGems"} className="rounded-full bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300">
+            {loadingType === "hiddenGems" ? "Creating..." : "Create Hidden Gem"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

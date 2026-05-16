@@ -21,7 +21,7 @@ const offeringSchema = new mongoose.Schema({
     },
     reviews: {
         type: String,
-        required: true
+        default: ""
     },
     price: {
         type: Number,
