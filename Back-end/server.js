@@ -37,7 +37,7 @@ const SearchRoute = require("./routes/searchRoutes");
 const newsletterRoute = require("./routes/newsletterRoute");
 
 // Connect to databas
- connectDB();
+connectDB();
 // Middleware
 app.use("/api/payments", paymentRoutes);
 app.use(express.json());
@@ -143,6 +143,7 @@ app.use("/api/passport", passportRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
 app.use("/api/searchHandler", SearchRoute);
 app.use("/api/newsletter", newsletterRoute);
+
 
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");

@@ -16,7 +16,11 @@ const tripSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  category: {
+  AdvantureType: {
+    type: String,
+    required: true,
+  },
+  AdvantureDescription: {
     type: String,
     required: true,
   },

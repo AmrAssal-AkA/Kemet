@@ -6,7 +6,8 @@ const createTrip = async (req, res) => {
   const {
     name,
     city,
-    category,
+    AdvantureType,
+    AdvantureDescription,
     description,
     price,
     duration,
@@ -27,7 +28,8 @@ const createTrip = async (req, res) => {
   if (
     !name ||
     !city ||
-    !category ||
+    !AdvantureType ||
+    !AdvantureDescription ||
     !description ||
     !price ||
     !duration ||
@@ -43,8 +45,8 @@ const createTrip = async (req, res) => {
     const newTrip = new trip({
       name,
       city,
-      category,
-      description,
+      AdvantureType,
+      AdvantureDescription,
       basePrice: price,
       finalPrice: finalPrice,
       duration,
@@ -109,7 +111,8 @@ const updateTripById = async (req, res) => {
     const updateData = {
       name: req.body.name,
       city: req.body.city,
-      category: req.body.category,
+      AdvantureType: req.body.AdvantureType,
+      AdvantureDescription: req.body.AdvantureDescription,
       description: req.body.description,
       basePrice: req.body.price,
       finalPrice: finalPrice,

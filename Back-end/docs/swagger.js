@@ -30,6 +30,7 @@ const definition = {
   tags: [
     { name: "Auth", description: "Authentication and session endpoints" },
     { name: "Trips", description: "Trip management endpoints" },
+    { name: "Search", description: "Trip search and filtering endpoints" },
     { name: "Flights", description: "Flight search and pricing endpoints" },
     { name: "Hotels", description: "Hotel search and offer endpoints" },
     { name: "Contact", description: "Contact form endpoints" },
@@ -51,6 +52,7 @@ const definition = {
       name: "Newsletter",
       description: "Newsletter subscription and delivery endpoints",
     },
+    
   ],
   components: {
     securitySchemes: {
@@ -118,6 +120,16 @@ const definition = {
         required: ["email"],
         properties: {
           email: { type: "string", format: "email" },
+        },
+      },
+      SearchTripsRequest: {
+        type: "object",
+        required: ["location", "duration"],
+        properties: {
+          location: { type: "string", description: "Trip location (case-insensitive)" },
+          duration: { type: "string", description: "Trip duration (case-insensitive)" },
+          travelers: { type: "integer", minimum: 1, default: 1, description: "Minimum number of travelers" },
+          AdvantureType: { type: "string", description: "Optional adventure type filter" },
         },
       },
       Trip: {
@@ -553,9 +565,9 @@ const definition = {
       },
       RefundRequest: {
         type: "object",
-        required: ["amount"],
+        required: ["bookingId"],
         properties: {
-          amount: { type: "number", description: "Amount to refund" },
+          bookingId: { type: "string", description: "MongoDB ObjectId of the booking to refund" },
         },
       },
       Booking: {
@@ -1071,6 +1083,58 @@ const definition = {
           401: { description: "Unauthorized" },
           403: { description: "Forbidden" },
           404: { description: "Trip not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/search": {
+      get: {
+        tags: ["Search"],
+        summary: "Search trips by location, duration, travelers, and adventure type",
+        description: "Search for trips with optional filters. Location and duration are case-insensitive regex searches.",
+        parameters: [
+          {
+            in: "query",
+            name: "location",
+            required: true,
+            schema: { type: "string" },
+            description: "Trip location (required, case-insensitive)",
+          },
+          {
+            in: "query",
+            name: "duration",
+            required: true,
+            schema: { type: "string" },
+            description: "Trip duration (required, case-insensitive)",
+          },
+          {
+            in: "query",
+            name: "travelers",
+            required: false,
+            schema: { type: "integer", minimum: 1, default: 1 },
+            description: "Minimum number of travelers",
+          },
+          {
+            in: "query",
+            name: "AdvantureType",
+            required: false,
+            schema: { type: "string" },
+            description: "Optional adventure type filter",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Trips matching search criteria",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Trip" },
+                },
+              },
+            },
+          },
+          400: { description: "Missing or invalid required parameters" },
           500: { description: "Server error" },
         },
       },
@@ -1628,6 +1692,27 @@ const definition = {
         },
       },
     },
+    "/api/payments/refund": {
+      post: {
+        tags: ["Payments"],
+        summary: "Refund a payment",
+        description: "Process a refund for a booking using Stripe",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/RefundRequest" },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Payment refunded successfully" },
+          400: { description: "Failed to process refund" },
+          500: { description: "Server error" },
+        },
+      },
+    },
     "/api/adminDashboard/AllUsers": {
       get: {
         tags: ["Admin"],
@@ -1678,6 +1763,26 @@ const definition = {
           200: { description: "Bookings returned" },
           401: { description: "Unauthorized" },
           403: { description: "Forbidden" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/adminDashboard/confirmBooking/{bookingId}": {
+      patch: {
+        tags: ["Admin"],
+        summary: "Confirm a booking",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "bookingId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Booking confirmed" },
+          404: { description: "Booking not found" },
           500: { description: "Server error" },
         },
       },
