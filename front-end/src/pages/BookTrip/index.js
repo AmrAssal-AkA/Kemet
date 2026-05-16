@@ -518,10 +518,14 @@ export default function BookTripPage() {
     try {
       const booking = await createBooking(payload);
       const bookingData = booking?.data || booking;
+      const bookingId = bookingData?.bookingId || bookingData?._id;
+      if (bookingId && typeof window !== "undefined") {
+        window.sessionStorage.setItem("kemet:lastBookingId", String(bookingId));
+      }
       const checkout = bookingData?.checkoutUrl
         ? { url: bookingData.checkoutUrl }
         : await createPayment({
-            bookingId: bookingData?.bookingId || bookingData?._id,
+            bookingId,
             amount: totals.totalPrice,
             currency: "EGP",
             metadata: {

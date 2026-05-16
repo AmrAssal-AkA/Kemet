@@ -1,12 +1,14 @@
 const sharp = require("sharp");
 
 const validateImage = async (req, res, next) => {
-  if (!req.file) {
+  const file = req.file || req.files?.[0];
+
+  if (!file) {
     return res.status(401).json({message: "No image uploaded"});
   }
 
   try {
-    const metadata = await sharp(req.file.buffer).metadata();
+    const metadata = await sharp(file.buffer).metadata();
     const {width, height} = metadata;
 
     if (width < 200 || height < 200) {

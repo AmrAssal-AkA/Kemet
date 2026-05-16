@@ -5,7 +5,8 @@ const {
 } = require("../../services/miling");
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const domain = process.env.DOMAIN;
+const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
+const frontendUrl = process.env.FRONTEND_URL || process.env.DOMAIN || "http://localhost:3000";
 
 const stripeCheckout = async (req, nxt) => {
   try {
@@ -23,8 +24,8 @@ const stripeCheckout = async (req, nxt) => {
       payment_method_types: ["card"],
       mode: "payment",
       customer_email: email,
-      success_url: `${domain}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${domain}/api/payments/cancel?payment_fail=true`,
+      success_url: `${backendUrl}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/api/payments/cancel?payment_fail=true`,
       metadata: { BookingId: bookingId, Email: email },
       line_items: req.body.items.map((item) => ({
         price_data: {
@@ -47,7 +48,17 @@ const stripeCheckout = async (req, nxt) => {
 
 const success = async (req, res, nxt) => {
   try {
-    return res.redirect(`${domain}/checkout?payment=done`);
+    const sessionId = req.query.session_id;
+    const params = new URLSearchParams({
+      paymentStatus: "Paid",
+      bookingStatus: "Pending",
+    });
+
+    if (sessionId) {
+      params.set("session_id", sessionId);
+    }
+
+    return res.redirect(`${frontendUrl}/booking-status?${params.toString()}`);
   } catch (err) {
     nxt(err);
   }

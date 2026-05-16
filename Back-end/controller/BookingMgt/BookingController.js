@@ -9,6 +9,16 @@ const currencyMapping = {
   EUR: "EUR",
 };
 
+function parseJsonField(value) {
+  if (typeof value !== "string") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
 const createBooking = async (req, res, nxt) => {
   try {
     const userId = req.user?.id;
@@ -20,29 +30,44 @@ const createBooking = async (req, res, nxt) => {
         .json({ error: "Missing required fields: userId, email" });
     }
 
-    const {
-      guests,
-      flight,
-      hotel,
-      trip,
-      tripDetails,
-      PassportNumber,
-      totalPrice,
-    } = req.body;
+    const guests = parseJsonField(req.body.guests);
+    const flight = parseJsonField(req.body.flight);
+    const hotel = parseJsonField(req.body.hotel);
+    const trip = parseJsonField(req.body.trip);
+    const tripDetails = parseJsonField(req.body.tripDetails);
+    const items = parseJsonField(req.body.items);
+    const { PassportNumber, totalPrice } = req.body;
 
     if (!Array.isArray(guests)) {
       return res.status(400).json({ message: "Guests must be an array" });
     }
-    const hasValidGuest = guests.every(
+    const normalizedGuests = guests.map((guest) => ({
+      ...guest,
+      name: guest.name || `${guest.firstName || ""} ${guest.lastName || ""}`.trim(),
+    }));
+    const hasValidGuest = normalizedGuests.every(
       (g) =>
-        g.name && g.nationality && g.type && g.dateOfBirth,
+        g.firstName &&
+        g.lastName &&
+        g.nationality &&
+        g.type &&
+        g.passportNumber &&
+        g.dateOfBirth &&
+        g.expiryDate,
     );
     if (!hasValidGuest) {
       return res.status(400).json({
         message:
-          "Each guest must have name, nationality, type, and dateOfBirth fields",
+          "Each guest must have firstName, lastName, nationality, type, passportNumber, dateOfBirth, and expiryDate fields",
       });
     }
+    req.body.guests = normalizedGuests;
+    req.body.flight = flight;
+    req.body.hotel = hotel;
+    req.body.trip = trip;
+    req.body.tripDetails = tripDetails;
+    req.body.items = items;
+
     const ChildAge = (guest) => {
       const today = new Date();
       const birthDate = new Date(guest.dateOfBirth);
@@ -54,7 +79,7 @@ const createBooking = async (req, res, nxt) => {
       return age < 16;
     };
 
-    const childerentAgeUnder16 = guests.some(
+    const childerentAgeUnder16 = normalizedGuests.some(
       (g) => g.type === "child" && ChildAge(g),
     );
 
@@ -71,10 +96,21 @@ const createBooking = async (req, res, nxt) => {
         size: req.files[0].size,
       });
 
-      if (!passportValidationResult.valid) {
-        return res
-          .status(400)
-          .json({ error: passportValidationResult.message });
+      const passportIssues = Array.isArray(passportValidationResult?.issues)
+        ? passportValidationResult.issues
+        : [];
+      const passportIsValid =
+        passportValidationResult?.valid ??
+        passportValidationResult?.isReadable ??
+        passportIssues.length === 0;
+
+      if (!passportIsValid) {
+        return res.status(400).json({
+          error:
+            passportValidationResult?.message ||
+            passportIssues.join(", ") ||
+            "Passport image validation failed",
+        });
       }
     }
     let passportImage = [];
@@ -87,34 +123,37 @@ const createBooking = async (req, res, nxt) => {
     }
 
     let currency = req.body.currency;
-    if (!userId || guests.length === 0 || !totalPrice) {
+    if (!userId || normalizedGuests.length === 0 || !totalPrice) {
       return res
         .status(400)
         .json({ error: "Missing required fields: userId, guests, totalPrice" });
     }
-    const guestNationalities = guests.map(
+    const guestNationalities = normalizedGuests.map(
       (g) => currencyMapping[g.nationality] || "USD",
     );
     if (guestNationalities.length > 0) {
       currency = guestNationalities[0];
     }
 
+    const hasTrip = Array.isArray(trip) ? trip.length > 0 : Boolean(trip);
+    const hasFlight = Boolean(flight);
+    const hasHotel = Boolean(hotel);
+
     const bookingDetails = {
-      bookingType:
-        trip && trip.length > 0
-          ? "Trip"
-          : flight && hotel
-            ? "FlightAndHotel"
-            : flight
-              ? "Flight"
-              : hotel
-                ? "Hotel"
-                : "Mixed",
+      bookingType: hasTrip
+        ? "Trip"
+        : hasFlight && hasHotel
+          ? "FlightAndHotel"
+          : hasFlight
+            ? "Flight"
+            : hasHotel
+              ? "Hotel"
+              : undefined,
     };
     const newBooking = new Booking({
       userId,
       email,
-      guests,
+      guests: normalizedGuests,
       flight,
       hotel,
       trip,
