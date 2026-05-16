@@ -10,7 +10,7 @@ router.post(
   "/create",
   authenticate,
   authorize("user"),
-  upload.single("passportImage"),
+  upload.array("passportImage"),
   validateTravelPassport,
   BookingController.createBooking
 );

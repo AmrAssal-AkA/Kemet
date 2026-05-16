@@ -1,5 +1,4 @@
 const hiddenG = require("../../model/hiddenGemSchema");
-const googleMapsService = require("../../services/maps");
 
 // Create Hidden Gem Post
 const createHiddenGem = async (req, res) => {

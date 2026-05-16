@@ -9,3 +9,4 @@ router.post("/search", hotelCityValid, hotelController.SearchHotel);
 router.get("/getOneHotelDetails", hotelController.getHotelOffers);
 
 module.exports = router;
+

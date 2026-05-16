@@ -9,55 +9,17 @@ const currencyMapping = {
   EUR: "EUR",
 };
 
-function parseJsonField(body, field) {
-  const value = body[field];
-
-  if (typeof value !== "string") {
-    return { value };
-  }
-
-  try {
-    return { value: JSON.parse(value) };
-  } catch {
-    return { error: `Invalid ${field} format` };
-  }
-}
-
-function parseMultipartJsonFields(req, res) {
-  const body = { ...req.body };
-  const fields = ["guests", "flight", "hotel", "trip", "tripDetails", "items"];
-
-  for (const field of fields) {
-    const parsed = parseJsonField(body, field);
-    if (parsed.error) {
-      const message = field === "guests" ? "Invalid guests format" : parsed.error;
-      return { error: res.status(400).json({ message }) };
-    }
-    body[field] = parsed.value;
-  }
-
-  return { body };
-}
-
-function getPassportImageDataUri(file) {
-  if (!file?.buffer) return null;
-  return `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-}
 
 const createBooking = async (req, res, nxt) => {
   try {
-    const userId = req.user?.userId;
-    const email = req.email?.email;
+    const userId = req.user?.id;
+    const email = req.user?.email;
 
     if (!userId && !email) {
       return res
         .status(400)
         .json({ error: "Missing required fields: userId, email" });
     }
-
-    const parsed = parseMultipartJsonFields(req, res);
-    if (parsed.error) return parsed.error;
-    req.body = parsed.body;
 
     const {
       guests,
@@ -67,8 +29,8 @@ const createBooking = async (req, res, nxt) => {
       tripDetails,
       PassportNumber,
       totalPrice,
-    } = parsed.body;
-
+    } = req.body;
+    
     if (!Array.isArray(guests)) {
       return res.status(400).json({ message: "Guests must be an array" });
     }
@@ -92,35 +54,22 @@ const createBooking = async (req, res, nxt) => {
       return res.status(400).json({ error: "Passport image is required" });
     }
 
-    const passportImages = req.file?.buffer ? [req.file.buffer] : [];
+    const passportImages = req.files || [];
 
-    if (req.file?.buffer) {
-      const passportValidationResult = await PassportValidation({
-        width: req.imageMetadata?.width || 0,
-        height: req.imageMetadata?.height || 0,
-        format: req.imageMetadata?.format || "",
-        size: req.file.size || req.file.buffer.length,
-      });
+if (req.files && req.files.length > 0) {
+  const passportValidationResult = await PassportValidation({
+    width: req.imageMetadata?.width || 0,
+    height: req.imageMetadata?.height || 0,
+    format: req.imageMetadata?.format || "",
+    size: req.files[0].size
+    });
+  }
+    const passportImage = await Promise.all(
+      req.files.map((file) => cloudinary.uploadImage(file.path, "passport_images")),
+    )
 
-      if (!passportValidationResult.isReadable) {
-        return res.status(400).json({
-          error: "Passport image is not readable",
-          issues: passportValidationResult.issues,
-        });
-      }
-    }
 
-    const uploadedPassports = await Promise.all(
-      passportImages.map((buffer) => {
-        const dataUri = getPassportImageDataUri({
-          buffer,
-          mimetype: req.file?.mimetype || "image/jpeg",
-        });
-        return cloudinary.uploadImage(dataUri, "guest_passport_images");
-      }),
-    );
-
-    let currency = parsed.body.currency;
+    let currency = req.body.currency;
     if (!userId || guests.length === 0 || !totalPrice) {
       return res
         .status(400)
@@ -159,7 +108,7 @@ const createBooking = async (req, res, nxt) => {
       details: bookingDetails,
       status: "Pending",
       paymentStatus: "Pending",
-      passportImages: uploadedPassports.map((upload) => ({
+      passportImages: passportImage.map((upload) => ({
         url: upload.secure_url,
         cloudinaryId: upload.public_id,
       })),

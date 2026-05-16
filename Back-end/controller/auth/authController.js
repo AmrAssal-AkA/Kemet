@@ -87,7 +87,7 @@ const register = async (req, res, nxt) => {
     }
     const customPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if(!customPasswordRegex.test(password)){
-      return res.status(400).json({ message: "Password must contain at least one uppercase letter, one lowercase letter, one digit, and be at least 8 characters long." });
+      return res.status(400).json({ message: "Password must contain at least one uppercase letter, one digit, and be at least 8 characters long." });
     }
 
     const Newuser = await User.create({
@@ -109,7 +109,7 @@ const register = async (req, res, nxt) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 15 * 60 * 1000, 
     });
     // Set refresh token in HTTP-only cookie
     res.cookie("x-refresh-token", refreshToken, {
