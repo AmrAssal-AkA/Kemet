@@ -243,7 +243,7 @@ function Offerings(props) {
                         {offer.title}
                       </h3>
                       <p className="text-gray-600 text-lg">{offer.city}</p>
-                      <p className="text-black text-lg mb-6 leading-relaxed grow">
+                      <p className="text-black text-lg mb-6 leading-relaxed grow line-clamp-2">
                         {offer.description}
                       </p>
                       <div className="w-full h-px bg-gray-100 mb-4"></div>
@@ -331,7 +331,7 @@ function Offerings(props) {
                           {offer.title}
                         </h3>
                         <p className="text-gray-600 text-lg">{offer.city}</p>
-                        <p className="text-black text-lg mb-6 leading-relaxed grow">
+                        <p className="text-black text-lg mb-6 leading-relaxed grow line-clamp-2">
                           {offer.description}
                         </p>
                         <div className="w-full h-px bg-gray-100 mb-4"></div>

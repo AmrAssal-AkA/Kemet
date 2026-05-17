@@ -10,6 +10,7 @@ exports.SearchCity = async (params) => {
 
   const searchParams = {
     cityCode: params.cityCode,
+    cityId: params.cityId,
     checkInDate: params.checkInDate,
     checkOutDate: params.checkOutDate,
     adults: params.NumberOfGuests || 1,

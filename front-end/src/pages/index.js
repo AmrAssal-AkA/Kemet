@@ -964,8 +964,8 @@ export default function Home(props) {
 export async function getStaticProps() {
   try {
     const [trips, hiddenGems] = await Promise.all([
-        axios.get("http://locahost:8000/api/Trip/"),
-        axios.get("http://locahost:8000/api/HiddenGem/"),
+        axios.get("http://localhost:8000/api/Trip/"),
+        axios.get("http://localhost:8000/api/hiddenGem/"),
     ])
 
     return {
