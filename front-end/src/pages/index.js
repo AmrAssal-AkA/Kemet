@@ -433,7 +433,7 @@ export default function Home(props) {
 
         {/* ══════ FEATURED LUXOR ══════ */}
         <section className="px-4 md:px-20 pb-16">
-          <Link href="/Destination">
+          <Link href="/Luxor">
             <motion.div
               whileHover={{ y: -4 }}
               transition={{ duration: 0.25 }}
