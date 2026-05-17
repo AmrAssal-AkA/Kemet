@@ -64,22 +64,6 @@ function DestinationPage(props) {
   const {trips} = props
 
 
-  useEffect(() => {
-    const fetchDestinationData = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/destinations`);
-        const result = await response.json();
-        if (result && result.length > 0) {
-          setData(result[0]);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    
-    fetchDestinationData();
-  }, []);
-
   return (
     <>
       <Head>
