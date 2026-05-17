@@ -3,21 +3,18 @@ import { useRouter } from "next/router";
 import {
   FaChartPie,
   FaClipboardList,
-  FaMapMarkedAlt,
   FaRoute,
   FaPenNib,
   FaUsers,
   FaMoneyBillWave,
   FaQuestionCircle,
   FaSignOutAlt,
-  FaArrowUp,
 } from "react-icons/fa";
 
 const menuItems = [
   { label: "Overview", href: "/admin", icon: FaChartPie },
   { label: "Bookings", href: "/admin/bookings", icon: FaClipboardList },
   { label: "Trips", href: "/admin/trips", icon: FaRoute },
-  { label: "Destinations", href: "/admin/destinations", icon: FaMapMarkedAlt },
   { label: "Editorial", href: "/admin/editorial", icon: FaPenNib },
   { label: "Users", href: "/admin/users", icon: FaUsers },
   { label: "Revenue", href: "/admin/revenue", icon: FaMoneyBillWave },

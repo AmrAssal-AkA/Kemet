@@ -20,6 +20,15 @@ function getHeaders(cookie) {
   return cookie ? { Cookie: cookie } : {};
 }
 
+function getBookingArray(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.bookings)) return data.bookings;
+  if (Array.isArray(data?.data?.bookings)) return data.data.bookings;
+  if (Array.isArray(data?.bookingDetails)) return data.bookingDetails;
+  return [];
+}
+
 function getRequestOrigin(context) {
   const host = context.req.headers.host;
   const proto = context.req.headers["x-forwarded-proto"] || "http";
@@ -80,7 +89,29 @@ export async function getAdminBookings(cookie = "") {
     credentials: "include",
   });
   const data = await handleResponse(res, "Bookings could not be loaded.");
-  return data?.bookings || [];
+  const bookings = getBookingArray(data);
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Normalized admin bookings:", {
+      count: bookings.length,
+      firstBookingKeys: bookings[0] ? Object.keys(bookings[0]) : [],
+    });
+  }
+
+  return bookings;
+}
+
+export async function confirmAdminBooking(bookingId) {
+  if (!bookingId) {
+    throw new Error("Booking ID is required.");
+  }
+
+  const res = await fetch(buildApiUrl(`/api/adminDashboard/confirmBooking/${bookingId}`), {
+    method: "PATCH",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Booking could not be confirmed.");
 }
 
 export async function getTripStats(cookie = "") {

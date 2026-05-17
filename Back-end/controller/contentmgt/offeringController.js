@@ -68,16 +68,33 @@ const getOneOfferById = async (req, res) => {
 // Update Offering Post
 const updateOffersById = async (req, res) => {
     const {title, city, description, reviews, price} = req.body;
+    const files = getUploadedFiles(req);
     try {
+        const updateData = {};
+
+        if (title !== undefined) updateData.title = title;
+        if (city !== undefined) updateData.city = city;
+        if (description !== undefined) updateData.description = description;
+        if (reviews !== undefined) updateData.reviews = reviews;
+        if (price !== undefined) updateData.price = price;
+
+        if (files.length > 0) {
+            const imageResult = await Promise.all(files.map((file) => cloudinary.uploadImage(getFileSource(file), "offers_images")));
+            updateData.images = imageResult.map((result) => ({
+                imageUrl: result.secure_url,
+                cloudinaryId: result.public_id,
+            }));
+        }
+
         const offerUpdate = await offer.findByIdAndUpdate(
         req.params.id,
-        {title, city, description, reviews, price},
-        {new: true},
+        updateData,
+        {new: true, runValidators: true},
         );
         if (!offerUpdate) {
         return res.status(404).json({message: "Offer not found"});
         }
-        res.status(200).json({message: "Offer updated successfully"});
+        res.status(200).json({message: "Offer updated successfully", offering: offerUpdate});
     } catch (error) {
         res.status(500).json({message: "Server Error", error: error.message});
     }

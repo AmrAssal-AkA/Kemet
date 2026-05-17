@@ -8,6 +8,30 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
 const frontendUrl = process.env.FRONTEND_URL || process.env.DOMAIN || "http://localhost:3000";
 
+function getBookingIdFromSession(session) {
+  return session?.metadata?.BookingId || session?.metadata?.bookingId;
+}
+
+function isPaidCheckoutSession(session) {
+  return session?.payment_status === "paid" || session?.status === "complete";
+}
+
+async function markBookingPaidFromSession(session) {
+  const bookingId = getBookingIdFromSession(session);
+  if (!bookingId || !isPaidCheckoutSession(session)) return null;
+
+  return Booking.findByIdAndUpdate(
+    bookingId,
+    {
+      paymentStatus: "Paid",
+      stripeSessionId: session.id,
+      stripePaymentIntentId: session.payment_intent,
+      paymentDate: new Date(),
+    },
+    { new: true, runValidators: true, context: "query" },
+  );
+}
+
 const stripeCheckout = async (req, nxt) => {
   try {
     const bookingId = req.body.bookingId;
@@ -49,9 +73,22 @@ const stripeCheckout = async (req, nxt) => {
 const success = async (req, res, nxt) => {
   try {
     const sessionId = req.query.session_id;
+    let bookingStatus = "Pending";
+    let paymentStatus = "Pending";
+
+    if (sessionId) {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      const paidBooking = await markBookingPaidFromSession(session);
+
+      if (paidBooking) {
+        bookingStatus = paidBooking.status;
+        paymentStatus = paidBooking.paymentStatus;
+      }
+    }
+
     const params = new URLSearchParams({
-      paymentStatus: "Paid",
-      bookingStatus: "Pending",
+      paymentStatus,
+      bookingStatus,
     });
 
     if (sessionId) {
@@ -64,7 +101,7 @@ const success = async (req, res, nxt) => {
   }
 };
 
-const webhook = async (req, res, nxt) => {
+const webhook = async (req, res) => {
   const signature = req.headers["stripe-signature"];
   let event;
 
@@ -74,39 +111,45 @@ const webhook = async (req, res, nxt) => {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET,
     );
-  } catch (error) {
+  } catch {
     res.status(400).json({ message: "Webhook signature verification failed" });
     return;
   }
+  let updateBooking = null;
+  let email = "";
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-    const bookingId = session.metadata.BookingId;
-    const email = session.metadata.Email;
-    const paymentIntent = await stripe.paymentIntents.retrieve(
-      session.payment_intent,
-    );
-    const charge = paymentIntent.charges.data[0];
-    const paymentMethod = await stripe.paymentMethods.retrieve(
-      charge.payment_method,
-    );
-    const cardDetails = paymentMethod.card;
+    email = session.metadata?.Email || session.metadata?.email || "";
 
-    const updateBooking = await Booking.findByIdAndUpdate(
-      bookingId,
-      {
-        status: "Confirmed",
-        paymentStatus: "Paid",
-        stripeSessionId: session.id,
-        stripePaymentIntentId: session.payment_intent,
-        paymentCard: {
-          brand: cardDetails.brand,
-          last4: cardDetails.last4,
-          expMonth: cardDetails.exp_month,
-          expYear: cardDetails.exp_year,
-        },
-      },
-      { new: true },
-    );
+    updateBooking = await markBookingPaidFromSession(session);
+    if (updateBooking && session.payment_intent) {
+      try {
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          session.payment_intent,
+        );
+        const charge = paymentIntent.charges?.data?.[0];
+
+        if (charge?.payment_method) {
+          const paymentMethod = await stripe.paymentMethods.retrieve(
+            charge.payment_method,
+          );
+          const cardDetails = paymentMethod.card;
+
+          if (cardDetails) {
+            updateBooking.paymentCard = {
+              brand: cardDetails.brand,
+              last4: cardDetails.last4,
+              expMonth: cardDetails.exp_month,
+              expYear: cardDetails.exp_year,
+            };
+            await updateBooking.save();
+          }
+        }
+      } catch {
+        console.warn("Booking payment saved, but card details could not be stored.");
+      }
+    }
   }
   if (updateBooking && email) {
     const BookingDetails = {

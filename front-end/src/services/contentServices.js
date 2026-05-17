@@ -19,6 +19,13 @@ function getHeaders(cookie) {
   return cookie ? { Cookie: cookie } : {};
 }
 
+function getJsonHeaders(cookie = "") {
+  return {
+    "Content-Type": "application/json",
+    ...getHeaders(cookie),
+  };
+}
+
 function getArray(data, key) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.[key])) return data[key];
@@ -35,6 +42,29 @@ export async function getBlogs(cookie = "") {
   });
   const data = await handleResponse(res, "Blogs could not be loaded.");
   return getArray(data, "blogs");
+}
+
+export async function updateBlog(blogId, payload) {
+  if (!blogId) throw new Error("Blog ID is required.");
+
+  const res = await fetch(buildApiUrl(`/api/blog/updateBlog/${blogId}`), {
+    method: "PUT",
+    credentials: "include",
+    body: payload,
+  });
+
+  return handleResponse(res, "Blog could not be updated.");
+}
+
+export async function deleteBlog(blogId) {
+  if (!blogId) throw new Error("Blog ID is required.");
+
+  const res = await fetch(buildApiUrl(`/api/blog/deleteBlog/${blogId}`), {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Blog could not be deleted.");
 }
 
 export async function getContacts(cookie = "") {
@@ -55,6 +85,30 @@ export async function getHiddenGems(cookie = "") {
   return getArray(data, "allHiddenGem");
 }
 
+export async function updateHiddenGem(id, payload) {
+  if (!id) throw new Error("Hidden gem ID is required.");
+
+  const res = await fetch(buildApiUrl(`/api/hiddenGem/${id}`), {
+    method: "PUT",
+    headers: getJsonHeaders(),
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(res, "Hidden gem could not be updated.");
+}
+
+export async function deleteHiddenGem(id) {
+  if (!id) throw new Error("Hidden gem ID is required.");
+
+  const res = await fetch(buildApiUrl(`/api/hiddenGem/${id}`), {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Hidden gem could not be deleted.");
+}
+
 export async function getOfferings(cookie = "") {
   const res = await fetch(buildApiUrl("/api/offerings"), {
     headers: getHeaders(cookie),
@@ -63,6 +117,31 @@ export async function getOfferings(cookie = "") {
   const data = await handleResponse(res, "Offerings could not be loaded.");
   const offerings = getArray(data, "allOfferings");
   return offerings.length > 0 ? offerings : getArray(data, "offerings");
+}
+
+export async function updateOffering(id, payload) {
+  if (!id) throw new Error("Offering ID is required.");
+  const isFormData = typeof FormData !== "undefined" && payload instanceof FormData;
+
+  const res = await fetch(buildApiUrl(`/api/offerings/${id}`), {
+    method: "PUT",
+    headers: isFormData ? undefined : getJsonHeaders(),
+    credentials: "include",
+    body: isFormData ? payload : JSON.stringify(payload),
+  });
+
+  return handleResponse(res, "Offering could not be updated.");
+}
+
+export async function deleteOffering(id) {
+  if (!id) throw new Error("Offering ID is required.");
+
+  const res = await fetch(buildApiUrl(`/api/offerings/${id}`), {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Offering could not be deleted.");
 }
 
 export async function createOffering(formData) {
