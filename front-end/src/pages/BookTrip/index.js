@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+﻿/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createBooking, searchFlights, searchHotels } from "@/services/bookServices";
@@ -35,21 +35,36 @@ const cityOptions = [
   { label: "Marsa Alam", value: "RMF" },
   { label: "Dabaa", value: "DBB" },
 ];
+const nationalityOptions = [
+  { label: "Egypt", value: "EG" },
+  { label: "United States", value: "USA" },
+  { label: "Europe", value: "EURO" },
+];
 const serviceFee = 0;
 
 const initialTraveler = {
+  type: "adult",
   firstName: "",
   lastName: "",
   email: "",
   phone: "",
+  nationality: "EG",
+  passportNumber: "",
+  dateOfBirth: "",
+  expiryDate: "",
 };
 
 function createEmptyGuest() {
   return {
+    type: "adult",
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
+    nationality: "EG",
+    passportNumber: "",
+    dateOfBirth: "",
+    expiryDate: "",
   };
 }
 
@@ -181,6 +196,15 @@ function formatMoney(value, currency = "EGP") {
   return `${currency} ${Number(value || 0).toLocaleString()}`;
 }
 
+function hasPassportDetails(person) {
+  return Boolean(
+    person.nationality &&
+      person.passportNumber?.trim() &&
+      person.dateOfBirth &&
+      person.expiryDate,
+  );
+}
+
 function Field({ label, children }) {
   return (
     <label className="block">
@@ -254,6 +278,7 @@ export default function BookTripPage() {
   const [hotelResults, setHotelResults] = useState([]);
   const [selectedFlightIndex, setSelectedFlightIndex] = useState("");
   const [selectedHotelIndex, setSelectedHotelIndex] = useState("");
+  const [passportImage, setPassportImage] = useState(null);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [loadingFlights, setLoadingFlights] = useState(false);
   const [loadingHotels, setLoadingHotels] = useState(false);
@@ -356,16 +381,26 @@ export default function BookTripPage() {
   function buildTravelers() {
     return [
       {
+        type: traveler.type,
         firstName: traveler.firstName,
         lastName: traveler.lastName,
         email: traveler.email,
         phone: traveler.phone,
+        nationality: traveler.nationality,
+        passportNumber: traveler.passportNumber,
+        dateOfBirth: traveler.dateOfBirth,
+        expiryDate: traveler.expiryDate,
       },
       ...extraGuests.map((guest) => ({
+        type: guest.type,
         firstName: guest.firstName,
         lastName: guest.lastName,
         email: guest.email,
         phone: guest.phone,
+        nationality: guest.nationality,
+        passportNumber: guest.passportNumber,
+        dateOfBirth: guest.dateOfBirth,
+        expiryDate: guest.expiryDate,
       })),
     ];
   }
@@ -432,15 +467,17 @@ export default function BookTripPage() {
     if (!traveler.lastName.trim()) return "Last name is required.";
     if (!traveler.email.trim()) return "Email is required.";
     if (!traveler.phone.trim()) return "Phone number is required.";
+    if (!hasPassportDetails(traveler)) return "Guest 1 passport details are required.";
+    if (!passportImage) return "Passport image is required.";
     if (!selectedTrip) return "Please select a trip.";
     if (Number(numberOfGuests) < 1) return "Number of guests must be at least 1.";
     if (Number(numberOfGuests) > 1) {
       const missingGuestIndex = extraGuests.findIndex(
-        (guest) => !guest.firstName.trim() || !guest.lastName.trim(),
+        (guest) => !guest.firstName.trim() || !guest.lastName.trim() || !hasPassportDetails(guest),
       );
 
       if (missingGuestIndex !== -1) {
-        return `Guest ${missingGuestIndex + 2} first and last name are required.`;
+        return `Guest ${missingGuestIndex + 2} name and passport details are required.`;
       }
     }
     if (!payment.method) return "Payment method is required.";
@@ -474,16 +511,21 @@ export default function BookTripPage() {
       payment,
       notes: notes.trim(),
       totalPrice: totals.totalPrice,
+      passportImage,
     };
 
     setSubmitting(true);
     try {
       const booking = await createBooking(payload);
       const bookingData = booking?.data || booking;
+      const bookingId = bookingData?.bookingId || bookingData?._id;
+      if (bookingId && typeof window !== "undefined") {
+        window.sessionStorage.setItem("kemet:lastBookingId", String(bookingId));
+      }
       const checkout = bookingData?.checkoutUrl
         ? { url: bookingData.checkoutUrl }
         : await createPayment({
-            bookingId: bookingData?.bookingId || bookingData?._id,
+            bookingId,
             amount: totals.totalPrice,
             currency: "EGP",
             metadata: {
@@ -615,6 +657,27 @@ export default function BookTripPage() {
                 <Field label="Phone number">
                   <TextInput name="phone" value={traveler.phone} onChange={updateTraveler} required />
                 </Field>
+                <Field label="Nationality">
+                  <SelectInput name="nationality" value={traveler.nationality} onChange={updateTraveler} options={nationalityOptions} />
+                </Field>
+                <Field label="Passport number">
+                  <TextInput name="passportNumber" value={traveler.passportNumber} onChange={updateTraveler} required />
+                </Field>
+                <Field label="Date of birth">
+                  <TextInput name="dateOfBirth" type="date" value={traveler.dateOfBirth} onChange={updateTraveler} required />
+                </Field>
+                <Field label="Passport expiry">
+                  <TextInput name="expiryDate" type="date" value={traveler.expiryDate} onChange={updateTraveler} required />
+                </Field>
+                <Field label="Passport image">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => setPassportImage(event.target.files?.[0] || null)}
+                    required
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-amber-100 file:px-4 file:py-2 file:text-sm file:font-bold file:text-amber-800 focus:border-amber-400 focus:ring-4 focus:ring-amber-100"
+                  />
+                </Field>
               </div>
             </Section>
 
@@ -702,6 +765,40 @@ export default function BookTripPage() {
                             name="phone"
                             value={guest.phone}
                             onChange={(event) => updateExtraGuest(index, event)}
+                          />
+                        </Field>
+                        <Field label="Nationality">
+                          <SelectInput
+                            name="nationality"
+                            value={guest.nationality}
+                            onChange={(event) => updateExtraGuest(index, event)}
+                            options={nationalityOptions}
+                          />
+                        </Field>
+                        <Field label="Passport number">
+                          <TextInput
+                            name="passportNumber"
+                            value={guest.passportNumber}
+                            onChange={(event) => updateExtraGuest(index, event)}
+                            required
+                          />
+                        </Field>
+                        <Field label="Date of birth">
+                          <TextInput
+                            name="dateOfBirth"
+                            type="date"
+                            value={guest.dateOfBirth}
+                            onChange={(event) => updateExtraGuest(index, event)}
+                            required
+                          />
+                        </Field>
+                        <Field label="Passport expiry">
+                          <TextInput
+                            name="expiryDate"
+                            type="date"
+                            value={guest.expiryDate}
+                            onChange={(event) => updateExtraGuest(index, event)}
+                            required
                           />
                         </Field>
                       </div>

@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import { buildApiUrl } from '@/utils/apiBaseUrl';
 
 const ArrowRightIcon = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -55,7 +54,7 @@ function HiddenGemsPage() {
   useEffect(() => {
     const fetchHiddenGems = async () => {
       try {
-        const response = await fetch(buildApiUrl('/api/hidden-gems'));
+        const response = await fetch("http://localhost:8000/api/hiddenGem");
         const data = await response.json();
         setHiddenGems(data);
         setIsLoading(false);
@@ -68,25 +67,6 @@ function HiddenGemsPage() {
     fetchHiddenGems();
   }, []);
 
-  const [tours, setTours] = useState([]);
-  const [gallery, setGallery] = useState([]);
-
-  useEffect(() => {
-    const fetchHiddenGems = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/hidden-gems`);
-        const data = await response.json();
-        
-        setTours(data.tours || []);
-        setGallery(data.gallery || []);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchHiddenGems();
-  }, []);
-  
   return (
     <>
       <Head>
@@ -109,13 +89,13 @@ function HiddenGemsPage() {
             
             <div className="relative h-150 flex items-center justify-center gap-x-6">
                 <div className="absolute top-1/2 left-[18%] transform -translate-y-[45%] flex gap-x-6">
-                    <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl relative">
+                    <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl relative">
                         <img src="/images/hidden-gems/Rectangle 178.png" alt="Sunset boat" className="w-full h-full object-cover"/> 
                     </div>
-                    <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl mt-12 relative">
+                    <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl mt-12 relative">
                         <img src="/images/hidden-gems/Rectangle 177.png" alt="Temple Ruin" className="w-full h-full object-cover"/> 
                     </div>
-                    <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl relative">
+                    <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl relative">
                         <img src="/images/hidden-gems/Rectangle 176.png" alt="Pyramid View" className="w-full h-full object-cover"/> 
                     </div>
                 </div>
@@ -175,7 +155,7 @@ function HiddenGemsPage() {
             <h2 className="text-4xl font-black text-[#111827] mb-12 uppercase tracking-wide">OUR FEATURED TOURS</h2>
             <div className="grid grid-cols-[1fr_1fr_1fr] gap-x-6 gap-y-6">
               <div className="flex flex-col gap-6">
-                <a href="#" className="group relative block aspect-[4/5] rounded-[15px] overflow-hidden shadow-sm">
+                <a href="#" className="group relative block aspect-4/5 rounded-[15px] overflow-hidden shadow-sm">
                   <img src="/images/hidden-gems/Rectangle 181.png" alt="Nuweiba" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" /> 
                   <div className="absolute inset-0 bg-black opacity-30"></div>
                   <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">Nuweiba</h4>
@@ -190,13 +170,13 @@ function HiddenGemsPage() {
               </div>
 
               <div className="flex flex-col gap-6 mt-8">
-                <a href="#" className="group relative block aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm">
+                <a href="#" className="group relative block aspect-3/4 rounded-[15px] overflow-hidden shadow-sm">
                   <img src="/images/hidden-gems/Rectangle 179.png" alt="Alexandria" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" /> 
                   <div className="absolute inset-0 bg-black opacity-30"></div>
                   <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">Alex</h4>
                   <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">Explore</div>
                 </a>
-                <a href="#" className="group relative block aspect-[4/5] rounded-[15px] overflow-hidden shadow-sm">
+                <a href="#" className="group relative block aspect-4/5 rounded-[15px] overflow-hidden shadow-sm">
                   <img src="/images/hidden-gems/Rectangle 182.png" alt="Sharm" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" /> 
                   <div className="absolute inset-0 bg-black opacity-30"></div>
                   <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">sharm</h4>
@@ -211,7 +191,7 @@ function HiddenGemsPage() {
                   <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">siwa</h4>
                   <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">Explore</div>
                 </a>
-                <a href="#" className="group relative block aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm">
+                <a href="#" className="group relative block aspect-3/4 rounded-[15px] overflow-hidden shadow-sm">
                   <img src="/images/hidden-gems/Rectangle 184.png" alt="Aswan" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" /> 
                   <div className="absolute inset-0 bg-black opacity-30"></div>
                   <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">aswan</h4>
@@ -266,7 +246,7 @@ function HiddenGemsPage() {
             </h2>
             <div className="grid grid-cols-4 gap-4 w-full">
               <div className="flex flex-col gap-4">
-                  <div className="relative aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm">
+                  <div className="relative aspect-3/4 rounded-[15px] overflow-hidden shadow-sm">
                        <img src="/images/hidden-gems/Rectangle 186.png" alt="Gallery 1" className="w-full h-full object-cover"/> 
                   </div>
                   <div className="relative aspect-square rounded-[15px] overflow-hidden shadow-sm">
@@ -282,7 +262,7 @@ function HiddenGemsPage() {
                   </div>
               </div>
               <div className="flex flex-col gap-4">
-                  <div className="relative aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm">
+                  <div className="relative aspect-3/4 rounded-[15px] overflow-hidden shadow-sm">
                        <img src="/images/hidden-gems/Rectangle 187.png" alt="Gallery 5" className="w-full h-full object-cover"/> 
                   </div>
                   <div className="relative aspect-square rounded-[15px] overflow-hidden shadow-sm">

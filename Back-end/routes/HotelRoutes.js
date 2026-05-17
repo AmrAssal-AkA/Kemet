@@ -5,7 +5,8 @@ const hotelCityValid = require("../middleware/HotelCityMW");
 const authenticate = require("../middleware/authenticate");
 const authorize = require("../middleware/authorize");
 
-router.post("/search", hotelCityValid, hotelController.SearchHotel);
+router.post("/search", hotelController.SearchHotel);
 router.get("/getOneHotelDetails", hotelController.getHotelOffers);
 
 module.exports = router;
+

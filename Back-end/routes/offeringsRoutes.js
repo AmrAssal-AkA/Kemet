@@ -9,7 +9,7 @@ const upload = require("../middleware/multer");
 router.post("/", authenticate, authorize("admin"), upload.array("image", 5), offeringController.createOffers);
 router.get("/", offeringController.getAllOffers);
 router.get("/:id", offeringController.getOneOfferById);
-router.put("/:id", authenticate, authorize("admin"), offeringController.updateOffersById);
+router.put("/:id", authenticate, authorize("admin"), upload.array("image", 5), offeringController.updateOffersById);
 router.delete("/:id", authenticate, authorize("admin"), offeringController.deleteOffersById);
 
 module.exports = router;

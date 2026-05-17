@@ -1,441 +1,797 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useAuth } from "@/context/AuthContext";
-import { getAuthRedirectPath, getUserRole } from "@/utils/authSession";
+import Head from "next/head";
 
-const popularCities = [
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+
+const upcomingTrips = [
   {
-    name: "Alexandria",
-    image: "/images/cities/alexandria.jpg",
-    description:
-      "A Mediterranean gem with seaside promenades, historic forts, and vibrant coastal culture.",
+    img: "/redballon.jpg",
+    title: "Luxor: Sunrise Hot Air Balloon Ride",
+    date: "Jun 14, 2025",
+    status: "Confirmed",
+    statusColor: "#22c55e",
+    price: "$250",
+    daysLeft: 28,
   },
   {
-    name: "Luxor",
-    image: "/images/cities/luxor.jpeg",
-    description:
-      "Walk through ancient temples and timeless monuments along the magical Nile River.",
-  },
-  {
-    name: "Aswan",
-    image: "/images/cities/aswan.webp",
-    description:
-      "A peaceful southern city known for river islands, Nubian heritage, and golden sunsets.",
-  },
-  {
-    name: "Hurghada",
-    image: "/images/cities/hurghada.jpg",
-    description:
-      "Crystal-clear Red Sea waters, coral reefs, and lively beach escapes for every traveler.",
-  },
-  {
-    name: "Siwa",
-    image: "/images/cities/siwa.jpg",
-    description:
-      "A serene desert oasis filled with palm groves, salt lakes, and unique local traditions.",
+    img: "/valley.jpeg",
+    title: "Valley of the Kings Full Day Tour",
+    date: "Jun 17, 2025",
+    status: "Pending",
+    statusColor: "#FFCE2A",
+    price: "$180",
+    daysLeft: 31,
   },
 ];
 
-const packages = [
+const pastTrips = [
   {
-    title: "Luxor Temple & Nile Tour",
-    days: "3 Days / 2 Nights",
-    price: "$320",
-    image: "/images/packages/nile-tour.jpg",
+    img: "/karnak.jpeg",
+    title: "Guided Tour of Karnak & Luxor Temples",
+    date: "Mar 10, 2025",
+    rating: 5,
+    review: "An unforgettable experience through ancient history.",
   },
   {
-    title: "Desert Safari & Oasis Escape",
-    days: "4 Days / 3 Nights",
-    price: "$410",
-    image: "/images/packages/desert-safari.jpg",
-  },
-  {
-    title: "Red Sea Adventure",
-    days: "5 Days / 4 Nights",
-    price: "$520",
-    image: "/images/packages/red-sea.webp",
-  },
-  {
-    title: "Historical Cairo Experience",
-    days: "2 Days / 1 Night",
-    price: "$240",
-    image: "/images/packages/historical-cairo.jpg",
+    img: "/dinner.jpeg",
+    title: "Sunset Felucca Cruise with Local Dinner",
+    date: "Jan 22, 2025",
+    rating: 4,
+    review: null,
   },
 ];
+
+const savedGems = [
+  {
+    img: "/images/home/gem1.jpg",
+    location: "Western Desert",
+    title: "Siwa White Desert",
+    tag: "Off the beaten path",
+    href: "/hidden-gems",
+  },
+  {
+    img: "/images/home/gem2.jpg",
+    location: "South Sinai",
+    title: "Colored Canyon",
+    tag: "Nature wonder",
+    href: "/hidden-gems",
+  },
+  {
+    img: "/images/home/gem3.jpg",
+    location: "Fayoum",
+    title: "Lake Qaroun",
+    tag: "Hidden escape",
+    href: "/hidden-gems",
+  },
+];
+
+const communityActivity = [
+  {
+    initials: "SA",
+    avatarBg: "#c0392b",
+    name: "Sara Al-Masri",
+    action: "liked your story",
+    time: "2h ago",
+    icon: "♥",
+  },
+  {
+    initials: "KM",
+    avatarBg: "#2980b9",
+    name: "Karim Mansour",
+    action: "commented on your photo",
+    time: "5h ago",
+    icon: "💬",
+  },
+  {
+    initials: "LH",
+    avatarBg: "#8e44ad",
+    name: "Layla Haddad",
+    action: "started following you",
+    time: "1d ago",
+    icon: "👤",
+  },
+];
+
+const recommendedCities = [
+  { img: "cairo.jpeg", name: "Cairo", match: "92% match" },
+  { img: "aswan.jpeg", name: "Aswan", match: "87% match" },
+  { img: "siwa.jpeg", name: "Siwa", match: "81% match" },
+];
+
+const stats = [
+  { value: "4", label: "Trips Taken" },
+  { value: "2", label: "Upcoming" },
+  { value: "12", label: "Places Saved" },
+  { value: "3", label: "Stories Shared" },
+];
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 28 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+function StarRow({ count = 5, total = 5 }) {
+  return (
+    <div className="flex gap-0.5">
+      {Array.from({ length: total }).map((_, i) => (
+        <span key={i} style={{ color: i < count ? "#FFCE2A" : "#374151", fontSize: 13 }}>
+          ★
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function SectionHeading({ eyebrow, title, subtitle, light = false }) {
+  return (
+    <div className="mb-8">
+      {eyebrow && (
+        <span
+          className={`inline-block mb-3 text-[11px] font-bold uppercase tracking-[0.18em] px-3 py-1 rounded-full ${
+            light
+              ? "text-yellow-300 bg-yellow-400/20"
+              : "text-yellow-600 bg-yellow-50"
+          }`}
+        >
+          {eyebrow}
+        </span>
+      )}
+      <h2
+        className={`text-2xl md:text-3xl font-extrabold leading-tight ${light ? "text-white" : "text-gray-900"}`}
+        style={{ fontFamily: "'Playfair Display', serif" }}
+      >
+        {title}
+      </h2>
+      {subtitle && (
+        <p className={`mt-2 text-sm max-w-lg leading-relaxed ${light ? "text-gray-400" : "text-gray-500"}`}>
+          {subtitle}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
+
+function Sidebar({ activeTab, setActiveTab }) {
+  const nav = [
+    { key: "overview", icon: "⬡", label: "Overview" },
+    { key: "trips", icon: "🗺️", label: "My Trips" },
+    { key: "saved", icon: "♥", label: "Saved Places" },
+    { key: "community", icon: "✦", label: "Community" },
+    { key: "settings", icon: "⚙", label: "Settings" },
+  ];
+  return (
+    <aside
+      className="hidden lg:flex flex-col gap-1 w-56 shrink-0 sticky top-6 self-start"
+      style={{ height: "fit-content" }}
+    >
+      <div
+        className="rounded-2xl px-3 py-4"
+        style={{
+          background: "linear-gradient(135deg,#06122e 0%,#0b1f46 100%)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        {nav.map(({ key, icon, label }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 text-sm font-medium transition-all duration-200"
+            style={{
+              background: activeTab === key ? "rgba(255,206,42,0.15)" : "transparent",
+              color: activeTab === key ? "#FFCE2A" : "rgba(255,255,255,0.55)",
+              borderLeft: activeTab === key ? "2px solid #FFCE2A" : "2px solid transparent",
+            }}
+          >
+            <span style={{ fontSize: 15, opacity: activeTab === key ? 1 : 0.7 }}>{icon}</span>
+            {label}
+          </button>
+        ))}
+
+        <div className="mx-2 my-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
+
+        <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+          style={{ color: "rgba(255,255,255,0.4)" }}>
+          <span style={{ fontSize: 15 }}>↩</span>
+          Sign Out
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+// ─── PAGE ─────────────────────────────────────────────────────────────────────
 
 export default function UserDashboard() {
-  const router = useRouter();
-  const { user, sessionReady } = useAuth();
-  const [searchCity, setSearchCity] = useState("");
-  const [selectedTag, setSelectedTag] = useState("Top Picks");
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
-  const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
-  const touchStartXRef = useRef(null);
-
-  const filteredCities = popularCities.filter((city) =>
-    city.name.toLowerCase().includes(searchCity.toLowerCase()),
-  );
-
-  const carouselCities = useMemo(
-    () => (filteredCities.length ? filteredCities : popularCities),
-    [filteredCities],
-  );
-  const userName = user?.name || "Traveler";
-  const userRole = getUserRole(user);
-
-  useEffect(() => {
-    if (!sessionReady) return;
-
-    if (!user) {
-      router.replace("/auth/auth");
-      return;
-    }
-
-    if (userRole === "admin" || userRole === "guide" || userRole === "localguide") {
-      router.replace(getAuthRedirectPath(user));
-    }
-  }, [router, sessionReady, user, userRole]);
-
-  const handlePrevSlide = useCallback(() => {
-    setActiveSlide((prev) =>
-      prev === 0 ? carouselCities.length - 1 : prev - 1,
-    );
-  }, [carouselCities.length]);
-
-  const handleNextSlide = useCallback(() => {
-    setActiveSlide((prev) =>
-      prev === carouselCities.length - 1 ? 0 : prev + 1,
-    );
-  }, [carouselCities.length]);
-
-  useEffect(() => {
-    if (isUserInteracting || isCarouselPaused || carouselCities.length <= 1) return;
-
-    const interval = setInterval(() => {
-      handleNextSlide();
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [handleNextSlide, isUserInteracting, isCarouselPaused, carouselCities.length]);
-
-  const handleTouchStart = (e) => {
-    touchStartXRef.current = e.touches[0].clientX;
-    setIsUserInteracting(true);
-  };
-
-  const handleTouchEnd = (e) => {
-    if (touchStartXRef.current === null) {
-      setIsUserInteracting(false);
-      return;
-    }
-
-    const touchEndX = e.changedTouches[0].clientX;
-    const deltaX = touchStartXRef.current - touchEndX;
-
-    if (Math.abs(deltaX) > 40) {
-      if (deltaX > 0) {
-        handleNextSlide();
-      } else {
-        handlePrevSlide();
-      }
-    }
-
-    touchStartXRef.current = null;
-    setTimeout(() => setIsUserInteracting(false), 1200);
-  };
-
-  if (!sessionReady || !user || ["admin", "guide", "localguide"].includes(userRole)) {
-    return null;
-  }
+  const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <main className="min-h-screen bg-[#f8fafc] text-slate-900">
-      {/* Hero */}
-      <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-        <div
-          className="relative min-h-[320px] overflow-hidden rounded-2xl bg-cover bg-center p-6 sm:min-h-[360px] sm:p-8 lg:min-h-[400px] lg:p-10"
-          style={{ backgroundImage: "url('/images/BlogPageImages/hero.jpg')" }}
-        >
-          <div className="absolute inset-0 bg-[#0b1d3a]/60" />
-          <div className="relative z-10 max-w-3xl pt-2 sm:pt-3 lg:pt-4">
-            <p className="text-base font-semibold uppercase tracking-[0.2em] text-amber-300 sm:text-lg">
-              Home
-            </p>
-            <h1 className="mt-3 text-3xl font-bold leading-tight text-white sm:text-4xl lg:mt-4 lg:text-5xl">
-              Hello {userName}, Discover Egypt through Kemet
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-100 sm:text-base lg:mt-4 lg:text-lg">
-              Plan your smart trip to Egypt from templates to full guide-led
-              experiences.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link
-                href="/Destination"
-                className="rounded-full bg-amber-400 px-6 py-3 text-base font-semibold text-slate-900 transition hover:bg-amber-300"
-              >
-                Explore Now
-              </Link>
-              <Link
-                href="/BookTrip"
-                className="rounded-full bg-amber-400 px-6 py-3 text-base font-semibold text-slate-900 transition hover:bg-amber-300"
-              >
-                Book Trip
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+    <>
+      <Head>
+        <title>My Dashboard — Kemet Travel</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap"
+          rel="stylesheet"
+        />
+      </Head>
 
-      {/* Search Strip */}
-      <section className="mx-auto mt-5 max-w-7xl px-4 sm:mt-7 sm:px-6 lg:mt-8 lg:px-8">
-        <div className="rounded-3xl border border-gray-200 bg-white p-3 shadow-xl">
-          <div className="grid grid-cols-1 overflow-hidden rounded-2xl md:grid-cols-5">
-            <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3 md:border-b-0 md:border-r">
-              <div className="h-5 w-5 text-gray-400">📍</div>
-              <div className="w-full">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  Location
-                </p>
-                <input
-                  value={searchCity}
-                  onChange={(e) => setSearchCity(e.target.value)}
-                  placeholder="Where to?"
-                  className="w-full bg-transparent text-sm font-semibold text-[#111827] outline-none"
-                />
-              </div>
-            </div>
+      <style>{`
+        :root { --gold:#FFCE2A; --gold-dark:#e8b800; --navy:#0b1f46; }
 
-            <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3 md:border-b-0 md:border-r">
-              <div className="h-5 w-5 text-gray-400">📅</div>
-              <div className="w-full">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  Date
-                </p>
-                <input
-                  type="date"
-                  className="w-full bg-transparent text-sm font-semibold text-[#111827] outline-none"
-                />
-              </div>
-            </div>
+        .btn-gold {
+          background: linear-gradient(135deg,var(--gold) 0%,var(--gold-dark) 100%);
+          box-shadow: 0 4px 14px rgba(255,206,42,.35);
+          transition: transform .18s ease, box-shadow .18s ease;
+        }
+        .btn-gold:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(255,206,42,.45); }
 
-            <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3 md:border-b-0 md:border-r">
-              <div className="h-5 w-5 text-gray-400">👥</div>
-              <div className="w-full">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  Travelers
-                </p>
-                <input
-                  placeholder="Guests"
-                  className="w-full bg-transparent text-sm font-semibold text-[#111827] outline-none"
-                />
-              </div>
-            </div>
+        .btn-ghost { border:1.5px solid #e2e8f0; transition:border-color .18s,background .18s; }
+        .btn-ghost:hover { border-color:var(--gold); background:#fffbea; }
 
-            <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3 md:border-b-0 md:border-r">
-              <div className="h-5 w-5 text-gray-400">☰</div>
-              <div className="w-full">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  Category
-                </p>
-                <select
-                  value={selectedTag}
-                  onChange={(e) => setSelectedTag(e.target.value)}
-                  className="w-full bg-transparent text-sm font-semibold text-[#111827] outline-none"
+        .trip-card { transition:transform .25s,box-shadow .25s; }
+        .trip-card:hover { transform:translateY(-6px); box-shadow:0 18px 40px rgba(0,0,0,.12); }
+        .trip-img { transition:transform .4s; }
+        .trip-card:hover .trip-img { transform:scale(1.05); }
+
+        .gem-card { transition:transform .28s,box-shadow .28s; }
+        .gem-card:hover { transform:translateY(-5px); box-shadow:0 16px 36px rgba(0,0,0,.13); }
+        .gem-img { transition:transform .45s; }
+        .gem-card:hover .gem-img { transform:scale(1.06); }
+        .gem-overlay {
+          background:linear-gradient(to top,rgba(6,18,46,.85) 0%,rgba(6,18,46,.2) 55%,transparent 100%);
+        }
+
+        .stat-chip { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(8px); }
+
+        .city-ring { box-shadow:0 0 0 3px #fff,0 0 0 5px transparent; transition:box-shadow .25s,transform .25s; }
+        .city-card:hover .city-ring { box-shadow:0 0 0 3px #fff,0 0 0 5px var(--gold); }
+
+        .notif-row { transition:background .18s; }
+        .notif-row:hover { background:rgba(255,206,42,0.05); }
+
+        .tab-pill { transition:background .2s,color .2s; }
+        .progress-bar { animation: fillBar 1.2s ease forwards; }
+        @keyframes fillBar { from { width:0 } }
+      `}</style>
+
+      <main className="font-sans bg-[#f9fafb] min-h-screen">
+
+        {/* ══════ DASHBOARD HERO BANNER ══════ */}
+        <section className="relative overflow-hidden" style={{ minHeight: 220 }}>
+          <img src="/hero.png" alt="Egypt" className="w-full h-56 object-cover" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(105deg,rgba(6,18,46,.88) 0%,rgba(11,31,70,.65) 55%,rgba(0,0,0,.25) 100%)",
+            }}
+          />
+          <div
+            className="absolute left-0 bottom-0 w-full h-0.5 pointer-events-none"
+            style={{
+              background: "linear-gradient(90deg,transparent,#FFCE2A 40%,#f5b800 60%,transparent)",
+            }}
+          />
+
+          {/* User Identity */}
+          <div className="absolute inset-0 flex items-end px-6 md:px-20 pb-8">
+            <motion.div {...fadeUp(0.1)} className="flex items-end gap-5">
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                <div
+                  className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl font-extrabold text-gray-900 shadow-xl"
+                  style={{
+                    background: "linear-gradient(135deg,#FFCE2A 0%,#f5b800 100%)",
+                    border: "3px solid rgba(255,255,255,0.85)",
+                  }}
                 >
-                  <option>Top Picks</option>
-                  <option>Family Trips</option>
-                  <option>Budget Friendly</option>
-                  <option>Luxury</option>
-                </select>
+                  AM
+                </div>
+                <div
+                  className="absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white"
+                  style={{ background: "#22c55e" }}
+                />
               </div>
-            </div>
 
-            <div className="flex items-center justify-center px-3 py-3">
-              <Link
-                href="/Destination"
-                className="w-full rounded-full bg-[#FBBF24] px-6 py-3 text-center text-sm font-bold tracking-wide text-white transition-colors hover:bg-[#e5a913]"
-              >
-                FIND
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+              <div className="pb-1">
+                <span className="inline-block mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-3 py-0.5 rounded-full">
+                  ✦ Explorer Member
+                </span>
+                <h1
+                  className="text-2xl md:text-3xl font-extrabold text-white leading-none"
+                  style={{ fontFamily: "'Playfair Display', serif" }}
+                >
+                  Ahmed Mostafa
+                </h1>
+                <p className="text-gray-400 text-xs mt-1">
+                  📍 Alexandria, Egypt &nbsp;·&nbsp; Member since Jan 2024
+                </p>
+              </div>
+            </motion.div>
 
-      {/* Popular Cities */}
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold">Explore Popular Cities</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Discover Egypt’s most iconic destinations.
-        </p>
-
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {filteredCities.map((city) => (
-            <Link
-              key={city.name}
-              href="/Destination"
-              className="group text-center"
+            {/* Stat chips — right side */}
+            <motion.div
+              {...fadeUp(0.25)}
+              className="hidden md:flex flex-wrap gap-3 ml-auto pb-1"
             >
-              <div
-                className="mx-auto h-24 w-24 rounded-full bg-cover bg-center ring-2 ring-white shadow-md transition group-hover:scale-105"
-                style={{ backgroundImage: `url('${city.image}')` }}
-              />
-              <p className="mt-3 text-sm font-semibold">{city.name}</p>
-            </Link>
+              {stats.map(({ value, label }) => (
+                <div key={label} className="stat-chip rounded-xl px-4 py-2 text-center">
+                  <div className="text-base font-extrabold text-yellow-400 leading-none">{value}</div>
+                  <div className="text-[10px] uppercase tracking-widest text-gray-400 mt-0.5">{label}</div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Mobile stat row */}
+        <div className="flex md:hidden gap-2 px-4 pt-4 overflow-x-auto">
+          {stats.map(({ value, label }) => (
+            <div
+              key={label}
+              className="shrink-0 rounded-xl px-4 py-2 text-center"
+              style={{ background: "#06122e", border: "1px solid rgba(255,255,255,0.12)" }}
+            >
+              <div className="text-sm font-extrabold text-yellow-400 leading-none">{value}</div>
+              <div className="text-[10px] uppercase tracking-widest text-gray-400 mt-0.5">{label}</div>
+            </div>
           ))}
         </div>
-      </section>
 
-      {/* Cities Carousel */}
-      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
-        <div className="overflow-hidden bg-white sm:p-6">
-          <div className="mb-4 px-4 sm:px-0">
-            <h3 className="text-xl font-bold text-slate-900 sm:text-2xl">
-              Explore Cities in Motion
-            </h3>
-          </div>
+        {/* ══════ BODY ══════ */}
+        <div className="px-4 md:px-20 py-8 flex gap-8 items-start">
+          {/* Sidebar */}
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          <div
-            className="group relative h-[420px] w-full overflow-hidden rounded-none sm:h-[520px] sm:rounded-2xl"
-            onMouseEnter={() => {
-              setIsCarouselHovered(true);
-              setIsCarouselPaused(true);
-            }}
-            onMouseLeave={() => {
-              setIsCarouselHovered(false);
-              setIsCarouselPaused(false);
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            onMouseDown={() => setIsCarouselPaused(true)}
-            onMouseUp={() => setIsCarouselPaused(false)}
-          >
-            {carouselCities.map((city, index) => (
-              <div
-                key={city.name}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                  activeSlide === index ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <div
-                  className="h-full w-full bg-cover bg-center"
-                  style={{ backgroundImage: `url('${city.image}')` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
-                <div className="absolute bottom-6 left-6 max-w-xl">
-                  <h4 className="text-xl font-semibold tracking-wide text-white drop-shadow-md sm:text-2xl">
-                    {city.name}
-                  </h4>
-                  <p className="mt-2 line-clamp-2 text-sm font-medium leading-relaxed text-white/90 drop-shadow-sm sm:text-base">
-                    {city.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={handlePrevSlide}
-              className={`absolute left-3 top-1/2 z-20 -translate-y-1/2 p-2 text-3xl leading-none text-white/90 transition-all duration-200 hover:text-white ${
-                isCarouselHovered || isUserInteracting
-                  ? "opacity-100"
-                  : "pointer-events-none opacity-0"
-              }`}
-              aria-label="Previous slide"
-            >
-              ‹
-            </button>
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
 
-            <button
-              type="button"
-              onClick={handleNextSlide}
-              className={`absolute right-3 top-1/2 z-20 -translate-y-1/2 p-2 text-3xl leading-none text-white/90 transition-all duration-200 hover:text-white ${
-                isCarouselHovered || isUserInteracting
-                  ? "opacity-100"
-                  : "pointer-events-none opacity-0"
-              }`}
-              aria-label="Next slide"
-            >
-              ›
-            </button>
-          </div>
+            {/* ── OVERVIEW ── */}
+            {activeTab === "overview" && (
+              <div className="flex flex-col gap-10">
 
-          <div className="mt-4 flex items-center justify-center gap-2">
-            {carouselCities.map((city, index) => (
-              <button
-                key={city.name}
-                type="button"
-                onClick={() => setActiveSlide(index)}
-                className={`h-2.5 rounded-full transition-all ${
-                  activeSlide === index
-                    ? "w-8 bg-amber-400"
-                    : "w-2.5 bg-slate-300 hover:bg-slate-400"
-                }`}
-                aria-label={`Go to ${city.name} slide`}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+                {/* ── Upcoming Trips ── */}
+                <motion.div {...fadeUp(0)}>
+                  <div className="flex items-end justify-between mb-6">
+                    <SectionHeading
+                      eyebrow="Your Itinerary"
+                      title="Upcoming Trips"
+                      subtitle="You have 2 adventures coming up."
+                    />
+                    <button
+                      onClick={() => setActiveTab("trips")}
+                      className="hidden sm:flex items-center gap-1 text-sm font-semibold text-gray-400 border-b border-gray-300 hover:text-yellow-600 hover:border-yellow-400 transition-colors whitespace-nowrap mb-8"
+                    >
+                      View all →
+                    </button>
+                  </div>
 
-      {/* Packages */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <h2 className="text-2xl font-bold">Explore Our Packages</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Handpicked plans for different travel styles.
-        </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {upcomingTrips.map((trip, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1, duration: 0.45 }}
+                        className="trip-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                      >
+                        <div className="overflow-hidden h-40 relative">
+                          <img src={trip.img} alt={trip.title} className="trip-img w-full h-full object-cover" />
+                          <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 60%)" }} />
+                          <span
+                            className="absolute top-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-full"
+                            style={{ background: trip.statusColor + "22", color: trip.statusColor, border: `1px solid ${trip.statusColor}44` }}
+                          >
+                            {trip.status}
+                          </span>
+                          <span className="absolute bottom-3 left-3 text-white text-xs font-bold">
+                            🗓 {trip.date}
+                          </span>
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-bold text-sm text-gray-900 mb-1 leading-snug">{trip.title}</h4>
+                          <div className="flex items-center justify-between mt-3">
+                            <span className="text-yellow-600 font-extrabold text-base">{trip.price}</span>
+                            <div className="flex gap-2">
+                              <span className="text-xs font-medium text-gray-500 border border-gray-200 rounded-full px-3 py-1">Details</span>
+                              <span className="text-xs font-medium text-red-400 border border-red-100 rounded-full px-3 py-1 hover:border-red-300 transition-colors cursor-pointer">Cancel</span>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex items-center gap-2">
+                            <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                              <div
+                                className="progress-bar h-full rounded-full"
+                                style={{
+                                  width: `${Math.max(10, 100 - trip.daysLeft * 3)}%`,
+                                  background: "linear-gradient(90deg,#FFCE2A,#f5b800)",
+                                }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-400 shrink-0">{trip.daysLeft}d left</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {packages.map((pkg) => (
-            <div
-              key={pkg.title}
-              className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-xl"
-            >
-              <div className="h-44 overflow-hidden">
-                <div
-                  className="h-full w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                  style={{ backgroundImage: `url('${pkg.image}')` }}
-                />
-              </div>
-
-              <div className="flex grow flex-col p-5">
-                <h3 className="mb-2 text-base font-bold leading-tight text-[#111827]">
-                  {pkg.title}
-                </h3>
-                <p className="mb-5 grow text-sm leading-relaxed text-gray-600">
-                  {pkg.days}
-                </p>
-
-                <div className="mb-4 h-px w-full bg-gray-100" />
-
-                <div className="flex items-end justify-between">
-                  <span className="text-lg font-bold text-[#FBBF24]">
-                    {pkg.price}
-                  </span>
-
-                  <Link
-                    href="/BookTrip"
-                    className="rounded-full bg-[#FBBF24] px-4 py-2 text-xs font-bold tracking-wide text-slate-900 transition-colors hover:bg-[#e5a913]"
+                {/* ── Recommendations ── */}
+                <motion.div {...fadeUp(0.1)}>
+                  <div
+                    className="rounded-3xl px-6 md:px-10 py-10 relative overflow-hidden"
+                    style={{
+                      background: "linear-gradient(135deg,#06122e 0%,#0b1f46 50%,#102554 100%)",
+                    }}
                   >
-                    Book
+                    <div
+                      className="absolute top-0 right-0 pointer-events-none"
+                      style={{
+                        width: 400, height: 400,
+                        background: "radial-gradient(circle,rgba(255,206,42,.10) 0%,transparent 65%)",
+                        transform: "translate(120px,-120px)",
+                      }}
+                    />
+                    <div className="relative z-10">
+                      <SectionHeading
+                        eyebrow="Curated for You"
+                        title="Recommended Next Destinations"
+                        subtitle="Based on your travel history and preferences."
+                        light
+                      />
+                      <div className="flex flex-wrap gap-6 mt-2">
+                        {recommendedCities.map((city, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.08, duration: 0.4 }}
+                            whileHover={{ y: -4 }}
+                            className="city-card text-center cursor-pointer group"
+                          >
+                            <div className="relative w-20 h-20 mx-auto">
+                              <img
+                                src={`/${city.img}`}
+                                alt={city.name}
+                                className="city-ring w-20 h-20 rounded-full object-cover shadow-md"
+                              />
+                            </div>
+                            <p className="mt-2 text-sm font-semibold text-white group-hover:text-yellow-400 transition-colors">{city.name}</p>
+                            <span className="inline-block mt-1 text-[10px] font-bold text-yellow-400 bg-yellow-400/15 px-2 py-0.5 rounded-full">{city.match}</span>
+                          </motion.div>
+                        ))}
+                      </div>
+                      <div className="mt-8">
+                        <Link href="/Destination">
+                          <button className="btn-gold rounded-full px-8 py-3 font-semibold text-black text-sm">
+                            Browse All Destinations
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* ── Community Activity ── */}
+                <motion.div {...fadeUp(0.15)}>
+                  <SectionHeading
+                    eyebrow="Activity"
+                    title="Community Notifications"
+                  />
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                    {communityActivity.map((n, i) => (
+                      <div key={i} className="notif-row flex items-center gap-4 px-5 py-4 cursor-pointer rounded-xl">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                          style={{ background: n.avatarBg }}
+                        >
+                          {n.initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-800">
+                            <span className="font-semibold">{n.name}</span>{" "}
+                            <span className="text-gray-500">{n.action}</span>
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">{n.time}</p>
+                        </div>
+                        <span className="text-lg">{n.icon}</span>
+                      </div>
+                    ))}
+                    <div className="px-5 py-3">
+                      <Link href="/communities">
+                        <span className="text-sm font-semibold text-yellow-600 hover:text-yellow-500 transition-colors cursor-pointer">
+                          View all activity →
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* ── Loyalty / Explorer Score ── */}
+                <motion.div {...fadeUp(0.2)}>
+                  <div
+                    className="rounded-2xl px-6 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5"
+                    style={{
+                      background: "linear-gradient(135deg,#1a1a1a 0%,#2d2519 60%,#3d3020 100%)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div>
+                      <span className="inline-block mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-3 py-0.5 rounded-full">
+                        Explorer Level
+                      </span>
+                      <h3 className="text-white font-extrabold text-lg leading-none" style={{ fontFamily: "'Playfair Display', serif" }}>
+                        Pharaoh Tier 🏺
+                      </h3>
+                      <p className="text-gray-400 text-sm mt-1.5">1,240 / 2,000 XP to Legendary Explorer</p>
+                      <div className="mt-3 w-64 h-2 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className="progress-bar h-full rounded-full"
+                          style={{ width: "62%", background: "linear-gradient(90deg,#FFCE2A,#f5b800)" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {["10% off next booking", "Priority guide assignment", "Exclusive hidden gems access"].map((perk) => (
+                        <div key={perk} className="flex items-center gap-2 text-sm text-gray-300">
+                          <span className="text-yellow-400 text-xs">✦</span>
+                          {perk}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+
+            {/* ── TRIPS TAB ── */}
+            {activeTab === "trips" && (
+              <div className="flex flex-col gap-10">
+                <motion.div {...fadeUp(0)}>
+                  <SectionHeading eyebrow="Your Itinerary" title="Upcoming Trips" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
+                    {upcomingTrips.map((trip, i) => (
+                      <div key={i} className="trip-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="overflow-hidden h-40 relative">
+                          <img src={trip.img} alt={trip.title} className="trip-img w-full h-full object-cover" />
+                          <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 60%)" }} />
+                          <span
+                            className="absolute top-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-full"
+                            style={{ background: trip.statusColor + "22", color: trip.statusColor, border: `1px solid ${trip.statusColor}44` }}
+                          >
+                            {trip.status}
+                          </span>
+                          <span className="absolute bottom-3 left-3 text-white text-xs font-bold">🗓 {trip.date}</span>
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-bold text-sm text-gray-900 mb-3 leading-snug">{trip.title}</h4>
+                          <div className="flex items-center justify-between">
+                            <span className="text-yellow-600 font-extrabold text-base">{trip.price}</span>
+                            <div className="flex gap-2">
+                              <span className="text-xs font-medium text-gray-500 border border-gray-200 rounded-full px-3 py-1 cursor-pointer hover:border-yellow-400 transition-colors">Details</span>
+                              <span className="text-xs font-medium text-red-400 border border-red-100 rounded-full px-3 py-1 hover:border-red-300 transition-colors cursor-pointer">Cancel</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                <motion.div {...fadeUp(0.1)}>
+                  <SectionHeading eyebrow="History" title="Past Adventures" />
+                  <div className="flex flex-col gap-4">
+                    {pastTrips.map((trip, i) => (
+                      <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col sm:flex-row">
+                        <div className="sm:w-40 h-32 sm:h-auto shrink-0 overflow-hidden">
+                          <img src={trip.img} alt={trip.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex flex-col justify-between p-5 flex-1">
+                          <div>
+                            <p className="text-xs text-gray-400 mb-1">🗓 {trip.date}</p>
+                            <h4 className="font-bold text-sm text-gray-900 mb-2">{trip.title}</h4>
+                            <StarRow count={trip.rating} />
+                          </div>
+                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                            {trip.review ? (
+                              <p className="text-xs text-gray-400 italic max-w-xs">"{trip.review}"</p>
+                            ) : (
+                              <button className="btn-gold rounded-full px-5 py-2 font-semibold text-black text-xs">
+                                Leave a Review
+                              </button>
+                            )}
+                            <Link href="/BookTrip">
+                              <span className="text-xs font-semibold text-yellow-600 cursor-pointer hover:text-yellow-500 transition-colors">
+                                Book Again →
+                              </span>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                <motion.div {...fadeUp(0.2)} className="text-center">
+                  <Link href="/BookTrip">
+                    <button className="btn-gold rounded-full px-10 py-3.5 font-semibold text-black text-sm">
+                      Book a New Trip
+                    </button>
+                  </Link>
+                </motion.div>
+              </div>
+            )}
+
+            {/* ── SAVED PLACES ── */}
+            {activeTab === "saved" && (
+              <motion.div {...fadeUp(0)}>
+                <SectionHeading
+                  eyebrow="Wishlist"
+                  title="Your Saved Places"
+                  subtitle="Hidden gems and destinations you've bookmarked."
+                />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {savedGems.map((gem, i) => (
+                    <Link href={gem.href} key={i}>
+                      <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1, duration: 0.5 }}
+                        className="gem-card relative rounded-2xl overflow-hidden cursor-pointer shadow-md"
+                        style={{ height: 300 }}
+                      >
+                        <img src={gem.img} alt={gem.title} className="gem-img w-full h-full object-cover" />
+                        <div className="gem-overlay absolute inset-0" />
+                        <div className="absolute top-4 left-4">
+                          <span className="inline-block bg-yellow-400 text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                            {gem.tag}
+                          </span>
+                        </div>
+                        {/* unsave */}
+                        <button
+                          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-red-400 text-sm font-bold"
+                          style={{ background: "rgba(0,0,0,0.4)" }}
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          ♥
+                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 p-5">
+                          <p className="text-xs font-semibold uppercase tracking-widest text-yellow-400 mb-1">{gem.location}</p>
+                          <h3 className="text-xl font-extrabold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+                            {gem.title}
+                          </h3>
+                          <div className="inline-flex items-center gap-1 mt-2 text-yellow-400 text-xs font-semibold">
+                            Discover <span>→</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="text-center mt-8">
+                  <Link href="/hidden-gems">
+                    <button className="btn-gold rounded-full px-9 py-3.5 font-semibold text-black text-sm">
+                      Explore More Hidden Gems
+                    </button>
                   </Link>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              </motion.div>
+            )}
 
-        <div className="mt-6 text-center">
-          <Link
-            href="/offerings"
-            className="inline-block rounded-full bg-amber-400 px-6 py-2 text-sm font-semibold text-slate-900 hover:bg-amber-300"
-          >
-            View All Packages
-          </Link>
+            {/* ── COMMUNITY ── */}
+            {activeTab === "community" && (
+              <motion.div {...fadeUp(0)} className="flex flex-col gap-8">
+                <SectionHeading
+                  eyebrow="Community Hub"
+                  title="Your Stories & Activity"
+                  subtitle="Share your Egypt journey with 12,400+ fellow travelers."
+                />
+
+                {/* My stories placeholder */}
+                <div
+                  className="rounded-2xl p-8 flex flex-col items-center text-center gap-4"
+                  style={{ background: "#fff", border: "1.5px dashed #e2e8f0" }}
+                >
+                  <span style={{ fontSize: 40 }}>✍️</span>
+                  <h3 className="font-bold text-gray-800 text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Share your first story
+                  </h3>
+                  <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
+                    Tell the community about your Egypt experience — a photo, a tip, a moment.
+                  </p>
+                  <Link href="/communities">
+                    <button className="btn-gold rounded-full px-8 py-3 font-semibold text-black text-sm">
+                      Write a Story
+                    </button>
+                  </Link>
+                </div>
+
+                {/* Activity notifications */}
+                <div>
+                  <p className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-widest">Recent Activity</p>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                    {communityActivity.map((n, i) => (
+                      <div key={i} className="notif-row flex items-center gap-4 px-5 py-4 cursor-pointer rounded-xl">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                          style={{ background: n.avatarBg }}
+                        >
+                          {n.initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-800">
+                            <span className="font-semibold">{n.name}</span>{" "}
+                            <span className="text-gray-500">{n.action}</span>
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">{n.time}</p>
+                        </div>
+                        <span className="text-lg">{n.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── SETTINGS ── */}
+            {activeTab === "settings" && (
+              <motion.div {...fadeUp(0)} className="flex flex-col gap-8">
+                <SectionHeading eyebrow="Account" title="Profile & Preferences" />
+
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      { label: "Full Name", value: "Ahmed Mostafa" },
+                      { label: "Email", value: "ahmed@example.com" },
+                      { label: "Phone", value: "+20 100 000 0000" },
+                      { label: "Location", value: "Alexandria, Egypt" },
+                    ].map(({ label, value }) => (
+                      <div key={label}>
+                        <label className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-1.5 block">
+                          {label}
+                        </label>
+                        <input
+                          defaultValue={value}
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 outline-none focus:border-yellow-400 transition-colors"
+                          style={{ background: "#fafafa" }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">
+                      Notifications
+                    </p>
+                    {["Trip reminders", "Community activity", "Newsletter & deals"].map((pref) => (
+                      <div key={pref} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+                        <span className="text-sm text-gray-700">{pref}</span>
+                        <div
+                          className="w-10 h-5 rounded-full relative cursor-pointer"
+                          style={{ background: "linear-gradient(135deg,#FFCE2A,#f5b800)" }}
+                        >
+                          <div className="absolute right-0.5 top-0.5 w-4 h-4 rounded-full bg-white shadow-sm" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button className="btn-gold self-start rounded-full px-8 py-3 font-semibold text-black text-sm">
+                    Save Changes
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+          </div>
         </div>
-      </section>
-    </main>
+      </main>
+    </>
   );
 }

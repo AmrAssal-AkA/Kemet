@@ -1,12 +1,21 @@
 const trip = require("../../model/tripSchema");
 const cloudinary = require("../../config/cloudinary");
 
+function getUploadedFile(req) {
+  return req.file || req.files?.[0];
+}
+
+function getFileSource(file) {
+  return file?.buffer || file?.path;
+}
+
 // create trip
 const createTrip = async (req, res) => {
   const {
     name,
     city,
-    category,
+    AdventureType,
+    AdventureDescription,
     description,
     price,
     duration,
@@ -17,37 +26,36 @@ const createTrip = async (req, res) => {
   } = req.body;
 
   const StartPrice = guideAvailable ? parseFloat(price) + parseFloat(guidefees) : parseFloat(price); 
-  const finalPrice = StartPrice * parseFloat("1.14"); // final price with 14% tax
+  const finalPrice = StartPrice * parseFloat("1.14"); 
 
-  if (!req.file) {
+  const uploadedFile = getUploadedFile(req);
+  if (!uploadedFile) {
     return res.status(400).json({ message: "Please upload an image" });
   }
-  const imagepath = req.file.path;
+  const imagepath = getFileSource(uploadedFile);
 
   if (
     !name ||
     !city ||
-    !category ||
+    !AdventureType ||
+    !AdventureDescription ||
     !description ||
     !price ||
     !duration ||
-    !location ||
-    !imagepath ||
-    !guidefees ||
-    !guestCapacity
+    !location 
+
   ) {
     return res.status(400).json({ message: "Please fill all the fields" });
   }
 
   try {
-    const imageResult = await Promise.all(
-      req.files.map((file) => cloudinary.uploadImage(file.path, "trip_images")),
-    );
+    const imageResult = await cloudinary.uploadImage(imagepath, "trip_images");
+
     const newTrip = new trip({
       name,
       city,
-      category,
-      description,
+      AdventureType,
+      AdventureDescription,
       basePrice: price,
       finalPrice: finalPrice,
       duration,
@@ -62,10 +70,7 @@ const createTrip = async (req, res) => {
     });
     await newTrip.save();
 
-    res.status(201).json({
-      message: "Trip created successfully",
-      trip: newTrip,
-    });
+    res.status(201).json({message: "Trip created successfully"});
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -115,7 +120,8 @@ const updateTripById = async (req, res) => {
     const updateData = {
       name: req.body.name,
       city: req.body.city,
-      category: req.body.category,
+      AdventureType: req.body.AdventureType,
+      AdventureDescription: req.body.AdventureDescription,
       description: req.body.description,
       basePrice: req.body.price,
       finalPrice: finalPrice,
@@ -125,10 +131,11 @@ const updateTripById = async (req, res) => {
       guidefees: req.body.guidefees,
       guestCapacity: req.body.guestCapacity,
     };
-    if (!req.file) {
+    const uploadedFile = getUploadedFile(req);
+    if (!uploadedFile) {
       return res.status(400).json({ message: "Please upload an image" });
     }
-    const imagepath = req.file.path;
+    const imagepath = getFileSource(uploadedFile);
 
     const result = await cloudinary.uploadImage(imagepath, "trip_images");
     updateData.images = [

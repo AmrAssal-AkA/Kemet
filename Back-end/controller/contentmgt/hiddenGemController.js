@@ -1,19 +1,32 @@
 const hiddenG = require("../../model/hiddenGemSchema");
-const googleMapsService = require("../../services/maps");
+const cloudinary = require("../../config/cloudinary");
+
+function getUploadedFiles(req) {
+    if (req.file) return [req.file];
+    return Array.isArray(req.files) ? req.files : [];
+}
+
+function getFileSource(file) {
+    return file?.buffer || file?.path;
+}
 
 // Create Hidden Gem Post
 const createHiddenGem = async (req, res) => {
-    const {location, reviews} = req.body;
-    if (!location || !reviews) {
+    const placeName = req.body.placeName || req.body.PlaceName;
+    const description = req.body.description || req.body.Description;
+    const files = getUploadedFiles(req);
+
+    if (!placeName || !description) {
         return res.status(400).json({message: "Please fill the Hidden Gem Post"});
-    }if (!req.files || req.files.length === 0) {
+    }
+    if (files.length === 0) {
         return res.status(400).json({message: "Please upload at least one image"});
     }
     try {
-    const imageResult = await Promise.all(req.files.map((file) => cloudinary.uploadImage(file.path, "hiddenGem_images")));
+    const imageResult = await Promise.all(files.map((file) => cloudinary.uploadImage(getFileSource(file), "hiddenGem_images")));
     const hidden = new hiddenG({
-      location,
-      reviews,
+        placeName,
+        description,
       images: imageResult.map((result) => ({
         imageUrl: result.secure_url,
         cloudinaryId: result.public_id,
@@ -52,11 +65,11 @@ const getOneHiddenGemById = async (req, res) => {
 
 // Update Hidden Gem Post
 const updateHiddenGemById = async (req, res) => {
-    const {location, images, reviews} = req.body;
+    const {PlaceName, Description} = req.body;
     try {
         const hiddenGemUpdate = await hiddenG.findByIdAndUpdate(
         req.params.id,
-        {location, images, reviews},
+        {PlaceName, Description},
         {new: true},
         );
         if (!hiddenGemUpdate) {

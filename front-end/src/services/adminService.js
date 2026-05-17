@@ -20,10 +20,27 @@ function getHeaders(cookie) {
   return cookie ? { Cookie: cookie } : {};
 }
 
-export async function getAdminFromSession(cookie = "") {
-  const res = await fetch(`/api/auth/refresh`, {
+function getBookingArray(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.bookings)) return data.bookings;
+  if (Array.isArray(data?.data?.bookings)) return data.data.bookings;
+  if (Array.isArray(data?.bookingDetails)) return data.bookingDetails;
+  return [];
+}
+
+function getRequestOrigin(context) {
+  const host = context.req.headers.host;
+  const proto = context.req.headers["x-forwarded-proto"] || "http";
+  return `${proto}://${host}`;
+}
+
+export async function getAdminFromSession(cookie = "", origin = "") {
+  const sessionUrl = origin ? `${origin}/api/auth/refresh` : "/api/auth/refresh";
+
+  const res = await fetch(sessionUrl, {
     method: "POST",
-    headers: cookie ? { Cookie: cookie } : {},
+    headers: getHeaders(cookie),
     credentials: "include",
   });
   const data = await handleResponse(res, "Admin session could not be verified.");
@@ -40,7 +57,7 @@ export async function requireAdmin(context) {
   }
 
   try {
-    const admin = await getAdminFromSession(cookie);
+    const admin = await getAdminFromSession(cookie, getRequestOrigin(context));
 
     if (getUserRole(admin) !== "admin") {
       return {
@@ -72,7 +89,29 @@ export async function getAdminBookings(cookie = "") {
     credentials: "include",
   });
   const data = await handleResponse(res, "Bookings could not be loaded.");
-  return data?.bookings || [];
+  const bookings = getBookingArray(data);
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Normalized admin bookings:", {
+      count: bookings.length,
+      firstBookingKeys: bookings[0] ? Object.keys(bookings[0]) : [],
+    });
+  }
+
+  return bookings;
+}
+
+export async function confirmAdminBooking(bookingId) {
+  if (!bookingId) {
+    throw new Error("Booking ID is required.");
+  }
+
+  const res = await fetch(buildApiUrl(`/api/adminDashboard/confirmBooking/${bookingId}`), {
+    method: "PATCH",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Booking could not be confirmed.");
 }
 
 export async function getTripStats(cookie = "") {

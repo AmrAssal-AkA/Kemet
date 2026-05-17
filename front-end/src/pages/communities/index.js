@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function Community() {
   const [activeTag, setActiveTag] = useState("All");
 
-  const tags = ["All", "Luxor", "Cairo", "Siwa", "Alexandria", "Aswan", "Sharm", "Tips & Advice", "Hidden Gems"];
+  const tags = ["All", "Luxor", "Cairo", "Siwa", "Alexandria", "Aswan", "Sharm", "Tips & Advice"  ];
 
   const stories = [
     {
@@ -247,9 +247,9 @@ export default function Community() {
               >
                 {/* Story image */}
                 <div
-                  className={`flex-shrink-0 overflow-hidden ${
+                  className={`shrink-0 overflow-hidden ${
                     isFeaturedFirst
-                      ? "md:w-[480px] w-full h-56 md:h-full"
+                      ? "md:w-120 w-full h-56 md:h-full"
                       : "w-full h-52"
                   }`}
                 >
@@ -275,7 +275,7 @@ export default function Community() {
                     <p className="text-sm text-gray-500 leading-relaxed mb-4">{story.excerpt}</p>
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
                         style={{ background: story.avatarBg }}
                       >
                         {story.initials}
@@ -321,7 +321,7 @@ export default function Community() {
                 <img
                   src={tip.img}
                   alt={tip.title}
-                  className="w-full h-56 object-cover flex-shrink-0"
+                  className="w-full h-56 object-cover shrink-0"
                 />
                 <div className="p-4 flex flex-col flex-1">
                   <h4 className="font-semibold text-sm mb-1">{tip.title}</h4>
@@ -345,7 +345,7 @@ export default function Community() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-4 grid-rows-2 gap-3 h-[340px]">
+        <div className="grid grid-cols-4 grid-rows-2 gap-3 h-85">
           {photos.map((photo, i) => (
             <motion.div
               key={i}
@@ -420,7 +420,7 @@ export default function Community() {
               Over 12,000 travelers are ready to help — from visa tips to the best kushari spots in Cairo.
             </p>
           </div>
-          <div className="flex gap-3 flex-shrink-0">
+          <div className="flex gap-3 shrink-0">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -456,7 +456,7 @@ export default function Community() {
               whileHover={{ x: 4 }}
               className="bg-white border border-gray-100 rounded-xl p-5 flex items-center gap-5 shadow-sm"
             >
-              <div className="bg-yellow-50 rounded-xl p-3 text-center min-w-[56px]">
+              <div className="bg-yellow-50 rounded-xl p-3 text-center min-w-14">
                 <p className="text-xs font-bold text-yellow-700 tracking-widest uppercase">{event.month}</p>
                 <p className="text-2xl font-bold text-gray-900 leading-tight">{event.day}</p>
               </div>
@@ -464,7 +464,7 @@ export default function Community() {
                 <p className="font-semibold text-sm mb-1">{event.title}</p>
                 <p className="text-xs text-gray-400">{event.sub}</p>
               </div>
-              <button className="bg-yellow-400 text-black text-sm font-semibold px-5 py-2 rounded-full flex-shrink-0 hover:bg-yellow-300 transition">
+              <button className="bg-yellow-400 text-black text-sm font-semibold px-5 py-2 rounded-full shrink-0 hover:bg-yellow-300 transition">
                 Join
               </button>
             </motion.div>

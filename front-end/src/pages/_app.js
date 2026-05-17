@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-
+import {Toaster} from "react-hot-toast";
 
 import "@/styles/globals.css";
 import Header from "@/components/Header&Footer/header";
@@ -28,6 +28,7 @@ export default function App({ Component, pageProps }) {
 
       <AuthProvider>
         {!dashboardLayout && <Header />}
+        <Toaster position="top-right" size="2xl" reverseOrder={false} />
         <Component {...pageProps} />
         {!dashboardLayout && <Footer />}
       </AuthProvider>

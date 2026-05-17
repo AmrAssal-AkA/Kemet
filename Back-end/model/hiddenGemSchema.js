@@ -11,25 +11,16 @@ const hiddenGemSchema = new mongoose.Schema({
             required: true
         }
     }],
-    location: {
-        type: {
-            type: String, 
-            enum: ['Point'],
-            default: 'Point',
-            required: true
-        },
-        coordinates: {
-            type: [Number],
-            required: true
-        },
-        formattedAddress: String
+    placeName:{
+        type: String,
+        required: true
     },
-    reviews: {
+    description: {
         type: String,
         required: true
     }
 });
 
-hiddenGemSchema.index({ location: "2dsphere" });
+
 
 module.exports = mongoose.models.hiddenGem || mongoose.model("hiddenGem", hiddenGemSchema);

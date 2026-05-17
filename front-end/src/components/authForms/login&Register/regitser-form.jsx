@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FaGoogle } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 import { loginWithGoogle } from "@/services/authServices";
 import { useAuth } from "@/context/AuthContext";
@@ -23,10 +24,16 @@ export default function RegisterForm() {
   const handleRegister = async (e) => {
     e.preventDefault();
     await register(formData);
+    toast.success("Registration successful");
   };
 
   const handleGoogleRegister = () => {
-    loginWithGoogle();
+    try{
+      loginWithGoogle();
+      toast.success("Registration with google successful");
+    }catch(error){
+      toast.error("Registration with google failed")
+    }
   };
 
   return (

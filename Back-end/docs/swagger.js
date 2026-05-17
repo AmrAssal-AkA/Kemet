@@ -30,6 +30,7 @@ const definition = {
   tags: [
     { name: "Auth", description: "Authentication and session endpoints" },
     { name: "Trips", description: "Trip management endpoints" },
+    { name: "Search", description: "Trip search and filtering endpoints" },
     { name: "Flights", description: "Flight search and pricing endpoints" },
     { name: "Hotels", description: "Hotel search and offer endpoints" },
     { name: "Contact", description: "Contact form endpoints" },
@@ -51,6 +52,7 @@ const definition = {
       name: "Newsletter",
       description: "Newsletter subscription and delivery endpoints",
     },
+    
   ],
   components: {
     securitySchemes: {
@@ -118,6 +120,16 @@ const definition = {
         required: ["email"],
         properties: {
           email: { type: "string", format: "email" },
+        },
+      },
+      SearchTripsRequest: {
+        type: "object",
+        required: ["location", "duration"],
+        properties: {
+          location: { type: "string", description: "Trip location (case-insensitive)" },
+          duration: { type: "string", description: "Trip duration (case-insensitive)" },
+          travelers: { type: "integer", minimum: 1, default: 1, description: "Minimum number of travelers" },
+          AdvantureType: { type: "string", description: "Optional adventure type filter" },
         },
       },
       Trip: {
@@ -272,8 +284,8 @@ const definition = {
         type: "object",
         properties: {
           _id: { type: "string" },
-          location: { type: "string" },
-          reviews: { type: "string" },
+          placeName: { type: "string" },
+          description: { type: "string" },
           images: {
             type: "array",
             items: {
@@ -283,6 +295,40 @@ const definition = {
                 cloudinaryId: { type: "string" },
               },
             },
+          },
+        },
+      },
+      HiddenGemCreateRequest: {
+        type: "object",
+        required: ["PlaceName", "Description", "image"],
+        properties: {
+          PlaceName: {
+            type: "string",
+            description: "Hidden gem name as currently read by the controller.",
+          },
+          Description: {
+            type: "string",
+            description:
+              "Hidden gem description as currently read by the controller.",
+          },
+          image: {
+            type: "array",
+            description: "Up to 5 uploaded images.",
+            items: { type: "string", format: "binary" },
+          },
+        },
+      },
+      HiddenGemUpdateRequest: {
+        type: "object",
+        properties: {
+          PlaceName: {
+            type: "string",
+            description: "Hidden gem name as currently read by the controller.",
+          },
+          Description: {
+            type: "string",
+            description:
+              "Hidden gem description as currently read by the controller.",
           },
         },
       },
@@ -519,9 +565,9 @@ const definition = {
       },
       RefundRequest: {
         type: "object",
-        required: ["amount"],
+        required: ["bookingId"],
         properties: {
-          amount: { type: "number", description: "Amount to refund" },
+          bookingId: { type: "string", description: "MongoDB ObjectId of the booking to refund" },
         },
       },
       Booking: {
@@ -1037,6 +1083,58 @@ const definition = {
           401: { description: "Unauthorized" },
           403: { description: "Forbidden" },
           404: { description: "Trip not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/search": {
+      get: {
+        tags: ["Search"],
+        summary: "Search trips by location, duration, travelers, and adventure type",
+        description: "Search for trips with optional filters. Location and duration are case-insensitive regex searches.",
+        parameters: [
+          {
+            in: "query",
+            name: "location",
+            required: true,
+            schema: { type: "string" },
+            description: "Trip location (required, case-insensitive)",
+          },
+          {
+            in: "query",
+            name: "duration",
+            required: true,
+            schema: { type: "string" },
+            description: "Trip duration (required, case-insensitive)",
+          },
+          {
+            in: "query",
+            name: "travelers",
+            required: false,
+            schema: { type: "integer", minimum: 1, default: 1 },
+            description: "Minimum number of travelers",
+          },
+          {
+            in: "query",
+            name: "AdvantureType",
+            required: false,
+            schema: { type: "string" },
+            description: "Optional adventure type filter",
+          },
+        ],
+        responses: {
+          200: {
+            description: "Trips matching search criteria",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Trip" },
+                },
+              },
+            },
+          },
+          400: { description: "Missing or invalid required parameters" },
           500: { description: "Server error" },
         },
       },
@@ -1594,6 +1692,27 @@ const definition = {
         },
       },
     },
+    "/api/payments/refund": {
+      post: {
+        tags: ["Payments"],
+        summary: "Refund a payment",
+        description: "Process a refund for a booking using Stripe",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/RefundRequest" },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Payment refunded successfully" },
+          400: { description: "Failed to process refund" },
+          500: { description: "Server error" },
+        },
+      },
+    },
     "/api/adminDashboard/AllUsers": {
       get: {
         tags: ["Admin"],
@@ -1644,6 +1763,26 @@ const definition = {
           200: { description: "Bookings returned" },
           401: { description: "Unauthorized" },
           403: { description: "Forbidden" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/adminDashboard/confirmBooking/{bookingId}": {
+      patch: {
+        tags: ["Admin"],
+        summary: "Confirm a booking",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "bookingId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Booking confirmed" },
+          404: { description: "Booking not found" },
           500: { description: "Server error" },
         },
       },
@@ -1788,29 +1927,31 @@ const definition = {
       post: {
         tags: ["Hidden Gems"],
         summary: "Create a hidden gem",
+        description:
+          "Admin-only endpoint that accepts multipart form data with `PlaceName`, `Description`, and up to 5 files under the `image` field.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
             "multipart/form-data": {
               schema: {
-                type: "object",
-                required: ["location", "reviews", "images"],
-                properties: {
-                  location: { type: "string" },
-                  reviews: { type: "string" },
-                  images: {
-                    type: "array",
-                    items: { type: "string", format: "binary" },
-                  },
+                $ref: "#/components/schemas/HiddenGemCreateRequest",
+              },
+              encoding: {
+                image: {
+                  style: "form",
+                  explode: true,
                 },
               },
             },
           },
         },
         responses: {
-          201: { description: "Hidden gem created" },
-          400: { description: "Validation failed" },
+          200: { description: "Hidden gem created" },
+          400: {
+            description:
+              "Missing `PlaceName`, `Description`, or at least one uploaded image.",
+          },
           401: { description: "Unauthorized" },
           500: { description: "Server error" },
         },
@@ -1818,6 +1959,8 @@ const definition = {
       get: {
         tags: ["Hidden Gems"],
         summary: "Get all hidden gems",
+        description:
+          "Returns all hidden gem documents in the `allHiddenGem` response property.",
         responses: {
           200: { description: "Hidden gems returned" },
           500: { description: "Server error" },
@@ -1836,6 +1979,8 @@ const definition = {
             schema: { type: "string" },
           },
         ],
+        description:
+          "Fetches a single hidden gem by route id. The current controller implementation uses a different param name internally, so this route may need a backend fix if requests fail unexpectedly.",
         responses: {
           200: { description: "Hidden gem returned" },
           404: { description: "Hidden gem not found" },
@@ -1858,15 +2003,7 @@ const definition = {
           content: {
             "application/json": {
               schema: {
-                type: "object",
-                properties: {
-                  location: { type: "string" },
-                  reviews: { type: "string" },
-                  images: {
-                    type: "array",
-                    items: { type: "string" },
-                  },
-                },
+                $ref: "#/components/schemas/HiddenGemUpdateRequest",
               },
             },
           },
@@ -1881,6 +2018,8 @@ const definition = {
       delete: {
         tags: ["Hidden Gems"],
         summary: "Delete a hidden gem by id",
+        description:
+          "Deletes a hidden gem by route id. The current controller implementation uses a different param name internally, so this route may need a backend fix if requests fail unexpectedly.",
         security: [{ cookieAuth: [] }],
         parameters: [
           {
@@ -1972,15 +2111,21 @@ const definition = {
         ],
         requestBody: {
           content: {
-            "application/json": {
+            "multipart/form-data": {
               schema: {
                 type: "object",
                 properties: {
                   title: { type: "string" },
+                  city: { type: "string" },
                   description: { type: "string" },
                   reviews: { type: "string" },
                   price: { type: "number" },
-                  image: { type: "string" },
+                  image: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                    description:
+                      "Optional replacement image file(s). Omit to keep existing offering images.",
+                  },
                 },
               },
             },

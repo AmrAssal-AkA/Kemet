@@ -8,6 +8,7 @@ const session = require("express-session");
 const swaggerUi = require("swagger-ui-express");
 const app = express();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const passport = require("passport");
 
 // Importing routes
 const connectDB = require("./config/db");
@@ -23,7 +24,6 @@ const { authLimiter, apiLimiter } = require("./middleware/rateLimiter");
 const Logger = require("./services/logger");
 const morganMiddleware = require("./middleware/morganMW");
 const swaggerSpec = require("./docs/swagger");
-const passport = require("passport");
 const port = process.env.PORT;
 const userRoutes = require("./routes/userdashboardRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
@@ -35,6 +35,8 @@ const { PassportValidation } = require("./controller/auth/passportValidation");
 const passportRoutes = require("./routes/passportRoutes");
 const SearchRoute = require("./routes/searchRoutes");
 const newsletterRoute = require("./routes/newsletterRoute");
+const offeringsRoute = require("./routes/offeringsRoutes");
+const hiddenGemRoute = require("./routes/hiddenGemRoutes");
 
 // Connect to databas
 connectDB();
@@ -143,6 +145,9 @@ app.use("/api/passport", passportRoutes);
 app.use("/api/guideDashboard", guideDashboardRoute);
 app.use("/api/searchHandler", SearchRoute);
 app.use("/api/newsletter", newsletterRoute);
+app.use("/api/offerings", offeringsRoute);
+app.use("/api/hiddenGem", hiddenGemRoute);
+
 
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");

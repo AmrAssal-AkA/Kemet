@@ -1,6 +1,6 @@
 const Booking = require("../../model/BookingSchema");
 const { stripeCheckout, refundPayment } = require("./paymentController");
-const validatePassport = require("../auth/passportValidation");
+const { PassportValidation } = require("../../services/passportService");
 const cloudinary = require("../../config/cloudinary");
 
 const currencyMapping = {
@@ -9,10 +9,20 @@ const currencyMapping = {
   EUR: "EUR",
 };
 
+function parseJsonField(value) {
+  if (typeof value !== "string") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
 const createBooking = async (req, res, nxt) => {
   try {
-    const userId = req.user?.userId;
-    const email = req.email?.email;
+    const userId = req.user?.id;
+    const email = req.user?.email;
 
     if (!userId && !email) {
       return res
@@ -20,29 +30,47 @@ const createBooking = async (req, res, nxt) => {
         .json({ error: "Missing required fields: userId, email" });
     }
 
-    const {
-      guest = [
-         {
-          firstName: "",
-          lastName: "",
-          nationality: "",
-          dateOfBirth: "",
-          PassportNumber: "",
-          expiryDate: "",
-          type: ["adult", "child", "infant"],
-        },
-      ],
-      flight,
-      hotel,
-      trip,
-      tripDetails,
-      PassportNumber,
-      totalPrice,
-    } = req.body;
+    const guests = parseJsonField(req.body.guests);
+    const flight = parseJsonField(req.body.flight);
+    const hotel = parseJsonField(req.body.hotel);
+    const trip = parseJsonField(req.body.trip);
+    const tripDetails = parseJsonField(req.body.tripDetails);
+    const items = parseJsonField(req.body.items);
+    const { PassportNumber, totalPrice } = req.body;
 
-    const ChildAge = (guests) => {
+    if (!Array.isArray(guests)) {
+      return res.status(400).json({ message: "Guests must be an array" });
+    }
+    const normalizedGuests = guests.map((guest) => ({
+      ...guest,
+      name: guest.name || `${guest.firstName || ""} ${guest.lastName || ""}`.trim(),
+    }));
+    const hasValidGuest = normalizedGuests.every(
+      (g) =>
+        g.firstName &&
+        g.lastName &&
+        g.nationality &&
+        g.type &&
+        g.passportNumber &&
+        g.dateOfBirth &&
+        g.expiryDate,
+    );
+    if (!hasValidGuest) {
+      return res.status(400).json({
+        message:
+          "Each guest must have firstName, lastName, nationality, type, passportNumber, dateOfBirth, and expiryDate fields",
+      });
+    }
+    req.body.guests = normalizedGuests;
+    req.body.flight = flight;
+    req.body.hotel = hotel;
+    req.body.trip = trip;
+    req.body.tripDetails = tripDetails;
+    req.body.items = items;
+
+    const ChildAge = (guest) => {
       const today = new Date();
-      const birthDate = new Date(guests.dateOfBirth);
+      const birthDate = new Date(guest.dateOfBirth);
       let age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
@@ -50,73 +78,93 @@ const createBooking = async (req, res, nxt) => {
       }
       return age < 16;
     };
-    const childerentAgeUnder16 = guests.some(
+
+    const childerentAgeUnder16 = normalizedGuests.some(
       (g) => g.type === "child" && ChildAge(g),
     );
-    if (!childerentAgeUnder16) {
-      const passportImage = req.file ? req.file.buffer : null;
-      if (!passportImage) {
-        res.status(400).json({ error: "Passport image is required" });
-        return;
+
+    if (!childerentAgeUnder16 && (!req.files || req.files.length === 0)) {
+      return res.status(400).json({ error: "Passport image is required" });
+    }
+
+
+    if (req.files && req.files.length > 0) {
+      const passportValidationResult = await PassportValidation({
+        width: req.imageMetadata?.width || 0,
+        height: req.imageMetadata?.height || 0,
+        format: req.imageMetadata?.format || "",
+        size: req.files[0].size,
+      });
+
+      const passportIssues = Array.isArray(passportValidationResult?.issues)
+        ? passportValidationResult.issues
+        : [];
+      const passportIsValid =
+        passportValidationResult?.valid ??
+        passportValidationResult?.isReadable ??
+        passportIssues.length === 0;
+
+      if (!passportIsValid) {
+        return res.status(400).json({
+          error:
+            passportValidationResult?.message ||
+            passportIssues.join(", ") ||
+            "Passport image validation failed",
+        });
       }
     }
-
-    const passportValidationResult = await validatePassport({
-      imageMetadata: { width: 0, height: 0, format: "", size: 0 },
-      file: { buffer: req.file.buffer },
-    });
-
-    if (!passportValidationResult.validation.isReadable) {
-      return res.status(400).json({
-        error: "Passport image is not readable",
-        issues: passportValidationResult.validation.issues,
-      });
+    let passportImage = [];
+    if (req.files && req.files.length > 0) {
+      passportImage = await Promise.all(
+        req.files.map((file) =>
+          cloudinary.uploadImage(file.buffer, "passport_images"),
+        ),
+      );
     }
-    const uploadedPassports = await Promise.all(
-      PassportImages.map((buffer) =>
-        cloudinary.uploadImage(buffer, "guest_passport_images"),
-      ),
-    );
 
     let currency = req.body.currency;
-    if (!userId || !guests || guests.length === 0 || !totalPrice) {
+    if (!userId || normalizedGuests.length === 0 || !totalPrice) {
       return res
         .status(400)
         .json({ error: "Missing required fields: userId, guests, totalPrice" });
     }
-    const guestNationalities = guests.map(
+    const guestNationalities = normalizedGuests.map(
       (g) => currencyMapping[g.nationality] || "USD",
     );
     if (guestNationalities.length > 0) {
       currency = guestNationalities[0];
     }
 
+    const hasTrip = Array.isArray(trip) ? trip.length > 0 : Boolean(trip);
+    const hasFlight = Boolean(flight);
+    const hasHotel = Boolean(hotel);
+
     const bookingDetails = {
-      bookingType:
-        trip && trip.length > 0
-          ? "Trip"
-          : flight && hotel
-            ? "FlightAndHotel"
-            : flight
-              ? "Flight"
-              : hotel
-                ? "Hotel"
-                : "Mixed",
+      bookingType: hasTrip
+        ? "Trip"
+        : hasFlight && hasHotel
+          ? "FlightAndHotel"
+          : hasFlight
+            ? "Flight"
+            : hasHotel
+              ? "Hotel"
+              : undefined,
     };
     const newBooking = new Booking({
       userId,
       email,
-      guests,
+      guests: normalizedGuests,
       flight,
       hotel,
       trip,
+      tripDetails,
       PassportNumber,
       totalPrice,
       currency,
       details: bookingDetails,
       status: "Pending",
       paymentStatus: "Pending",
-      passportImages: uploadedPassports.map((upload) => ({
+      passportImages: passportImage.map((upload) => ({
         url: upload.secure_url,
         cloudinaryId: upload.public_id,
       })),

@@ -4,6 +4,7 @@ const amadeusAPI = require("../../config/amadeus");
 const SearchHotel = async (req, res, nxt) => {
   const {
     cityCode,
+    cityId,
     checkInDate,
     checkOutDate,
     NumberOfGuests,
@@ -11,7 +12,13 @@ const SearchHotel = async (req, res, nxt) => {
     provider = "all",
   } = req.body;
 
-  if (!cityCode || !checkInDate || !checkOutDate || !NumberOfGuests || !NumberOfrooms) {
+  if (!cityCode && !cityId) {
+    return res.status(400).json({
+      error:
+        "Missing required fields. Please provide cityCode or cityId.",
+    });
+  }
+  if (!checkInDate || !checkOutDate || !NumberOfGuests || !NumberOfrooms) {
     return res.status(400).json({
       error:
         "Missing required fields. Please provide cityCode, checkInDate, checkOutDate, NumberOfGuests, and NumberOfrooms.",
@@ -36,6 +43,7 @@ const SearchHotel = async (req, res, nxt) => {
   try {
     const searchResults = await HotelServices.SearchCity({
       cityCode,
+      cityId,
       checkInDate,
       checkOutDate,
       NumberOfGuests,

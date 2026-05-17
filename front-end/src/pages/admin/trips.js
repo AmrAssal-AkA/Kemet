@@ -1,219 +1,80 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
 import { requireAdmin } from "@/services/adminService";
-import { createTrip, getAdminTrips } from "@/services/tripServices";
+import { deleteTrip, getAdminTrips, getTrips, updateTrip } from "@/services/tripServices";
+import toast from "react-hot-toast";
 
-const initialForm = {
-  title: "",
+const emptyEditForm = {
+  name: "",
   city: "",
   location: "",
-  category: "",
-  description: "",
   price: "",
   duration: "",
-  image: null,
+  description: "",
+  AdvantureType: "",
+  AdvantureDescription: "",
   guideAvailable: false,
   guidefees: "0",
   guestCapacity: "1",
+  image: null,
 };
 
-export default function AdminTrips({ admin, initialTrips = [], initialError = "" }) {
-  const { logout } = useAuth();
-  const [trips] = useState(initialTrips);
-  const [form, setForm] = useState(initialForm);
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState({ type: initialError ? "error" : "", message: initialError });
+const inputClass =
+  "mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100";
 
-  const pricePreview = useMemo(() => {
-    const basePrice = Number(form.price || 0);
-    const guideCost = form.guideAvailable ? Number(form.guidefees || 0) : 0;
-    return {
-      basePrice,
-      guideCost,
-      finalPrice: basePrice + guideCost,
-    };
-  }, [form.guideAvailable, form.guidefees, form.price]);
-
-  function handleChange(event) {
-    const { name, value, type, checked, files } = event.target;
-    setForm((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : type === "file" ? files?.[0] || null : value,
-    }));
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    setStatus({ type: "", message: "" });
-
-    if (Number(form.price) < 1) {
-      setStatus({ type: "error", message: "Price must be at least 1." });
-      return;
-    }
-
-    if (Number(form.guidefees) < 0) {
-      setStatus({ type: "error", message: "Guide fee cannot be negative." });
-      return;
-    }
-
-    if (Number(form.guestCapacity) < 1) {
-      setStatus({ type: "error", message: "Guest capacity must be at least 1." });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await createTrip({
-        ...form,
-        name: form.title,
-        price: pricePreview.basePrice,
-        guideAvailable: form.guideAvailable,
-        guidefees: pricePreview.guideCost,
-        guestCapacity: Number(form.guestCapacity),
-      });
-      setStatus({ type: "success", message: "Trip created successfully." });
-      setForm(initialForm);
-    } catch (error) {
-      setStatus({ type: "error", message: error.message || "Trip could not be created." });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <AdminLayout adminName={admin?.name} onLogout={logout}>
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-600">
-            Trip Management
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold text-slate-900">Create Trip</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Add database trips manually so they appear in the booking form.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="mt-6 grid gap-5 lg:grid-cols-[1fr_320px]">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Trip title/name">
-              <input name="title" value={form.title} onChange={handleChange} required className={inputClass} />
-            </Field>
-            <Field label="City">
-              <input name="city" value={form.city} onChange={handleChange} required className={inputClass} />
-            </Field>
-            <Field label="Location">
-              <input name="location" value={form.location} onChange={handleChange} required className={inputClass} />
-            </Field>
-            <Field label="Category">
-              <input name="category" value={form.category} onChange={handleChange} required className={inputClass} />
-            </Field>
-            <Field label="Price">
-              <input name="price" type="number" min="1" value={form.price} onChange={handleChange} required className={inputClass} />
-            </Field>
-            <Field label="Duration">
-              <input name="duration" type="number" min="1" value={form.duration} onChange={handleChange} required className={inputClass} />
-            </Field>
-            <Field label="Image">
-              <input type="file" name="image" onChange={handleChange} required className={inputClass} />
-            </Field>
-            <Field label="Guide fee">
-              <input name="guidefees" type="number" min="0" value={form.guidefees} onChange={handleChange} className={inputClass} />
-            </Field>
-            <Field label="Guest capacity">
-              <input name="guestCapacity" type="number" min="1" value={form.guestCapacity} onChange={handleChange} required className={inputClass} />
-            </Field>
-            <label className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 sm:col-span-2">
-              Guide available for this trip
-              <input
-                type="checkbox"
-                name="guideAvailable"
-                checked={form.guideAvailable}
-                onChange={handleChange}
-                className="h-4 w-4 accent-amber-400"
-              />
-            </label>
-            <Field label="Description" className="sm:col-span-2">
-              <textarea
-                name="description"
-                rows={5}
-                value={form.description}
-                onChange={handleChange}
-                required
-                className={inputClass}
-              />
-            </Field>
-          </div>
-
-          <aside className="h-fit rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <h2 className="text-lg font-extrabold text-slate-900">Price Preview</h2>
-            <div className="mt-4 space-y-3 text-sm">
-              <p className="flex justify-between">
-                <span>Base Trip Price</span>
-                <strong>EGP {pricePreview.basePrice.toLocaleString()}</strong>
-              </p>
-              <p className="flex justify-between">
-                <span>Guide Fee</span>
-                <strong>EGP {pricePreview.guideCost.toLocaleString()}</strong>
-              </p>
-              <p className="flex justify-between border-t border-slate-200 pt-3 text-base">
-                <span className="font-bold">Final Trip Price</span> <span className="text-slate-500 text-xs"> (including 14% tax)</span>
-                <strong>EGP {pricePreview.finalPrice.toLocaleString()}</strong>
-              </p>
-            </div>
-
-            {status.message && (
-              <p
-                className={`mt-4 rounded-xl p-3 text-sm font-semibold ${
-                  status.type === "success"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-red-50 text-red-600"
-                }`}
-              >
-                {status.message}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-5 w-full rounded-full bg-[#0b1d3a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300"
-            >
-              {loading ? "Creating..." : "Create Trip"}
-            </button>
-          </aside>
-        </form>
-
-        <div className="mt-8 border-t border-slate-200 pt-6">
-          <h2 className="text-xl font-extrabold text-slate-900">Current Trips</h2>
-          {trips.length > 0 ? (
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              {trips.map((trip) => (
-                <article key={trip._id || trip.tripId} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="font-bold text-slate-900">{trip.name || trip.title}</p>
-                  <p className="mt-1 text-sm text-slate-500">{trip.location || trip.city || "Egypt"}</p>
-                  <p className="mt-2 text-sm font-semibold text-amber-700">
-                    EGP {Number(trip.price || 0).toLocaleString()}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Capacity: {trip.guestCapacity || 0} | Guide: {trip.guideAvailable ? "Available" : "Unavailable"}
-                  </p>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">
-              No trips found yet.
-            </p>
-          )}
-        </div>
-      </section>
-    </AdminLayout>
-  );
+function getTripId(trip) {
+  return trip?._id || trip?.id || trip?.tripId;
 }
 
-const inputClass =
-  "mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100";
+function getTripImage(trip) {
+  const image = trip?.image || trip?.images;
+  if (Array.isArray(image)) {
+    return image[0]?.imageUrl || image[0]?.url || "";
+  }
+  return image?.imageUrl || image?.url || trip?.imageUrl || "";
+}
+
+function getTripPrice(trip) {
+  return trip?.price ?? trip?.basePrice ?? 0;
+}
+
+function buildEditForm(trip) {
+  return {
+    name: trip?.name || trip?.title || "",
+    city: trip?.city || "",
+    location: trip?.location || "",
+    price: String(getTripPrice(trip) || ""),
+    duration: String(trip?.duration || ""),
+    description: trip?.description || "",
+    AdvantureType: trip?.AdvantureType || "",
+    AdvantureDescription: trip?.AdvantureDescription || "",
+    guideAvailable: Boolean(trip?.guideAvailable),
+    guidefees: String(trip?.guidefees || 0),
+    guestCapacity: String(trip?.guestCapacity || 1),
+    image: null,
+  };
+}
+
+function appendEditFormData(form) {
+  const formData = new FormData();
+  formData.append("name", form.name);
+  formData.append("city", form.city);
+  formData.append("location", form.location);
+  formData.append("price", String(form.price || 0));
+  formData.append("duration", String(form.duration));
+  formData.append("description", form.description);
+  formData.append("AdvantureType", form.AdvantureType);
+  formData.append("AdvantureDescription", form.AdvantureDescription);
+  formData.append("guideAvailable", String(Boolean(form.guideAvailable)));
+  formData.append("guidefees", String(form.guidefees || 0));
+  formData.append("guestCapacity", String(form.guestCapacity || 1));
+  if (form.image) {
+    formData.append("image", form.image);
+  }
+  return formData;
+}
 
 function Field({ label, children, className = "" }) {
   return (
@@ -223,6 +84,299 @@ function Field({ label, children, className = "" }) {
       </span>
       {children}
     </label>
+  );
+}
+
+function Detail({ label, value }) {
+  if (value === undefined || value === null || value === "") return null;
+
+  return (
+    <p className="text-sm text-slate-600">
+      <span className="font-bold text-slate-800">{label}: </span>
+      {String(value)}
+    </p>
+  );
+}
+
+export default function AdminTrips({ admin, initialTrips = [], initialError = "" }) {
+  const { logout } = useAuth();
+  const [trips, setTrips] = useState(initialTrips);
+  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState("");
+  const [editingTrip, setEditingTrip] = useState(null);
+  const [editForm, setEditForm] = useState(emptyEditForm);
+  const [status, setStatus] = useState({
+    type: initialError ? "error" : "",
+    message: initialError,
+  });
+
+  async function refreshTrips() {
+    setLoading(true);
+    try {
+      const freshTrips = await getTrips({ force: true });
+      setTrips(freshTrips);
+      setStatus((current) => current.type === "error" ? { type: "", message: "" } : current);
+    } catch (error) {
+      setStatus({ type: "error", message: error.message || "Trips could not be loaded." });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener("kemet:trips-updated", refreshTrips);
+    return () => window.removeEventListener("kemet:trips-updated", refreshTrips);
+  }, []);
+
+  function openEditModal(trip) {
+    setEditingTrip(trip);
+    setEditForm(buildEditForm(trip));
+    setStatus({ type: "", message: "" });
+  }
+
+  function closeEditModal() {
+    setEditingTrip(null);
+    setEditForm(emptyEditForm);
+  }
+
+  function handleEditChange(event) {
+    const { name, value, type, checked, files } = event.target;
+    setEditForm((current) => ({
+      ...current,
+      [name]: type === "checkbox" ? checked : type === "file" ? files?.[0] || null : value,
+    }));
+  }
+
+  async function handleDelete(trip) {
+    const tripId = getTripId(trip);
+    if (!tripId) return;
+
+    setActionLoading(`delete-${tripId}`);
+    setStatus({ type: "", message: "" });
+
+    try {
+      await deleteTrip(tripId);
+      setTrips((current) => current.filter((item) => getTripId(item) !== tripId));
+      setStatus({ type: "success", message: "Trip deleted successfully." });
+      toast.success("Trip deleted successfully.");
+    } catch (error) {
+      setStatus({ type: "error", message: error.message || "Trip could not be deleted." });
+      toast.error("Failed to delete trip.");
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+  async function handleEditSubmit(event) {
+    event.preventDefault();
+    const tripId = getTripId(editingTrip);
+    if (!tripId) return;
+
+    setActionLoading(`edit-${tripId}`);
+    setStatus({ type: "", message: "" });
+
+    try {
+      const updated = await updateTrip(tripId, appendEditFormData(editForm));
+      const updatedTrip = updated?.trip || updated?.data?.trip || updated?.data || null;
+      if (updatedTrip) {
+        setTrips((current) =>
+          current.map((trip) => (getTripId(trip) === tripId ? updatedTrip : trip)),
+        );
+      } else {
+        await refreshTrips();
+      }
+      setStatus({ type: "success", message: "Trip updated successfully." });
+      toast.success("Trip updated successfully.");
+      closeEditModal();
+    } catch (error) {
+      setStatus({ type: "error", message: error.message || "Trip could not be updated." });
+      toast.error("Failed to update trip.");
+    } finally {
+      setActionLoading("");
+    }
+  }
+
+  return (
+    <AdminLayout adminName={admin?.name} onLogout={logout}>
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-600">
+              Trip Management
+            </p>
+            <h1 className="mt-2 text-3xl font-extrabold text-slate-900">Trips</h1>
+            <p className="mt-2 text-sm text-slate-500">
+              Review, edit, and delete created trips from the live backend.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={refreshTrips}
+            disabled={loading}
+            className="rounded-full border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400"
+          >
+            {loading ? "Refreshing..." : "Refresh Trips"}
+          </button>
+        </div>
+
+        {status.message && (
+          <p
+            className={`mt-5 rounded-2xl px-4 py-3 text-sm font-semibold ${
+              status.type === "success"
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-red-50 text-red-600"
+            }`}
+          >
+            {status.message}
+          </p>
+        )}
+
+        {loading ? (
+          <p className="mt-6 rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">
+            Loading trips...
+          </p>
+        ) : trips.length > 0 ? (
+          <div className="mt-6 grid gap-5 xl:grid-cols-2">
+            {trips.map((trip) => {
+              const tripId = getTripId(trip);
+              const imageUrl = getTripImage(trip);
+
+              return (
+                <article key={tripId} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                  {imageUrl && (
+                    <Image
+                      src={imageUrl}
+                      alt={trip.name || "Trip image"}
+                      width={800}
+                      height={420}
+                      unoptimized
+                      className="h-52 w-full object-cover"
+                    />
+                  )}
+                  <div className="p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h2 className="text-xl font-extrabold text-slate-900">
+                          {trip.name || trip.title || "Untitled Trip"}
+                        </h2>
+                        <p className="mt-1 text-sm font-semibold text-amber-700">
+                          EGP {Number(getTripPrice(trip) || 0).toLocaleString()}
+                          {trip.finalPrice ? ` / Final EGP ${Number(trip.finalPrice).toLocaleString()}` : ""}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500">
+                        {trip.AdvantureType || "Trip"}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-2">
+                      <Detail label="City" value={trip.city} />
+                      <Detail label="Location" value={trip.location} />
+                      <Detail label="Duration" value={trip.duration} />
+                      <Detail label="Advanture Description" value={trip.AdvantureDescription} />
+                      <Detail label="Description" value={trip.description} />
+                      <Detail label="Guide Available" value={trip.guideAvailable ? "Yes" : "No"} />
+                      <Detail label="Guide Fees" value={trip.guidefees} />
+                      <Detail label="Guest Capacity" value={trip.guestCapacity} />
+                    </div>
+
+                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(trip)}
+                        className="rounded-full bg-[#0b1d3a] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#132b52]"
+                      >
+                        Edit Trip
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(trip)}
+                        disabled={actionLoading === `delete-${tripId}`}
+                        className="rounded-full border border-red-200 px-5 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-red-300"
+                      >
+                        {actionLoading === `delete-${tripId}` ? "Deleting..." : "Delete Trip"}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-6 rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">
+            No trips found yet.
+          </p>
+        )}
+      </section>
+
+      {editingTrip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
+          <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-600">
+                  Edit Trip
+                </p>
+                <h2 className="mt-1 text-2xl font-extrabold text-slate-900">
+                  {editingTrip.name || "Trip Details"}
+                </h2>
+              </div>
+              <button type="button" onClick={closeEditModal} className="rounded-full px-3 py-1 text-2xl text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                x
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
+              <Field label="Trip Name">
+                <input name="name" value={editForm.name} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="City">
+                <input name="city" value={editForm.city} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="Location">
+                <input name="location" value={editForm.location} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="Price">
+                <input name="price" type="number" min="1" value={editForm.price} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="Duration">
+                <input name="duration" type="number" min="1" value={editForm.duration} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="Advanture Type">
+                <input name="AdvantureType" value={editForm.AdvantureType} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="Guide Fee">
+                <input name="guidefees" type="number" min="0" value={editForm.guidefees} onChange={handleEditChange} className={inputClass} />
+              </Field>
+              <Field label="Guest Capacity">
+                <input name="guestCapacity" type="number" min="1" value={editForm.guestCapacity} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="Advanture Description" className="sm:col-span-2">
+                <textarea name="AdvantureDescription" rows={3} value={editForm.AdvantureDescription} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="Description" className="sm:col-span-2">
+                <textarea name="description" rows={4} value={editForm.description} onChange={handleEditChange} required className={inputClass} />
+              </Field>
+              <Field label="New Image (optional)" className="sm:col-span-2">
+                <input name="image" type="file" accept="image/*" onChange={handleEditChange} className={inputClass} />
+              </Field>
+              <label className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 sm:col-span-2">
+                Guide available
+                <input name="guideAvailable" type="checkbox" checked={editForm.guideAvailable} onChange={handleEditChange} className="h-4 w-4 accent-amber-400" />
+              </label>
+              <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={closeEditModal} className="rounded-full border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                  Cancel
+                </button>
+                <button type="submit" disabled={actionLoading === `edit-${getTripId(editingTrip)}`} className="rounded-full bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300">
+                  {actionLoading === `edit-${getTripId(editingTrip)}` ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </AdminLayout>
   );
 }
 

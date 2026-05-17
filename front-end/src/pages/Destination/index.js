@@ -1,41 +1,10 @@
 import Head from "next/head";
 import { useState, useEffect } from "react";
-import { buildApiUrl } from "@/utils/apiBaseUrl";
 
-const ArrowRightIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="w-4 h-4 ml-1"
-  >
-    <path
-      d="M5 12H19M19 12L13 6M19 12L13 18"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="w-5 h-5 text-[#FBBF24]"
-  >
-    <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.2" />
-    <path
-      d="M8 12L11 15L16 9"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+import {FaGreaterThan, FaLessThan} from 'react-icons/fa'
+import { ArrowRightIcon } from "@/components/ui/ArrowRightIcon";
+import { CheckIcon } from "@/components/ui/CheckIcon";
+import axios from "axios";
 
 const defaultDestinationData = {
   hero: {
@@ -90,28 +59,15 @@ const defaultDestinationData = {
   },
 };
 
-function DestinationPage() {
+function DestinationPage(props) {
   const [data, setData] = useState(defaultDestinationData);
+  const {trips} = props
 
-  useEffect(() => {
-    const fetchDestinationData = async () => {
-      try {
-        const response = await fetch(buildApiUrl("/api/destinations"));
-        const result = await response.json();
-        if (result && result.length > 0) {
-          setData(result[0]);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchDestinationData();
-  }, []);
 
   return (
     <>
       <Head>
-        <title>Destination - {data.hero.title} | KEMET</title>
+        <title>Destination | KEMET</title>
       </Head>
 
       <div className="bg-white min-h-screen font-sans">
@@ -120,7 +76,7 @@ function DestinationPage() {
             src={data.hero.bgImage}
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-black/60"></div>
+          <div className="absolute inset-0 bg-linear-to-t from-white via-white/40 to-black/60"></div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-8 md:px-16 w-full mt-20">
             <span className="bg-[#FBBF24] text-white px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-widest shadow-sm">
@@ -157,7 +113,7 @@ function DestinationPage() {
               </span>
             </div>
           </div>
-          <div className="relative h-[650px] w-full">
+          <div className="relative h-162.5 w-full">
             <img
               src={data.narrative.image1}
               className="absolute top-0 left-0 w-[65%] h-[80%] object-cover rounded-[40px] shadow-2xl z-10"
@@ -189,35 +145,38 @@ function DestinationPage() {
             </div>
             <div className="flex gap-4">
               <button className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center hover:bg-[#FBBF24] hover:text-white transition-all duration-300 text-xl font-black text-[#111827]">
-                {"<"}
+                <FaLessThan />
               </button>
               <button className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center hover:bg-[#FBBF24] hover:text-white transition-all duration-300 text-xl font-black text-[#111827]">
-                {">"}
+                <FaGreaterThan />
               </button>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {data.curated.map((item) => (
+            {trips.map((trip) => (
               <div
-                key={item.id}
-                className="bg-white rounded-[32px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 group cursor-pointer pb-8 flex flex-col h-full"
+                key={trip.id}
+                className="bg-white rounded-4xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 group cursor-pointer pb-8 flex flex-col h-full"
               >
-                <div className="w-full aspect-[4/3] overflow-hidden p-4">
+                <div className="w-full aspect-4/3 overflow-hidden p-4">
                   <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover rounded-[24px] transform group-hover:scale-105 transition-transform duration-700"
+                    src={trip.image}
+                    alt={trip.name}
+                    className="w-full h-full object-cover rounded-3xl transform group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
                 <div className="px-8 pt-4 flex flex-col grow">
                   <h3 className="font-black text-2xl text-[#111827] mb-3">
-                    {item.title}
+                    {trip.name}
                   </h3>
                   <p className="text-gray-500 text-sm leading-relaxed mb-8 grow">
-                    {item.desc}
+                    {trip.description}
                   </p>
-                  <div className="flex items-center text-[#FBBF24] font-black text-xs uppercase tracking-widest group-hover:text-[#e5a913] transition-colors">
-                    {item.duration} <ArrowRightIcon />
+                  <div className="mt-auto flex items-center justify-between font-bold text-lg transition-colors">
+                    <span>{trip.price}</span>
+                      <div className="ml-2 transform group-hover:translate-x-1 transition-transform text-[#FBBF24] group-hover:text-[#e5a913] w-6 h-6">
+                         <ArrowRightIcon />
+                      </div>
                   </div>
                 </div>
               </div>
@@ -227,7 +186,7 @@ function DestinationPage() {
 
         <section className="max-w-7xl mx-auto px-8 md:px-16 py-24">
           <div className="bg-[#f4f4f5] rounded-[48px] overflow-hidden flex flex-col md:flex-row shadow-lg">
-            <div className="w-full md:w-[45%] h-[600px]">
+            <div className="w-full md:w-[45%] h-150">
               <img
                 src={data.hotel.image}
                 className="w-full h-full object-cover"
@@ -264,7 +223,7 @@ function DestinationPage() {
           <div className="relative bg-[#201c2c] rounded-[48px] p-24 text-center overflow-hidden flex flex-col items-center justify-center shadow-2xl">
             <div className="absolute inset-6 border-2 border-[#FBBF24]/20 rounded-[40px] pointer-events-none"></div>
 
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[800px] h-[800px] opacity-10 pointer-events-none">
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-200 h-200 opacity-10 pointer-events-none">
               <svg
                 viewBox="0 0 100 100"
                 fill="none"
@@ -305,3 +264,27 @@ function DestinationPage() {
 }
 
 export default DestinationPage;
+
+
+export async function getStaticProps() {
+  
+  try{
+    const response = await axios("http://localhost:8000/api/Trip/");
+
+    return {
+      props: {
+        trips: response.data
+      },
+      revalidate: 60
+    }
+  }catch(error){
+    console.log("error while fetch the data")
+     
+    return {
+      props: {
+        trips: []
+      },
+      revalidate: 10
+    }
+  }
+} 

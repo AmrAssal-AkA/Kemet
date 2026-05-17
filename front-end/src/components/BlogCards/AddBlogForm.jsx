@@ -2,6 +2,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 
 export default function AddBlogForm({ onSuccess }) {
   const { user } = useAuth();
@@ -16,19 +17,23 @@ export default function AddBlogForm({ onSuccess }) {
     e.preventDefault();
 
     if (!user) {
+      toast.error("You must be logged in to submit a blog post");
       setError("You must be logged in to submit a blog post");
       return;
     }
 
     if (!title.trim()) {
+      toast.error("Title is required");
       setError("Title is required");
       return;
     }
     if (!content.trim()) {
+      toast.error("content is required")
       setError("Content is required");
       return;
     }
     if (image.length === 0) {
+      toast.error("images is required")
       setError("Image is required");
       return;
     }
@@ -48,7 +53,7 @@ export default function AddBlogForm({ onSuccess }) {
       const response = await axios.post("/api/Blog/AddBlog", formData, {
         withCredentials: true,
       });
-
+      toast.success("Blog Added successfully");
       setLoading(false);
       setSuccess(true);
       setTitle("");
@@ -62,6 +67,7 @@ export default function AddBlogForm({ onSuccess }) {
         error.response?.data?.message ||
         "Failed to submit blog post. Please try again.";
       setError(errorMessage);
+      toast.error("An error occured while adding the blog")
       console.error("Form submission error:", error);
     }
   };

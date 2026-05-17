@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://kemet-gold.vercel.app/";
+const API_BASE_URL =
+  process.env.API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8000";
 
 async function handler(req, res) {
   if (req.method !== "POST") {

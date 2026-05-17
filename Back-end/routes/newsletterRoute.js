@@ -15,7 +15,7 @@ router.post("/subscribe", async (req, res) => {
     try {
         const existingSubscription = await Newsletter.findOne({ email });
         if (existingSubscription) {
-            return res.status(400).json({ error: "You are already subscribed" });
+            return res.status(200).json({ message: "email is already exists!" });
         }
         const newSubscription = new Newsletter({ email });
         await newSubscription.save();
@@ -24,7 +24,7 @@ router.post("/subscribe", async (req, res) => {
             to: email,
             subject: "Welcome to Kemet Travel Newsletter!",
             html: htmlContent,
-        }, res);
+        });
         res.status(201).json({ message: "You have been subscribed successfully!" });
     } catch (error) {
         console.error("Error subscribing to newsletter:", error);
@@ -45,7 +45,7 @@ router.post("/send", authenticate, authorize("admin"), async (req, res) => {
                 to: subscriber.email,
                 subject,
                 html: htmlContent,
-            }, res);
+            });
         });
         await Promise.all(emailPromises);
         res.status(200).json({ message: "Newsletter sent to all subscribers!" });
@@ -70,7 +70,7 @@ router.post("/unsubscribe",authenticate, authorize("user"), async (req, res) => 
             subject: "You have been unsubscribed from Kemet Travel Newsletter",
             text: "You have successfully unsubscribed from our newsletter. We're sorry to see you go!",
             html: `<p>You have successfully unsubscribed from our newsletter. We're sorry to see you go!</p>`,
-        }, res);
+        });
         res.status(200).json({ message: "You have been unsubscribed successfully!" });
     } catch (error) {
         console.error("Error unsubscribing from newsletter:", error);

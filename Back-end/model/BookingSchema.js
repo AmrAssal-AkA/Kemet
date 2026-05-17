@@ -85,6 +85,12 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    paymentCard:{
+      brand: String,
+      last4: String,
+      expMonth: Number,
+      expYear: Number,
+    },
     totalPrice: {
       type: Number,
       required: true,

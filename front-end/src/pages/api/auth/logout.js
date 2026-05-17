@@ -1,6 +1,17 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://kemet-gold.vercel.app/";
+const API_BASE_URL =
+  process.env.API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8000";
+
+const clearAuthCookies = [
+  "x-auth-token=; Max-Age=0; Path=/; HttpOnly",
+  "x-refresh-token=; Max-Age=0; Path=/; HttpOnly",
+  "auth-token=; Max-Age=0; Path=/",
+  "token=; Max-Age=0; Path=/",
+  "accessToken=; Max-Age=0; Path=/",
+];
 
 async function hundler(req, res) {
   if (req.method !== "POST") {
@@ -8,34 +19,22 @@ async function hundler(req, res) {
   }
 
   try {
-    await axios.post(
+    const response = await axios.post(
       `${API_BASE_URL}/api/auth/logout`,
       {},
       {
-        headers: {
-          Authorization: authToken ? `Bearer ${authToken}` : "",
-          cookies: req.headers.cookie || "",
-        },
+        headers: { Cookie: req.headers.cookie || "" },
         withCredentials: true,
       },
     );
+    res.setHeader("Set-Cookie", clearAuthCookies);
+    return res.status(response.status).json(response.data);
   } catch (error) {
-    if (error.response?.status && error.response.status !== 401) {
-      console.error("Logout error:", error.response?.data || error.message);
+    res.setHeader("Set-Cookie", clearAuthCookies);
+    if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }
-  } finally {
-    res.setHeader("Set-Cookie", [
-      "x-auth-token=; Max-Age=0; Path=/; HttpOnly",
-      "x-refresh-token=; Max-Age=0; Path=/; HttpOnly",
-      "connect.sid=; Max-Age=0; Path=/; HttpOnly",
-    ]);
-  }
-
-  try {
-    res.status(200).json({ message: "Logged out successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
 

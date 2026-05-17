@@ -17,30 +17,50 @@ const iataToCityName = {
 };
 
 exports.search = async (params) => {
-  const { cityCode, checkInDate, checkOutDate, adults = 1, rooms = 1 } = params;
+  const { cityCode, cityId: directCityId, checkInDate, checkOutDate, adults = 1, rooms = 1 } = params;
 
- 
-  const cityName = iataToCityName[cityCode] || cityCode;
-  const mappingRes = await hotelClient.get("/mapping", { params: { name: cityName } });
-  const mappingData = mappingRes.data || [];
+  let cityId = directCityId || null;
 
-  const geoResult = mappingData.find((item) => item.type === "GEO");
-  const cityId = geoResult?.document_id || mappingData[0]?.document_id || null;
-  if (!cityId) return [];
+  // Resolve city ID via /mapping only if not provided directly
+  if (!cityId) {
+    const cityName = iataToCityName[cityCode] || cityCode;
+    try {
+      const mappingRes = await hotelClient.get("/mapping", {
+        params: { api_key: process.env.HOTEL_MAKCORPS_KEY, name: cityName },
+      });
+      const mappingData = Array.isArray(mappingRes.data) ? mappingRes.data : [];
+      const geoResult = mappingData.find((item) => item.type === "GEO");
+      cityId = geoResult?.document_id || mappingData[0]?.document_id || null;
 
+      if (!cityId) {
+        console.warn(`[MakCorps] /mapping returned no city ID for "${cityName}". Raw:`, mappingData);
+        return [];
+      }
+    } catch (err) {
+      console.error(
+        `[MakCorps] /mapping failed for "${cityName}":`,
+        err.response?.status,
+        JSON.stringify(err.response?.data),
+      );
+      return [];
+    }
+  }
 
-  const response = await hotelClient.get("/city", {
-    params: {
-      cityid: cityId,
-      pagination: 0,
-      cur: "EGP",
-      rooms: parseInt(rooms) || 1,
-      adults: parseInt(adults) || 1,
-      checkin: checkInDate,
-      checkout: checkOutDate,
-    },
-  });
+  // Search hotels by city ID
+  const searchParams = {
+    api_key: process.env.HOTEL_MAKCORPS_KEY,
+    cityid: cityId,
+    pagination: "0",
+    cur: "USD",
+    rooms: String(parseInt(rooms) || 1),
+    adults: String(parseInt(adults) || 1),
+    checkin: checkInDate,
+    checkout: checkOutDate,
+  };
 
+  console.log(`[MakCorps] Searching cityId=${cityId}`, searchParams);
+
+  const response = await hotelClient.get("/city", { params: searchParams });
   const data = Array.isArray(response.data) ? response.data : [];
 
   return data
@@ -52,8 +72,8 @@ exports.search = async (params) => {
       geocode: hotel.geocode,
       rating: hotel.reviews?.rating || null,
       price: {
-        total: parseFloat((hotel.price1 || "$0").replace(/[^0-9.]/g, "")),
-        currency: "EGP",
+        total: parseFloat((hotel.price1 || "0").replace(/[^0-9.]/g, "")) || 0,
+        currency: "USD",
       },
       vendors: [
         { name: hotel.vendor1, price: hotel.price1 },

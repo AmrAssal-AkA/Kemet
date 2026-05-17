@@ -1,5 +1,5 @@
 const rateLimiter = require("express-rate-limit");
-const {ipKeyGenerator} = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
 
 exports.authLimiter = rateLimiter({
   windowMs: 15 * 60 * 1000,
@@ -11,12 +11,12 @@ exports.authLimiter = rateLimiter({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req, res) => {
-    const ip = 
+    const ip =
       req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
       req.headers["forwarded"]?.match(/for=([^;,]+)/)?.[1]?.trim() ||
-      req.ip
-      
-      return ipKeyGenerator({ip})
+      req.ip;
+
+    return ipKeyGenerator({ ip });
   },
 });
 
@@ -28,12 +28,11 @@ exports.apiLimiter = rateLimiter({
     message: "Too many requests from this IP, please try again later.",
   },
   keyGenerator: (req, res) => {
-    
     const ip =
       req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
       req.headers["forwarded"]?.match(/for=([^;,]+)/)?.[1]?.trim() ||
-      req.ip
+      req.ip;
 
-    return ipKeyGenerator({ip}) 
+    return ipKeyGenerator({ ip });
   },
 });

@@ -43,7 +43,7 @@ const data = {
   gems: [
     { img: "/images/aswan/gem1.jpg", tag: "Nubian Life",  location: "West Bank",     title: "Gharb Soheil Village",   desc: "The most authentic Nubian village near Aswan. Painted houses, warm families, and real home cooking." },
     { img: "/images/aswan/gem2.jpg", tag: "Ancient Site", location: "Nile Islands",  title: "Elephantine Island",     desc: "An inhabited island in the middle of the Nile with ruins of 3,000 years stacked on top of each other." },
-    { img: "/images/aswan/gem3.jpg", tag: "Desert Edge",  location: "West Desert",   title: "The Golden Dunes",       desc: "A 20-minute drive from Aswan, the desert begins. Completely silent. Completely yours." },
+    { img: "/images/aswan/gem3.jpg", tag: "Seko Nubian House.",  location: "Elephantine Island",   title: "seko kato nile view hote",       desc: "A 20-minute drive from Aswan, the desert begins. Completely silent. Completely yours." },
   ],
 };
 

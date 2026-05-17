@@ -9,7 +9,6 @@ if (!apiKey) {
 
 const hotelClient = axios.create({
   baseURL: "https://api.makcorps.com",
-  timeout: 15000,
   params: { api_key: apiKey },
 });
 
