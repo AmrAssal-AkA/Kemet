@@ -1,6 +1,14 @@
 const trip = require("../../model/tripSchema");
 const cloudinary = require("../../config/cloudinary");
 
+function getUploadedFile(req) {
+  return req.file || req.files?.[0];
+}
+
+function getFileSource(file) {
+  return file?.buffer || file?.path;
+}
+
 // create trip
 const createTrip = async (req, res) => {
   const {
@@ -20,10 +28,11 @@ const createTrip = async (req, res) => {
   const StartPrice = guideAvailable ? parseFloat(price) + parseFloat(guidefees) : parseFloat(price); 
   const finalPrice = StartPrice * parseFloat("1.14"); 
 
-  if (!req.file) {
+  const uploadedFile = getUploadedFile(req);
+  if (!uploadedFile) {
     return res.status(400).json({ message: "Please upload an image" });
   }
-  const imagepath = req.file.path;
+  const imagepath = getFileSource(uploadedFile);
 
   if (
     !name ||
@@ -122,10 +131,11 @@ const updateTripById = async (req, res) => {
       guidefees: req.body.guidefees,
       guestCapacity: req.body.guestCapacity,
     };
-    if (!req.file) {
+    const uploadedFile = getUploadedFile(req);
+    if (!uploadedFile) {
       return res.status(400).json({ message: "Please upload an image" });
     }
-    const imagepath = req.file.path;
+    const imagepath = getFileSource(uploadedFile);
 
     const result = await cloudinary.uploadImage(imagepath, "trip_images");
     updateData.images = [

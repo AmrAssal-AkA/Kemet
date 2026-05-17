@@ -53,54 +53,42 @@ function findTripByIdentifier(trips, tripId) {
   return trips.find((trip) => String(getTripIdentifier(trip)) === normalizedId) || null;
 }
 
-function getFileNameFromUrl(imageUrl) {
-  try {
-    const url = new URL(imageUrl, window.location.origin);
-    const fileName = url.pathname.split("/").filter(Boolean).pop();
-    return fileName || "trip-image.jpg";
-  } catch {
-    return "trip-image.jpg";
-  }
+function isFormData(value) {
+  return typeof FormData !== "undefined" && value instanceof FormData;
 }
 
-async function getImageFileFromUrl(imageUrl) {
-  if (imageUrl instanceof File) return imageUrl;
+function buildTripFormData(payload, { includeImage = true } = {}) {
+  if (isFormData(payload)) return payload;
 
-  const imageResponse = await fetch(imageUrl);
-
-  if (!imageResponse.ok) {
-    throw new Error("Image URL could not be loaded.");
-  }
-
-  const imageBlob = await imageResponse.blob();
-  const fileName = getFileNameFromUrl(imageUrl);
-  const fileType = imageBlob.type || "image/jpeg";
-
-  return new File([imageBlob], fileName, { type: fileType });
-}
-
-export async function createTrip(payload) {
-  const imageFile = await getImageFileFromUrl(payload.image || payload.imageUrl);
   const formData = new FormData();
 
   formData.append("name", payload.name || payload.title);
   formData.append("city", payload.city);
-  formData.append("category", payload.category);
-  formData.append("description", payload.description);
-  formData.append("price", String(payload.price || 0));
-  formData.append("duration", String(payload.duration));
   formData.append("location", payload.location);
+  formData.append("price", String(payload.price || payload.basePrice || 0));
+  formData.append("duration", String(payload.duration));
+  formData.append("description", payload.description);
+  formData.append("AdvantureType", payload.AdvantureType || payload.category);
+  formData.append("AdvantureDescription", payload.AdvantureDescription || "");
   formData.append("guideAvailable", String(Boolean(payload.guideAvailable)));
   formData.append("guidefees", String(payload.guidefees || 0));
   formData.append("guestCapacity", String(payload.guestCapacity || 1));
-  formData.append("image", imageFile);
+
+  if (includeImage && payload.image) {
+    formData.append("image", payload.image);
+  }
+
+  return formData;
+}
+
+export async function createTrip(payload) {
+  const formData = buildTripFormData(payload);
 
   const res = await fetch(buildApiUrl("/api/Trip/addTrip"), {
     method: "POST",
     credentials: "include",
     body: formData,
   });
-  console.log("Create Trip Response:", res);
   const data = await handleResponse(res, "Trip could not be created.");
   tripsCache = null;
   return data;
@@ -159,20 +147,7 @@ export async function getTripById(id) {
 }
 
 export async function updateTrip(id, payload) {
-  const imageFile = await getImageFileFromUrl(payload.image || payload.imageUrl);
-  const formData = new FormData();
-
-  formData.append("name", payload.name || payload.title);
-  formData.append("city", payload.city);
-  formData.append("category", payload.category);
-  formData.append("description", payload.description);
-  formData.append("price", String(payload.price || 0));
-  formData.append("duration", String(payload.duration));
-  formData.append("location", payload.location);
-  formData.append("guideAvailable", String(Boolean(payload.guideAvailable)));
-  formData.append("guidefees", String(payload.guidefees || 0));
-  formData.append("guestCapacity", String(payload.guestCapacity || 1));
-  formData.append("image", imageFile);
+  const formData = buildTripFormData(payload, { includeImage: Boolean(payload?.image) });
 
   const res = await fetch(buildApiUrl(`/api/Trip/updateTrip/${id}`), {
     method: "PUT",

@@ -2111,15 +2111,21 @@ const definition = {
         ],
         requestBody: {
           content: {
-            "application/json": {
+            "multipart/form-data": {
               schema: {
                 type: "object",
                 properties: {
                   title: { type: "string" },
+                  city: { type: "string" },
                   description: { type: "string" },
                   reviews: { type: "string" },
                   price: { type: "number" },
-                  image: { type: "string" },
+                  image: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                    description:
+                      "Optional replacement image file(s). Omit to keep existing offering images.",
+                  },
                 },
               },
             },

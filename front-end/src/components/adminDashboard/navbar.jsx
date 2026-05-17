@@ -46,7 +46,7 @@ export default function AdminNavBar() {
           onClick={toggleAddContent}
         >
           <FaPlus className="text-xs" />
-          Create Trip
+          Add New Content
         </button>
         <Link
           href="/blogs?addArticle=1"
