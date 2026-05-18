@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
 import {
+  cancelAdminBooking,
   confirmAdminBooking,
   getAdminBookings,
   requireAdmin,
@@ -11,6 +12,7 @@ import {
 
 const PENDING_STATUSES = ["pending", "waiting for confirmation"];
 const CONFIRMED_STATUSES = ["confirmed"];
+const CANCELLED_STATUSES = ["cancelled", "canceled"];
 
 function isPendingBooking(booking) {
   return PENDING_STATUSES.includes(String(booking.status || "").trim().toLowerCase());
@@ -20,8 +22,12 @@ function isConfirmedBooking(booking) {
   return CONFIRMED_STATUSES.includes(String(booking.status || "").trim().toLowerCase());
 }
 
+function isCancelledBooking(booking) {
+  return CANCELLED_STATUSES.includes(String(booking.status || "").trim().toLowerCase());
+}
+
 function isVisibleBooking(booking) {
-  return isPendingBooking(booking) || isConfirmedBooking(booking);
+  return isPendingBooking(booking) || isConfirmedBooking(booking) || isCancelledBooking(booking);
 }
 
 function getBookingId(booking) {
@@ -164,6 +170,7 @@ export default function AdminBookings({ admin }) {
   const [pageError, setPageError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [confirmStatus, setConfirmStatus] = useState({});
+  const [cancelStatus, setCancelStatus] = useState({});
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -185,6 +192,10 @@ export default function AdminBookings({ admin }) {
   );
   const confirmedBookings = useMemo(
     () => displayedBookings.filter(isConfirmedBooking),
+    [displayedBookings],
+  );
+  const cancelledBookings = useMemo(
+    () => displayedBookings.filter(isCancelledBooking),
     [displayedBookings],
   );
   const hasActiveSearch = searchQuery.trim().length > 0;
@@ -251,6 +262,57 @@ export default function AdminBookings({ admin }) {
     }));
   };
 
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+
+    setSuccessMessage("");
+    setPageError("");
+    setCancelStatus((current) => ({
+      ...current,
+      [bookingId]: { loading: true, error: "" },
+    }));
+
+    try {
+      const response = await cancelAdminBooking(bookingId);
+      const returnedBooking =
+        response?.booking ||
+        response?.cancelledBooking ||
+        response?.data?.booking ||
+        response?.data?.cancelledBooking ||
+        (response?.status || response?.paymentStatus ? response : null);
+
+      setBookings((current) =>
+        current.map((booking) => {
+          if ((booking._id || booking.id || booking.bookingId) !== bookingId) {
+            return booking;
+          }
+
+          return {
+            ...booking,
+            ...(returnedBooking && typeof returnedBooking === "object" ? returnedBooking : {}),
+            status: returnedBooking?.status || "Cancelled",
+            paymentStatus: returnedBooking?.paymentStatus || booking.paymentStatus,
+          };
+        }),
+      );
+      setSuccessMessage(response?.message || "Booking cancelled successfully.");
+      toast.success(response?.message || "Booking cancelled successfully.");
+    } catch (error) {
+      const message = error.message || "Booking could not be cancelled.";
+      setCancelStatus((current) => ({
+        ...current,
+        [bookingId]: { loading: false, error: message },
+      }));
+      toast.error(message);
+      return;
+    }
+
+    setCancelStatus((current) => ({
+      ...current,
+      [bookingId]: { loading: false, error: "" },
+    }));
+  };
+
   const handleSearch = (event) => {
     event.preventDefault();
     setSearchQuery(searchInput);
@@ -262,8 +324,11 @@ export default function AdminBookings({ admin }) {
   };
 
   const renderBookingCard = (booking, index) => {
-    const status = confirmStatus[booking.id] || {};
+    const confirmAction = confirmStatus[booking.id] || {};
+    const cancelAction = cancelStatus[booking.id] || {};
     const canConfirm = isPendingBooking(booking);
+    const canCancel = !isCancelledBooking(booking);
+    const actionError = confirmAction.error || cancelAction.error;
 
     return (
       <li
@@ -283,16 +348,28 @@ export default function AdminBookings({ admin }) {
             </p>
           </div>
 
-          {canConfirm && (
-            <button
-              type="button"
-              onClick={() => handleConfirmBooking(booking.id)}
-              disabled={!booking.id || status.loading}
-              className="rounded-xl bg-[#0b1d3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300"
-            >
-              {status.loading ? "Confirming..." : "Confirm Booking"}
-            </button>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {canConfirm && (
+              <button
+                type="button"
+                onClick={() => handleConfirmBooking(booking.id)}
+                disabled={!booking.id || confirmAction.loading}
+                className="rounded-xl bg-[#0b1d3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                {confirmAction.loading ? "Confirming..." : "Confirm Booking"}
+              </button>
+            )}
+            {canCancel && (
+              <button
+                type="button"
+                onClick={() => handleCancelBooking(booking.id)}
+                disabled={!booking.id || cancelAction.loading}
+                className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {cancelAction.loading ? "Cancelling..." : "Cancel Booking"}
+              </button>
+            )}
+          </div>
         </div>
 
         <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -320,7 +397,11 @@ export default function AdminBookings({ admin }) {
             <dt className="text-xs font-semibold uppercase text-slate-400">Status</dt>
             <dd
               className={`mt-1 text-sm font-semibold ${
-                isConfirmedBooking(booking) ? "text-emerald-700" : "text-amber-700"
+                isCancelledBooking(booking)
+                  ? "text-red-700"
+                  : isConfirmedBooking(booking)
+                    ? "text-emerald-700"
+                    : "text-amber-700"
               }`}
             >
               {booking.status}
@@ -334,9 +415,9 @@ export default function AdminBookings({ admin }) {
           </div>
         </dl>
 
-        {status.error && (
+        {actionError && (
           <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-            {status.error}
+            {actionError}
           </p>
         )}
       </li>
@@ -354,7 +435,8 @@ export default function AdminBookings({ admin }) {
             </p>
           </div>
           <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-            {pendingBookings.length} pending / {confirmedBookings.length} confirmed
+            {pendingBookings.length} pending / {confirmedBookings.length} confirmed /{" "}
+            {cancelledBookings.length} cancelled
           </span>
         </div>
 
@@ -439,12 +521,30 @@ export default function AdminBookings({ admin }) {
                 </ul>
               </section>
             )}
+
+            {cancelledBookings.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Cancelled Bookings
+                  </h2>
+                  <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+                    {cancelledBookings.length}
+                  </span>
+                </div>
+                <ul className="mt-3 space-y-4">
+                  {cancelledBookings.map((booking, index) =>
+                    renderBookingCard(booking, index),
+                  )}
+                </ul>
+              </section>
+            )}
           </div>
         ) : pageError ? null : (
           <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-5 text-sm font-medium text-slate-500">
             {hasActiveSearch
               ? "No booking found for this ID."
-              : "No pending or confirmed bookings found."}
+              : "No pending, confirmed, or cancelled bookings found."}
           </p>
         )}
       </section>

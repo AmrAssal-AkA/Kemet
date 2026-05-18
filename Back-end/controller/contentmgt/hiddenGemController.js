@@ -67,15 +67,20 @@ const getOneHiddenGemById = async (req, res) => {
 const updateHiddenGemById = async (req, res) => {
     const {PlaceName, Description} = req.body;
     try {
+        const updateData = {};
+
+        if (PlaceName !== undefined) updateData.placeName = PlaceName;
+        if (Description !== undefined) updateData.description = Description;
+
         const hiddenGemUpdate = await hiddenG.findByIdAndUpdate(
         req.params.id,
-        {PlaceName, Description},
-        {new: true},
+        updateData,
+        {new: true, runValidators: true},
         );
         if (!hiddenGemUpdate) {
         return res.status(404).json({message: "Hidden Gem not found"});
         }
-        res.status(200).json({message: "Hidden Gem updated successfully"});
+        res.status(200).json({message: "Hidden Gem updated successfully", hiddenGem: hiddenGemUpdate});
     } catch (error) {
         res.status(500).json({message: "Server Error", error: error.message});
     }
@@ -83,9 +88,9 @@ const updateHiddenGemById = async (req, res) => {
 
 // Delete Hidden Gem Post
 const deleteHiddenGemById = async (req, res) => {
-    const {hiddensId} = req.params;
+    const {id} = req.params;
     try {
-        const hiddenDelete = await hiddenG.findByIdAndDelete(hiddensId);
+        const hiddenDelete = await hiddenG.findByIdAndDelete(id);
         if (!hiddenDelete) {
         return res.status(404).json({message: "Hidden Gem Post not found"});
         }

@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
+
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
 import {
-  getAdminBookings,
+  getAdminBookingDetails,
   getAdminContacts,
   getAdminUsers,
   getBlogStats,
@@ -57,20 +59,126 @@ function StatCard({ card }) {
 }
 
 function BookingStatus({ status }) {
-  const isConfirmed = status === "Confirmed";
+  const normalized = String(status || "").toLowerCase();
+  const isConfirmed = ["confirmed", "paid", "completed", "success", "succeeded"].includes(normalized);
+  const isCancelled = ["cancelled", "canceled", "failed", "declined"].includes(normalized);
 
   return (
     <span
       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-        isConfirmed ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+        isCancelled
+          ? "bg-red-50 text-red-600"
+          : isConfirmed
+            ? "bg-emerald-50 text-emerald-600"
+            : "bg-amber-50 text-amber-600"
       }`}
     >
-      {status}
+      {status || "Not provided"}
     </span>
   );
 }
 
-export default function AdminDashboard({ admin, contacts, loadError }) {
+function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
+  const [recentBookings, setRecentBookings] = useState(initialBookings);
+  const [isLoading, setIsLoading] = useState(initialBookings.length === 0 && !initialError);
+  const [error, setError] = useState(initialError);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRecentBookings() {
+      setIsLoading(true);
+
+      try {
+        const bookings = await getAdminBookingDetails();
+        if (!isMounted) return;
+        setRecentBookings(getRecentBookings(bookings));
+        setError("");
+      } catch (loadError) {
+        if (!isMounted) return;
+        setError("Could not load bookings.");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadRecentBookings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return (
+    <div className="max-h-[34rem] overflow-auto">
+      <table className="w-full min-w-[1024px]">
+        <thead>
+          <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-[0.14em] text-slate-400">
+            <th className="sticky top-0 bg-white pb-3 pr-4">Booking ID</th>
+            <th className="sticky top-0 bg-white pb-3 pr-4">Customer Email</th>
+            <th className="sticky top-0 bg-white pb-3 pr-4">Trip title / destination</th>
+            <th className="sticky top-0 bg-white pb-3 pr-4">Guests</th>
+            <th className="sticky top-0 bg-white pb-3 pr-4">Total Price</th>
+            <th className="sticky top-0 bg-white pb-3 pr-4">Payment Status</th>
+            <th className="sticky top-0 bg-white pb-3 pr-4">Booking Status</th>
+            <th className="sticky top-0 bg-white pb-3">Created Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isLoading && recentBookings.length === 0 && (
+            <tr>
+              <td className="py-5 text-sm text-slate-500" colSpan={8}>
+                Loading recent bookings...
+              </td>
+            </tr>
+          )}
+          {!isLoading && error && (
+            <tr>
+              <td className="py-5 text-sm text-red-600" colSpan={8}>
+                {error}
+              </td>
+            </tr>
+          )}
+          {!isLoading &&
+            !error &&
+            recentBookings.map((booking) => (
+              <tr key={booking.rowKey} className="border-b border-slate-100 last:border-0">
+                <td className="max-w-44 truncate py-4 pr-4 font-mono text-xs text-slate-500">
+                  {booking.id}
+                </td>
+                <td className="py-4 pr-4 font-semibold text-slate-800">
+                  {booking.customerEmail}
+                </td>
+                <td className="py-4 pr-4 text-slate-600">{booking.tripTitle}</td>
+                <td className="py-4 pr-4 text-slate-600">{booking.guests}</td>
+                <td className="py-4 pr-4 font-semibold text-slate-700">
+                  {booking.totalPrice}
+                </td>
+                <td className="py-4 pr-4">
+                  <BookingStatus status={booking.paymentStatus} />
+                </td>
+                <td className="py-4 pr-4">
+                  <BookingStatus status={booking.bookingStatus} />
+                </td>
+                <td className="py-4 text-slate-600">
+                  {booking.createdDate}
+                </td>
+              </tr>
+            ))}
+          {!isLoading && !error && recentBookings.length === 0 && (
+            <tr>
+              <td className="py-5 text-sm text-slate-500" colSpan={8}>
+                No bookings yet.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default function AdminDashboard({ admin, contacts, loadError, recentBookingsError }) {
   const { logout } = useAuth();
 
   return (
@@ -132,85 +240,145 @@ export default function AdminDashboard({ admin, contacts, loadError }) {
         )}
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
+      <section className="mt-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-xl font-bold text-slate-900">Recent Bookings</h3>
+            <p className="text-sm text-slate-500">Newest bookings from the admin API</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-140">
-              <thead>
-                <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-[0.14em] text-slate-400">
-                  <th className="pb-3">Customer</th>
-                  <th className="pb-3">Destination</th>
-                  <th className="pb-3">Date</th>
-                  <th className="pb-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {admin.recentBookings.map((booking) => (
-                  <tr key={booking.id} className="border-b border-slate-100">
-                    <td className="py-4 pr-3 font-semibold text-slate-800">{booking.customer}</td>
-                    <td className="py-4 pr-3 text-slate-600">{booking.destination}</td>
-                    <td className="py-4 pr-3 text-slate-600">{booking.date}</td>
-                    <td className="py-4">
-                      <BookingStatus status={booking.status} />
-                    </td>
-                  </tr>
-                ))}
-                {admin.recentBookings.length === 0 && (
-                  <tr>
-                    <td className="py-5 text-sm text-slate-500" colSpan={4}>
-                      No bookings found yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <RecentBookingsTable
+            initialBookings={admin.recentBookings}
+            initialError={recentBookingsError}
+          />
         </div>
-
-        <aside className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-xl font-bold text-slate-900">Customer Contact</h3>
-          <div className="mt-4 space-y-4">
-            {contacts.slice(0, 5).map((contact) => (
-              <div key={contact._id || contact.id || contact.email} className="rounded-lg bg-slate-50 p-4">
-                <p className="font-semibold text-slate-800">{contact.name}</p>
-                <p className="text-sm text-slate-500">{contact.subject}</p>
-              </div>
-            ))}
-            {contacts.length === 0 && (
-              <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
-                No customer contacts found.
-              </p>
-            )}
-          </div>
-        </aside>
       </section>
     </AdminLayout>
   );
 }
 
 function formatDate(value) {
-  if (!value) return "N/A";
-  return new Date(value).toLocaleDateString("en-US", {
+  if (!value) return "Not provided";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not provided";
+
+  return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
 
-function mapBooking(booking) {
-  const trip = Array.isArray(booking.trip) ? booking.trip[0] : booking.trip;
-  const customer = booking.user || booking.userId;
+function getFirstValue(values) {
+  return values.find((value) => value !== undefined && value !== null && value !== "");
+}
 
+function getBookingId(booking) {
+  return booking._id || booking.bookingId || booking.id || "Not provided";
+}
+
+function getBookingDate(booking) {
+  return booking.createdAt || booking.created || booking.created_at || booking.date || "";
+}
+
+function getCustomerEmail(booking) {
+  const user = booking.user || {};
+  const customer = booking.customer || {};
+  const userId = booking.userId || {};
+  return getFirstValue([
+    booking.userEmail,
+    booking.customerEmail,
+    booking.email,
+    user?.email,
+    customer?.email,
+    userId?.email,
+  ]) || "Not provided";
+}
+
+function getTripTitle(booking) {
+  const trip = Array.isArray(booking.trip) ? booking.trip[0] : booking.trip;
+  const item = Array.isArray(booking.items) ? booking.items[0] : booking.items;
+  const tripId = booking.tripId || booking.tripID || booking.trip_id;
+  const tripTitle = getFirstValue([
+    trip?.name,
+    trip?.title,
+    booking.tripName,
+    booking.tripTitle,
+    item?.name,
+    item?.title,
+  ]);
+
+  if (tripTitle) return tripTitle;
+  if (typeof trip === "string") return `Trip ID: ${trip}`;
+  if (typeof tripId === "string") return `Trip ID: ${tripId}`;
+  if (trip?._id || trip?.id) return `Trip ID: ${trip._id || trip.id}`;
+  if (tripId?._id || tripId?.id) return `Trip ID: ${tripId._id || tripId.id}`;
+
+  return "Not provided";
+}
+
+function getGuestCount(booking) {
+  if (booking.guestCount !== undefined && booking.guestCount !== null) {
+    return booking.guestCount;
+  }
+
+  if (Array.isArray(booking.guests)) {
+    return booking.guests.length;
+  }
+
+  return "Not provided";
+}
+
+function formatCurrency(value) {
+  if (value === undefined || value === null || value === "") return "Not provided";
+
+  const numericValue = Number(value);
+  if (Number.isNaN(numericValue)) return String(value);
+
+  return `EGP ${numericValue.toLocaleString()}`;
+}
+
+function getTotalPrice(booking) {
+  return formatCurrency(
+    getFirstValue([
+      booking.totalPrice,
+      booking.total,
+      booking.amount,
+    ])
+  );
+}
+
+function getPaymentStatus(booking) {
+  return getFirstValue([
+    booking.paymentStatus,
+    booking.payment?.status,
+  ]) || "Not provided";
+}
+
+function mapBooking(booking, index) {
   return {
-    id: booking._id || booking.id,
-    customer: customer?.name || customer?.email || "Guest",
-    destination: trip?.name || trip?.city || booking.details?.bookingType || "KEMET Experience",
-    date: formatDate(booking.createdAt),
-    status: booking.status || "Pending",
+    rowKey: getBookingId(booking) !== "Not provided" ? getBookingId(booking) : `booking-${index}`,
+    id: getBookingId(booking),
+    customerEmail: getCustomerEmail(booking),
+    tripTitle: getTripTitle(booking),
+    guests: getGuestCount(booking),
+    totalPrice: getTotalPrice(booking),
+    paymentStatus: getPaymentStatus(booking),
+    bookingStatus: booking.status || "Not provided",
+    createdDate: formatDate(getBookingDate(booking)),
   };
+}
+
+function getRecentBookings(bookings) {
+  return [...bookings]
+    .sort((first, second) => {
+      const firstDate = new Date(getBookingDate(first)).getTime();
+      const secondDate = new Date(getBookingDate(second)).getTime();
+      const safeFirstDate = Number.isNaN(firstDate) ? 0 : firstDate;
+      const safeSecondDate = Number.isNaN(secondDate) ? 0 : secondDate;
+      return safeSecondDate - safeFirstDate;
+    })
+    .map(mapBooking);
 }
 
 function getRealRevenueValue(revenueStats) {
@@ -283,7 +451,7 @@ export async function getServerSideProps(context) {
     const results = await Promise.allSettled([
       getAdminContacts(cookieHeader),
       getAdminUsers(cookieHeader),
-      getAdminBookings(cookieHeader),
+      getAdminBookingDetails(cookieHeader),
       getTripStats(cookieHeader),
       getBlogStats(cookieHeader),
       getRevenueStats(cookieHeader),
@@ -293,6 +461,8 @@ export async function getServerSideProps(context) {
     const contacts = results[0].status === "fulfilled" ? results[0].value : [];
     const users = results[1].status === "fulfilled" ? results[1].value : [];
     const bookings = results[2].status === "fulfilled" ? results[2].value : [];
+    const recentBookingsError =
+      results[2].status === "rejected" ? "Could not load bookings." : "";
     const tripStats = results[3].status === "fulfilled" ? results[3].value : {};
     const blogStats = results[4].status === "fulfilled" ? results[4].value : {};
     const revenueStats = results[5].status === "fulfilled" ? results[5].value : {};
@@ -313,9 +483,10 @@ export async function getServerSideProps(context) {
           metrics,
           statCards: buildStatCards(metrics),
           activityBars: buildActivityBars(bookings),
-          recentBookings: bookings.slice(0, 5).map(mapBooking),
+          recentBookings: getRecentBookings(bookings),
         },
         contacts,
+        recentBookingsError,
         loadError: failedLoads.length
           ? "Some admin overview data could not be loaded. Showing available real data only."
           : "",
@@ -340,6 +511,7 @@ export async function getServerSideProps(context) {
           recentBookings: [],
         },
         contacts: [],
+        recentBookingsError: "Could not load bookings.",
         loadError: error.message || "Admin overview data could not be loaded.",
       },
     };

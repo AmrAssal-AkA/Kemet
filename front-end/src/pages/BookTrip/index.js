@@ -1,10 +1,12 @@
 ﻿/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { createBooking, searchFlights, searchHotels } from "@/services/bookServices";
-import { getCurrentUser } from "@/services/authServices";
 import { createPayment } from "@/services/paymentServices";
 import { getTrips } from "@/services/tripServices";
+import { getUserRole } from "@/utils/authSession";
 
 const airportOptions = [
   { label: "Cairo", value: "CAI" },
@@ -92,6 +94,7 @@ const initialHotelSearch = {
 const initialPayment = {
   method: "stripe-card",
 };
+const FALLBACK_TRIP_IMAGE = "/siwa.jpeg";
 
 function getTripId(trip) {
   return trip?._id || trip?.id || trip?.tripId;
@@ -102,11 +105,16 @@ function getTripTitle(trip) {
 }
 
 function getTripImage(trip) {
+  if (!trip) return "";
   if (trip?.imageUrl) return trip.imageUrl;
   if (typeof trip?.image === "string") return trip.image;
   if (Array.isArray(trip?.image) && trip.image[0]?.imageUrl) return trip.image[0].imageUrl;
+  if (Array.isArray(trip?.image) && typeof trip.image[0] === "string") return trip.image[0];
+  if (Array.isArray(trip?.image) && trip.image[0]?.url) return trip.image[0].url;
   if (Array.isArray(trip?.images) && trip.images[0]?.imageUrl) return trip.images[0].imageUrl;
-  return "/siwa.jpeg";
+  if (Array.isArray(trip?.images) && typeof trip.images[0] === "string") return trip.images[0];
+  if (Array.isArray(trip?.images) && trip.images[0]?.url) return trip.images[0].url;
+  return FALLBACK_TRIP_IMAGE;
 }
 
 function getTripPrice(trip) {
@@ -261,6 +269,11 @@ function Section({ eyebrow, title, children }) {
 }
 
 export default function BookTripPage() {
+  const router = useRouter();
+  const requestedTripId = Array.isArray(router.query.tripId)
+    ? router.query.tripId[0]
+    : router.query.tripId;
+  const { user, sessionReady } = useAuth();
   const didLoadTrips = useRef(false);
   const [trips, setTrips] = useState([]);
   const [selectedTripId, setSelectedTripId] = useState("");
@@ -286,8 +299,26 @@ export default function BookTripPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [notice, setNotice] = useState("");
+  const userRole = user ? getUserRole(user) : "";
 
   useEffect(() => {
+    if (!sessionReady) return;
+
+    if (!user) {
+      router.replace("/auth/auth");
+      return;
+    }
+
+    if (userRole === "admin") {
+      router.replace("/admin");
+      return;
+    }
+
+    if (userRole === "guide" || userRole === "localguide") {
+      router.replace("/guide/dashboard");
+      return;
+    }
+
     if (didLoadTrips.current) return;
     didLoadTrips.current = true;
 
@@ -304,24 +335,28 @@ export default function BookTripPage() {
     }
 
     loadTrips();
-  }, []);
+  }, [router, sessionReady, user, userRole]);
 
   useEffect(() => {
-    async function loadCurrentUser() {
-      const user = await getCurrentUser();
-      if (!user) return;
+    if (!requestedTripId || !trips.length) return;
 
-      const { firstName, lastName } = splitName(user.name);
-      setTraveler((current) => ({
-        ...current,
-        firstName: current.firstName || firstName,
-        lastName: current.lastName || lastName,
-        email: current.email || user.email || "",
-      }));
+    const matchingTrip = trips.find((trip) => String(getTripId(trip)) === String(requestedTripId));
+    if (matchingTrip) {
+      setSelectedTripId(getTripId(matchingTrip));
     }
+  }, [requestedTripId, trips]);
 
-    loadCurrentUser();
-  }, []);
+  useEffect(() => {
+    if (!sessionReady || !user) return;
+
+    const { firstName, lastName } = splitName(user.name);
+    setTraveler((current) => ({
+      ...current,
+      firstName: current.firstName || firstName,
+      lastName: current.lastName || lastName,
+      email: current.email || user.email || "",
+    }));
+  }, [sessionReady, user]);
 
   const selectedTrip = useMemo(
     () => trips.find((trip) => getTripId(trip) === selectedTripId),
@@ -347,6 +382,24 @@ export default function BookTripPage() {
       totalPrice: tripPrice * guests + flightPrice + hotelPrice + serviceFee,
     };
   }, [includeFlight, includeHotel, numberOfGuests, selectedFlight, selectedHotel, selectedTrip]);
+
+  if (!sessionReady) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-slate-50 px-4 text-slate-900">
+        <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
+          <p className="text-sm font-bold text-[#162766]">Checking your session...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  if (userRole === "admin" || userRole === "guide" || userRole === "localguide") {
+    return null;
+  }
 
   function updateTraveler(event) {
     const { name, value } = event.target;
@@ -983,14 +1036,16 @@ export default function BookTripPage() {
             <h2 className="mt-1 text-2xl font-extrabold text-slate-900">Booking Summary</h2>
             <div className="mt-5 space-y-3 text-sm">
               <div className="rounded-2xl bg-slate-50 p-4">
-                <img
-                  src={getTripImage(selectedTrip)}
-                  alt={selectedTrip ? getTripTitle(selectedTrip) : "Siwa Oasis"}
-                  onError={(event) => {
-                    event.currentTarget.src = "/siwa.jpeg";
-                  }}
-                  className="mb-4 h-40 w-full rounded-xl object-cover"
-                />
+                {selectedTrip && (
+                  <img
+                    src={getTripImage(selectedTrip)}
+                    alt={getTripTitle(selectedTrip)}
+                    onError={(event) => {
+                      event.currentTarget.src = FALLBACK_TRIP_IMAGE;
+                    }}
+                    className="mb-4 h-40 w-full rounded-xl object-cover"
+                  />
+                )}
                 <p className="font-extrabold text-slate-900">
                   {selectedTrip ? getTripTitle(selectedTrip) : "No trip selected"}
                 </p>

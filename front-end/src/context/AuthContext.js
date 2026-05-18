@@ -21,9 +21,34 @@ import {
 import { getAuthRedirectPath } from "@/utils/authSession";
 
 const AuthContext = createContext();
+const AUTH_STORAGE_KEYS = [
+  "user",
+  "authUser",
+  "currentUser",
+  "token",
+  "auth-token",
+  "accessToken",
+  "x-auth-token",
+  "x-refresh-token",
+];
+
+function clearStoredAuth() {
+  if (typeof window === "undefined") return;
+
+  try {
+    AUTH_STORAGE_KEYS.forEach((key) => {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    });
+  } catch {
+    // Some browsers can block storage access; cookie logout still handles auth.
+  }
+}
 
 export const AuthProvider = ({ children }) => {
   const didRestoreSession = useRef(false);
+  const isLoggingOut = useRef(false);
+  const sessionRequestId = useRef(0);
   const [user, setUser] = useState(null);
   const [admin, setAdmin] = useState(false);
   const [role, setRole] = useState(null);
@@ -57,16 +82,23 @@ export const AuthProvider = ({ children }) => {
     if (didRestoreSession.current) return;
     didRestoreSession.current = true;
 
+    const restoreRequestId = sessionRequestId.current + 1;
+    sessionRequestId.current = restoreRequestId;
+
     const restoredSession = async () => {
       setLoading(true);
       try {
         const backendUser = await getCurrentUser();
+        if (isLoggingOut.current || restoreRequestId !== sessionRequestId.current) return;
         applySessionUser(normalizeAuthUser(backendUser) || backendUser);
       } catch (error) {
+        if (isLoggingOut.current || restoreRequestId !== sessionRequestId.current) return;
         applySessionUser(null);
       } finally {
-        setSessionReady(true);
-        setLoading(false);
+        if (!isLoggingOut.current && restoreRequestId === sessionRequestId.current) {
+          setSessionReady(true);
+          setLoading(false);
+        }
       }
     };
 
@@ -126,15 +158,21 @@ export const AuthProvider = ({ children }) => {
   );
 
   const logouthundler = useCallback(async () => {
+    isLoggingOut.current = true;
+    sessionRequestId.current += 1;
     setLoading(true);
     setError(null);
+    applySessionUser(null);
+    setSessionReady(true);
+    clearStoredAuth();
+
     try {
       await logout();
-      applySessionUser(null);
-      router.push("/");
     } catch (error) {
       setError(error.message);
     } finally {
+      await router.replace("/auth/auth");
+      isLoggingOut.current = false;
       setLoading(false);
     }
   }, [applySessionUser, router]);

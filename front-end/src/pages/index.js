@@ -136,6 +136,23 @@ const fadeUp = (delay = 0) => ({
   transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] },
 });
 
+const FALLBACK_TRIP_IMAGE = "/siwa.jpeg";
+
+function getImageValue(image) {
+  if (typeof image === "string") return image;
+  return image?.imageUrl || image?.url || "";
+}
+
+function getTripImage(trip) {
+  if (trip?.img) return trip.img;
+  if (trip?.imageUrl) return trip.imageUrl;
+  if (Array.isArray(trip?.image)) return getImageValue(trip.image[0]) || FALLBACK_TRIP_IMAGE;
+  if (trip?.image) return getImageValue(trip.image) || FALLBACK_TRIP_IMAGE;
+  if (Array.isArray(trip?.images)) return getImageValue(trip.images[0]) || FALLBACK_TRIP_IMAGE;
+  if (trip?.images) return getImageValue(trip.images) || FALLBACK_TRIP_IMAGE;
+  return FALLBACK_TRIP_IMAGE;
+}
+
 function StarRow({ count = 5 }) {
   return (
     <div className="flex gap-0.5">
@@ -496,8 +513,11 @@ export default function Home(props) {
                     >
                       <div className="overflow-hidden h-44">
                         <img
-                          src={pkg.img}
-                          alt={pkg.title}
+                          src={getTripImage(pkg)}
+                          alt={pkg.title || pkg.name || "Trip image"}
+                          onError={(event) => {
+                            event.currentTarget.src = FALLBACK_TRIP_IMAGE;
+                          }}
                           className="pkg-img w-full h-full object-cover"
                         />
                       </div>

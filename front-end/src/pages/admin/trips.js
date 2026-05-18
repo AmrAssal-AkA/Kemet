@@ -23,17 +23,43 @@ const emptyEditForm = {
 
 const inputClass =
   "mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100";
+const FALLBACK_IMAGE = "/siwa.jpeg";
 
 function getTripId(trip) {
   return trip?._id || trip?.id || trip?.tripId;
 }
 
-function getTripImage(trip) {
-  const image = trip?.image || trip?.images;
+function getImageValue(image) {
+  if (typeof image === "string") return image;
+  return image?.imageUrl || image?.url || "";
+}
+
+function getRawTripImage(trip) {
+  if (trip?.imageUrl) return trip.imageUrl;
+
+  const image = trip?.image;
   if (Array.isArray(image)) {
-    return image[0]?.imageUrl || image[0]?.url || "";
+    const firstImage = getImageValue(image[0]);
+    if (firstImage) return firstImage;
+  } else {
+    const imageValue = getImageValue(image);
+    if (imageValue) return imageValue;
   }
-  return image?.imageUrl || image?.url || trip?.imageUrl || "";
+
+  const images = trip?.images;
+  if (Array.isArray(images)) {
+    const firstImage = getImageValue(images[0]);
+    if (firstImage) return firstImage;
+  } else {
+    const imageValue = getImageValue(images);
+    if (imageValue) return imageValue;
+  }
+
+  return "";
+}
+
+function getTripImage(trip) {
+  return getRawTripImage(trip) || FALLBACK_IMAGE;
 }
 
 function getTripPrice(trip) {
@@ -48,8 +74,9 @@ function buildEditForm(trip) {
     price: String(getTripPrice(trip) || ""),
     duration: String(trip?.duration || ""),
     description: trip?.description || "",
-    AdvantureType: trip?.AdvantureType || "",
-    AdvantureDescription: trip?.AdvantureDescription || "",
+    AdvantureType: trip?.AdvantureType || trip?.AdventureType || trip?.category || "",
+    AdvantureDescription:
+      trip?.AdvantureDescription || trip?.AdventureDescription || trip?.description || "",
     guideAvailable: Boolean(trip?.guideAvailable),
     guidefees: String(trip?.guidefees || 0),
     guestCapacity: String(trip?.guestCapacity || 1),
@@ -59,14 +86,23 @@ function buildEditForm(trip) {
 
 function appendEditFormData(form) {
   const formData = new FormData();
+  const basePrice = Number(form.price || 0);
+  const guidefees = Number(form.guidefees || 0);
+  const finalPrice = (form.guideAvailable ? basePrice + guidefees : basePrice) * 1.14;
+
   formData.append("name", form.name);
   formData.append("city", form.city);
   formData.append("location", form.location);
-  formData.append("price", String(form.price || 0));
+  formData.append("price", String(basePrice));
+  formData.append("basePrice", String(basePrice));
+  formData.append("finalPrice", String(finalPrice));
   formData.append("duration", String(form.duration));
   formData.append("description", form.description);
+  formData.append("category", form.AdvantureType);
   formData.append("AdvantureType", form.AdvantureType);
+  formData.append("AdventureType", form.AdvantureType);
   formData.append("AdvantureDescription", form.AdvantureDescription);
+  formData.append("AdventureDescription", form.AdvantureDescription);
   formData.append("guideAvailable", String(Boolean(form.guideAvailable)));
   formData.append("guidefees", String(form.guidefees || 0));
   formData.append("guestCapacity", String(form.guestCapacity || 1));
@@ -243,16 +279,14 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
 
               return (
                 <article key={tripId} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-                  {imageUrl && (
-                    <Image
-                      src={imageUrl}
-                      alt={trip.name || "Trip image"}
-                      width={800}
-                      height={420}
-                      unoptimized
-                      className="h-52 w-full object-cover"
-                    />
-                  )}
+                  <Image
+                    src={imageUrl}
+                    alt={trip.name || "Trip image"}
+                    width={800}
+                    height={420}
+                    unoptimized
+                    className="h-52 w-full object-cover"
+                  />
                   <div className="p-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
@@ -265,7 +299,7 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
                         </p>
                       </div>
                       <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500">
-                        {trip.AdvantureType || "Trip"}
+                        {trip.AdvantureType || trip.AdventureType || trip.category || "Trip"}
                       </span>
                     </div>
 
@@ -273,7 +307,7 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
                       <Detail label="City" value={trip.city} />
                       <Detail label="Location" value={trip.location} />
                       <Detail label="Duration" value={trip.duration} />
-                      <Detail label="Advanture Description" value={trip.AdvantureDescription} />
+                      <Detail label="Advanture Description" value={trip.AdvantureDescription || trip.AdventureDescription} />
                       <Detail label="Description" value={trip.description} />
                       <Detail label="Guide Available" value={trip.guideAvailable ? "Yes" : "No"} />
                       <Detail label="Guide Fees" value={trip.guidefees} />
@@ -327,6 +361,21 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
             </div>
 
             <form onSubmit={handleEditSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
+              {getRawTripImage(editingTrip) && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                    Current Image
+                  </p>
+                  <Image
+                    src={getRawTripImage(editingTrip)}
+                    alt={editingTrip.name || "Current trip image"}
+                    width={800}
+                    height={360}
+                    unoptimized
+                    className="mt-2 h-48 w-full rounded-2xl object-cover"
+                  />
+                </div>
+              )}
               <Field label="Trip Name">
                 <input name="name" value={editForm.name} onChange={handleEditChange} required className={inputClass} />
               </Field>

@@ -61,16 +61,29 @@ function buildTripFormData(payload, { includeImage = true } = {}) {
   if (isFormData(payload)) return payload;
 
   const formData = new FormData();
+  const basePrice = payload.price || payload.basePrice || 0;
+  const guidefees = Number(payload.guidefees || 0);
+  const guideAvailable = Boolean(payload.guideAvailable);
+  const finalPrice =
+    payload.finalPrice || (guideAvailable ? Number(basePrice) + guidefees : Number(basePrice)) * 1.14;
+  const adventureType = payload.AdvantureType || payload.AdventureType || payload.category;
+  const adventureDescription =
+    payload.AdvantureDescription || payload.AdventureDescription || payload.description || "";
 
   formData.append("name", payload.name || payload.title);
   formData.append("city", payload.city);
   formData.append("location", payload.location);
-  formData.append("price", String(payload.price || payload.basePrice || 0));
+  formData.append("price", String(basePrice));
+  formData.append("basePrice", String(basePrice));
+  formData.append("finalPrice", String(finalPrice));
   formData.append("duration", String(payload.duration));
   formData.append("description", payload.description);
-  formData.append("AdvantureType", payload.AdvantureType || payload.category);
-  formData.append("AdvantureDescription", payload.AdvantureDescription || "");
-  formData.append("guideAvailable", String(Boolean(payload.guideAvailable)));
+  formData.append("category", adventureType);
+  formData.append("AdvantureType", adventureType);
+  formData.append("AdventureType", adventureType);
+  formData.append("AdvantureDescription", adventureDescription);
+  formData.append("AdventureDescription", adventureDescription);
+  formData.append("guideAvailable", String(guideAvailable));
   formData.append("guidefees", String(payload.guidefees || 0));
   formData.append("guestCapacity", String(payload.guestCapacity || 1));
 

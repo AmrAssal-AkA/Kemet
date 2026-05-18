@@ -8,7 +8,7 @@ const authorize = require("../middleware/authorize");
 router.post("/", authenticate,authorize("user"),upload.array("images", 5),blogController.createBlog);
 router.get("/", blogController.getAllBlog);
 router.get("/:blogId", blogController.getOneBlogById);
-router.put("/updateBlog/:blogId", authenticate,authorize("user"),upload.single("image"),blogController.updateBlogById);
+router.put("/updateBlog/:blogId", authenticate,authorize("admin", "user"),upload.single("image"),blogController.updateBlogById);
 router.delete("/deleteBlog/:blogId", authenticate,authorize("admin", "user"), blogController.deleteBlogById);
 router.post("/addComment/:blogId", authenticate,authorize("user"), blogController.WriteBlogComments);
 

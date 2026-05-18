@@ -14,6 +14,7 @@ router.post(
   validateTravelPassport,
   BookingController.createBooking
 );
+router.delete("/:bookingId", authenticate, authorize("admin", "user"), BookingController.cancelBooking);
 router.get("/refund/:bookingId", authenticate, authorize("user"), BookingController.cancelBooking);
 
 module.exports = router;

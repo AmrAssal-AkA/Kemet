@@ -1,20 +1,25 @@
 const blog = require("../../model/blogSchema");
 const cloudinary = require("../../config/cloudinary");
 
+function getFileSource(file) {
+  return file?.buffer || file?.path;
+}
+
+function getValidationMessage(error) {
+  if (error?.name !== "ValidationError") return "";
+  return Object.values(error.errors || {})
+    .map((validationError) => validationError.message)
+    .filter(Boolean)
+    .join(" ");
+}
+
 // Create Blog
 const createBlog = async (req, res) => {
   const { title, content } = req.body;
   const author = req.user.id;
-  if (!title || !content) {
+  if (!title?.trim() || !content?.trim()) {
     return res.status(400).json({ message: "Please fill the blog" });
   }
-  const textRegex = /^[a-zA-Z0-9\s]+$/;
-  if (!textRegex.test(title) || !textRegex.test(content)) {
-    return res
-      .status(400)
-      .json({ message: "Title and content must contain only letters and spaces." });
-  }
-
 
   if (!req.files || req.files.length === 0) {
     return res
@@ -38,6 +43,10 @@ const createBlog = async (req, res) => {
     await blogs.save();
     res.status(201).json({ message: "Blog Created" });
   } catch (error) {
+    const validationMessage = getValidationMessage(error);
+    if (validationMessage) {
+      return res.status(400).json({ message: validationMessage });
+    }
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -71,20 +80,35 @@ const getOneBlogById = async (req, res) => {
 // Update Blog
 const updateBlogById = async (req, res) => {
   try {
+    const updateData = {};
+
+    if (req.body.title !== undefined) updateData.title = req.body.title;
+    if (req.body.content !== undefined) updateData.content = req.body.content;
+
+    if (req.file) {
+      const imageResult = await cloudinary.uploadImage(getFileSource(req.file), "blog_images");
+      updateData.images = [
+        {
+          imageUrl: imageResult.secure_url,
+          cloudinaryId: imageResult.public_id,
+        },
+      ];
+    }
+
     const blogUpdate = await blog.findByIdAndUpdate(
       req.params.blogId,
-      {
-        title: req.body.title,
-        content: req.body.content,
-        images: req.files ? req.files.map((file) => file.path) : null,
-      },
-      { new: true },
+      updateData,
+      { new: true, runValidators: true },
     );
     if (!blogUpdate) {
       return res.status(404).json({ message: "Blog not found" });
     }
-    res.status(201).json({ message: "Blog updated successfully" });
+    res.status(201).json({ message: "Blog updated successfully", blog: blogUpdate });
   } catch (error) {
+    const validationMessage = getValidationMessage(error);
+    if (validationMessage) {
+      return res.status(400).json({ message: validationMessage });
+    }
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };

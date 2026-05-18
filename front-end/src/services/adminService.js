@@ -83,7 +83,7 @@ export async function getAdminUsers(cookie = "") {
   return data?.users || [];
 }
 
-export async function getAdminBookings(cookie = "") {
+export async function getAdminBookingDetails(cookie = "") {
   const res = await fetch(buildApiUrl("/api/adminDashboard/bookingDetails"), {
     headers: getHeaders(cookie),
     credentials: "include",
@@ -101,6 +101,10 @@ export async function getAdminBookings(cookie = "") {
   return bookings;
 }
 
+export async function getAdminBookings(cookie = "") {
+  return getAdminBookingDetails(cookie);
+}
+
 export async function confirmAdminBooking(bookingId) {
   if (!bookingId) {
     throw new Error("Booking ID is required.");
@@ -112,6 +116,19 @@ export async function confirmAdminBooking(bookingId) {
   });
 
   return handleResponse(res, "Booking could not be confirmed.");
+}
+
+export async function cancelAdminBooking(bookingId) {
+  if (!bookingId) {
+    throw new Error("Booking ID is required.");
+  }
+
+  const res = await fetch(buildApiUrl(`/api/booking/${bookingId}`), {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Booking could not be cancelled.");
 }
 
 export async function getTripStats(cookie = "") {

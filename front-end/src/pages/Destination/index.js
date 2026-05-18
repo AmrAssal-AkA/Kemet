@@ -59,6 +59,22 @@ const defaultDestinationData = {
   },
 };
 
+const FALLBACK_TRIP_IMAGE = "/siwa.jpeg";
+
+function getImageValue(image) {
+  if (typeof image === "string") return image;
+  return image?.imageUrl || image?.url || "";
+}
+
+function getTripImage(trip) {
+  if (trip?.imageUrl) return trip.imageUrl;
+  if (Array.isArray(trip?.image)) return getImageValue(trip.image[0]) || FALLBACK_TRIP_IMAGE;
+  if (trip?.image) return getImageValue(trip.image) || FALLBACK_TRIP_IMAGE;
+  if (Array.isArray(trip?.images)) return getImageValue(trip.images[0]) || FALLBACK_TRIP_IMAGE;
+  if (trip?.images) return getImageValue(trip.images) || FALLBACK_TRIP_IMAGE;
+  return FALLBACK_TRIP_IMAGE;
+}
+
 function DestinationPage(props) {
   const [data, setData] = useState(defaultDestinationData);
   const {trips} = props
@@ -160,8 +176,11 @@ function DestinationPage(props) {
               >
                 <div className="w-full aspect-4/3 overflow-hidden p-4">
                   <img
-                    src={trip.image}
+                    src={getTripImage(trip)}
                     alt={trip.name}
+                    onError={(event) => {
+                      event.currentTarget.src = FALLBACK_TRIP_IMAGE;
+                    }}
                     className="w-full h-full object-cover rounded-3xl transform group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>

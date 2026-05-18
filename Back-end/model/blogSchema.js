@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const { validate } = require('./tripSchema');
+
+const hasText = (value) => typeof value === "string" && value.trim().length > 0;
 
 const blogSchema = new mongoose.Schema({
     title: {
@@ -7,10 +8,8 @@ const blogSchema = new mongoose.Schema({
         required: true,
         trim: true,
         validate: {
-            validator: (v) => {
-                return /^[a-zA-Z\s]+$/.test(v);
-            },
-            message: "Title must contain only letters and spaces."
+            validator: hasText,
+            message: "Title cannot be empty."
         }
     },
     content: {
@@ -18,10 +17,8 @@ const blogSchema = new mongoose.Schema({
         required: true,
         trim: true,
         validate: {
-            validator: (v) => {
-                return /^[a-zA-Z\s]+$/.test(v);
-            },
-            message: "Content must contain only letters and spaces."
+            validator: hasText,
+            message: "Content cannot be empty."
         }
     },
     images : [{
