@@ -80,12 +80,12 @@ function TagBar({ active, onChange }) {
   }, [active]);
 
   return (
-    <div ref={ref} className="relative flex flex-wrap gap-1.5 mb-7">
+    <div ref={ref} className="relative flex gap-1.5 mb-7 overflow-x-auto pb-1" style={{ scrollbarWidth:"none", WebkitOverflowScrolling:"touch" }}>
       <motion.div animate={ind} transition={{ type:"spring", stiffness:400, damping:36 }}
-        className="absolute top-0 h-full bg-yellow-400 rounded-full pointer-events-none z-0" />
+        className="absolute top-0 h-8 bg-yellow-400 rounded-full pointer-events-none z-0" />
       {TAGS.map(tag => (
         <button key={tag} ref={el => (btnRefs.current[tag] = el)} onClick={() => onChange(tag)}
-          className={`relative z-10 px-4 py-1.5 rounded-full text-[13px] font-medium border whitespace-nowrap cursor-pointer transition-colors
+          className={`relative z-10 px-4 py-1.5 rounded-full text-sm font-medium border whitespace-nowrap cursor-pointer transition-colors shrink-0
             ${active === tag ? "border-yellow-400 text-gray-900" : "border-gray-200 text-gray-500 hover:border-yellow-300"}`}
           style={{ background:"transparent" }}>
           {tag}
@@ -105,19 +105,19 @@ function PostCard({ post, index, onLike, liked }) {
           <img src={post.img} alt={post.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           <span className={`absolute top-3 left-3 ${typeColor[post.type]} text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full`}>{post.type}</span>
-          <span className="absolute bottom-2.5 right-3 text-white/80 text-[11px]">{post.readTime}</span>
+          <span className="absolute bottom-2.5 right-3 text-white/80 text-xs">{post.readTime}</span>
         </div>
-        <div className="p-4 flex flex-col flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-600 mb-1.5">{post.category}</p>
-          <h3 className="font-bold text-sm text-gray-900 leading-snug mb-2 flex-1" style={SERIF}>{post.title}</h3>
-          <p className="text-xs text-gray-400 leading-relaxed mb-3">{post.excerpt}</p>
+        <div className="p-4 sm:p-5 flex flex-col flex-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-yellow-600 mb-2">{post.category}</p>
+          <h3 className="font-bold text-sm sm:text-base text-gray-900 leading-snug mb-2 flex-1" style={SERIF}>{post.title}</h3>
+          <p className="text-sm text-gray-500 leading-relaxed mb-3">{post.excerpt}</p>
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0" style={{background:post.avatarBg}}>{post.initials}</div>
-            <div><p className="text-[13px] font-semibold text-gray-900">{post.author}</p><p className="text-[11px] text-gray-400">{post.date}</p></div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{background:post.avatarBg}}>{post.initials}</div>
+            <div><p className="text-sm font-semibold text-gray-900">{post.author}</p><p className="text-xs text-gray-400">{post.date}</p></div>
           </div>
           <div className="pt-2.5 border-t border-gray-100">
             <button onClick={e => { e.preventDefault(); onLike(post.id); }}
-              className={`flex items-center gap-1.5 text-xs cursor-pointer border-none bg-transparent p-0 transition-colors ${liked ? "text-rose-500" : "text-gray-400 hover:text-rose-400"}`}>
+              className={`flex items-center gap-1.5 text-sm cursor-pointer border-none bg-transparent p-0 transition-colors ${liked ? "text-rose-500" : "text-gray-400 hover:text-rose-400"}`}>
               <motion.span animate={liked ? {scale:[1,1.5,1]}:{scale:1}} transition={{duration:0.3}}>{liked ? "❤️":"🤍"}</motion.span>
               {post.likes + (liked ? 1:0)} likes
             </button>
@@ -145,13 +145,13 @@ function Poll() {
             style={{background:"#fafafa"}}>
             {voted!==null && <motion.div initial={{width:0}} animate={{width:`${pct}%`}} transition={{duration:0.6}} className={`absolute inset-0 z-0 ${voted===i ? "bg-yellow-50":"bg-gray-100"}`} />}
             <div className="relative z-10 flex items-center justify-between px-3.5 py-2.5">
-              <span className={`text-[13px] ${voted===i ? "font-semibold":""} text-gray-900`}>{opt.label}</span>
-              {voted!==null && <span className="text-xs font-semibold text-gray-400">{pct}%</span>}
+              <span className={`text-sm ${voted===i ? "font-semibold":""} text-gray-900`}>{opt.label}</span>
+              {voted!==null && <span className="text-sm font-semibold text-gray-400">{pct}%</span>}
             </div>
           </div>
         );
       })}
-      <p className="text-[11px] text-gray-400 mt-1">{total.toLocaleString()} votes · {voted===null ? "Click to vote":"Thanks!"}</p>
+      <p className="text-xs text-gray-400 mt-1">{total.toLocaleString()} votes · {voted===null ? "Click to vote":"Thanks!"}</p>
     </div>
   );
 }
@@ -160,26 +160,26 @@ function Sidebar() {
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <h3 className="text-[13px] font-bold text-gray-900 mb-4">🔥 Trending destinations</h3>
+        <h3 className="text-sm font-bold text-gray-900 mb-4">🔥 Trending destinations</h3>
         {TRENDING.map((t,i) => (
           <Link href={t.href} key={t.tag}>
             <div className="flex items-center justify-between hover:bg-gray-50 rounded-xl px-2 py-1.5 transition-colors cursor-pointer">
               <div className="flex items-center gap-2.5">
                 <span className="text-lg">{t.emoji}</span>
-                <div><p className="text-[13px] font-semibold text-gray-900">{t.tag}</p><p className="text-[11px] text-gray-400">{t.count}</p></div>
+                <div><p className="text-sm font-semibold text-gray-900">{t.tag}</p><p className="text-xs text-gray-400">{t.count}</p></div>
               </div>
-              <span className="text-[11px] text-gray-400">#{i+1}</span>
+              <span className="text-xs text-gray-400">#{i+1}</span>
             </div>
           </Link>
         ))}
       </div>
       <Poll />
       <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <h3 className="text-[13px] font-bold text-gray-900 mb-2">🗺️ Explore Egypt</h3>
-        <p className="text-[12px] text-gray-400 leading-relaxed mb-4">Ready to plan your trip? Browse all destinations and curated experiences.</p>
+        <h3 className="text-sm font-bold text-gray-900 mb-2">🗺️ Explore Egypt</h3>
+        <p className="text-sm text-gray-400 leading-relaxed mb-4">Ready to plan your trip? Browse all destinations and curated experiences.</p>
         <Link href="/Destination">
           <motion.button whileHover={{scale:1.04}} whileTap={{scale:0.96}}
-            className="w-full bg-yellow-400 text-gray-900 py-2.5 rounded-full text-[13px] font-bold border-none cursor-pointer hover:bg-yellow-300 transition-colors">
+            className="w-full bg-yellow-400 text-gray-900 py-2.5 rounded-full text-sm font-bold border-none cursor-pointer hover:bg-yellow-300 transition-colors">
             View Destinations →
           </motion.button>
         </Link>
@@ -195,21 +195,21 @@ function QASection() {
       <div className="rounded-3xl p-6 md:p-8" style={{background:"linear-gradient(135deg,#06122e 0%,#0b1f46 50%,#102554 100%)"}}>
         <div className="flex items-start justify-between gap-6 flex-wrap mb-7">
           <div>
-            <h3 className="text-lg md:text-xl font-bold text-white mb-1" style={SERIF}>Common questions about Egypt</h3>
-            <p className="text-[13px] text-gray-500">Everything travelers ask most — answered.</p>
+            <h3 className="text-2xl md:text-3xl font-bold text-white mb-1" style={SERIF}>Common questions about Egypt</h3>
+            <p className="text-sm text-gray-400 mt-1">Everything travelers ask most — answered.</p>
           </div>
-          <Link href="/offerings" className="text-[13px] text-yellow-400 border-b border-yellow-400/30 pb-0.5 hover:border-yellow-400 transition-colors whitespace-nowrap">Browse all offerings →</Link>
+          <Link href="/offerings" className="text-sm text-yellow-400 border-b border-yellow-400/30 pb-0.5 hover:border-yellow-400 transition-colors whitespace-nowrap">Browse all offerings →</Link>
         </div>
         {QA.map((item,i) => (
           <div key={i} className={`rounded-xl border overflow-hidden transition-colors mb-2 ${open===i ? "border-yellow-400":"border-gray-700"}`} style={{background:"rgba(255,255,255,0.05)"}}>
             <button onClick={() => setOpen(open===i ? null:i)} className="w-full flex items-center justify-between px-4 py-3.5 bg-transparent border-none cursor-pointer text-left gap-3">
-              <span className="text-[13px] md:text-[14px] font-semibold text-gray-100 leading-snug flex-1">{item.q}</span>
+              <span className="text-sm md:text-base font-semibold text-gray-100 leading-snug flex-1">{item.q}</span>
               <motion.span animate={{rotate:open===i ? 45:0}} transition={{type:"spring",stiffness:400,damping:28}} className="text-yellow-400 text-xl shrink-0 inline-block leading-none">+</motion.span>
             </button>
             <AnimatePresence initial={false}>
               {open===i && (
                 <motion.div key="a" initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}} transition={{duration:0.22}} className="overflow-hidden">
-                  <p className="px-4 pb-4 text-[13px] text-gray-400 leading-relaxed">{item.a}</p>
+                  <p className="px-4 pb-4 text-sm text-gray-300 leading-relaxed">{item.a}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -279,6 +279,13 @@ export default function Community() {
 
         {/* ── FEED + SIDEBAR ── */}
         <section id="community-feed" className="px-4 md:px-20 py-10 md:py-12 max-w-[1200px] mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 gap-2">
+            <div>
+              <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">Community Stories</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1" style={SERIF}>Stories from fellow travelers</h2>
+              <p className="text-sm text-gray-500 mt-1.5 max-w-md leading-relaxed">12,400+ explorers sharing their real Egypt — filter by destination or type.</p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
             <div>
               <TagBar active={activeTag} onChange={setActiveTag} />
@@ -296,17 +303,17 @@ export default function Community() {
         <section className="px-4 md:px-20 pb-12 max-w-[1200px] mx-auto">
           <div className="bg-yellow-50 rounded-3xl p-6 md:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-              <h2 className="text-xl md:text-2xl font-extrabold text-gray-900" style={SERIF}>Essential Egypt Travel Tips</h2>
-              <Link href="/offerings" className="text-[13px] text-amber-600 border-b border-yellow-200 hover:border-amber-400 transition-colors self-start sm:self-auto">All tips →</Link>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900" style={SERIF}>Essential Egypt Travel Tips</h2>
+              <Link href="/offerings" className="text-sm text-amber-600 border-b border-yellow-200 hover:border-amber-400 transition-colors self-start sm:self-auto">All tips →</Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {TIPS.map(tip => (
                 <Link href="/offerings" key={tip.title}>
                   <motion.div whileHover={{y:-4}} className="bg-white rounded-2xl border border-yellow-100 overflow-hidden cursor-pointer shadow-sm">
                     <img src={tip.img} alt={tip.title} className="w-full h-36 object-cover" />
-                    <div className="p-3.5">
-                      <h4 className="text-[13px] font-semibold text-gray-900 mb-1">{tip.title}</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed">{tip.text}</p>
+                    <div className="p-4">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1.5">{tip.title}</h4>
+                      <p className="text-sm text-gray-500 leading-relaxed">{tip.text}</p>
                     </div>
                   </motion.div>
                 </Link>
@@ -319,7 +326,7 @@ export default function Community() {
         <section className="px-4 md:px-20 pb-12 max-w-[1200px] mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900" style={SERIF}>Community Photo Wall</h2>
-            <Link href="/hidden-gems" className="text-[13px] text-gray-400 border-b border-gray-200 hover:text-yellow-600 hover:border-yellow-400 transition-colors self-start sm:self-auto">Explore hidden gems →</Link>
+            <Link href="/hidden-gems" className="text-sm text-gray-400 border-b border-gray-200 hover:text-yellow-600 hover:border-yellow-400 transition-colors self-start sm:self-auto">Explore hidden gems →</Link>
           </div>
           {/* Desktop: 4-col fixed grid */}
           <div className="hidden md:grid gap-2.5" style={{gridTemplateColumns:"repeat(4, 1fr)",gridTemplateRows:"repeat(2, 160px)"}}>
@@ -328,7 +335,7 @@ export default function Community() {
                 <motion.div whileHover={{scale:1.02}} className="relative rounded-2xl overflow-hidden h-full cursor-pointer">
                   <img src={photo.img} alt={photo.label} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-                  <span className="absolute bottom-0 left-0 right-0 text-white text-[11px] font-semibold px-3 py-2">{photo.label}</span>
+                  <span className="absolute bottom-0 left-0 right-0 text-white text-xs font-semibold px-3 py-2 whitespace-nowrap overflow-hidden text-ellipsis block">{photo.label}</span>
                 </motion.div>
               </Link>
             ))}
@@ -340,7 +347,7 @@ export default function Community() {
                 <motion.div whileHover={{scale:1.02}} className="relative rounded-2xl overflow-hidden h-full cursor-pointer">
                   <img src={photo.img} alt={photo.label} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-                  <span className="absolute bottom-0 left-0 right-0 text-white text-[11px] font-semibold px-3 py-2">{photo.label}</span>
+                  <span className="absolute bottom-0 left-0 right-0 text-white text-xs font-semibold px-3 py-2 whitespace-nowrap overflow-hidden text-ellipsis block">{photo.label}</span>
                 </motion.div>
               </Link>
             ))}
@@ -350,34 +357,23 @@ export default function Community() {
         {/* ── Q&A ── */}
         <QASection />
 
-        {/* ── SIGN IN CTA (replaces newsletter) ── */}
+        {/* ── SIGN IN CTA ── */}
         <section className="px-4 md:px-20 pb-16 max-w-[1200px] mx-auto">
           <div className="rounded-3xl text-center px-5 py-10 md:px-6 md:py-14 relative overflow-hidden"
             style={{background:"linear-gradient(135deg,#FFCE2A 0%,#f5c000 50%,#e8a800 100%)"}}>
-            {/* Decorative circles */}
             <div className="absolute left-0 top-0 w-64 h-64 rounded-full pointer-events-none" style={{background:"rgba(255,255,255,0.12)",transform:"translate(-80px,-80px)"}} />
             <div className="absolute right-0 bottom-0 w-48 h-48 rounded-full pointer-events-none" style={{background:"rgba(255,255,255,0.10)",transform:"translate(60px,60px)"}} />
-
             <div className="relative z-10 max-w-xl mx-auto">
-              <span className="inline-block mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-900/70 bg-yellow-900/10 px-3 py-1 rounded-full">
-                Stay in the loop
-              </span>
-              <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 leading-tight" style={SERIF}>
-                Get the weekly Egypt digest
-              </h3>
-              <p className="text-yellow-900/70 text-sm mb-8 leading-relaxed">
-                New stories, hidden gems, meetups, and community highlights — straight to your inbox.
-              </p>
+              <span className="inline-block mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-900/70 bg-yellow-900/10 px-3 py-1 rounded-full">Stay in the loop</span>
+              <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 leading-tight" style={SERIF}>Get the weekly Egypt digest</h3>
+              <p className="text-yellow-900/70 text-sm mb-8 leading-relaxed">New stories, hidden gems, meetups, and community highlights — straight to your inbox.</p>
               <Link href="/auth/auth">
-                <motion.button
-                  whileHover={{ scale: 1.05, translateY: -2 }}
-                  whileTap={{ scale: 0.97 }}
+                <motion.button whileHover={{ scale: 1.05, translateY: -2 }} whileTap={{ scale: 0.97 }}
                   className="rounded-full px-10 py-3.5 text-sm font-bold text-white border-none cursor-pointer"
                   style={{ background:"#06122e", boxShadow:"0 4px 14px rgba(6,18,46,.35)" }}>
                   Sign In →
                 </motion.button>
               </Link>
-             
             </div>
           </div>
         </section>
