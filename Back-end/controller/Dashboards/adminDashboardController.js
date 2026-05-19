@@ -2,8 +2,6 @@ const User = require("../../model/userSchema");
 const Booking = require("../../model/BookingSchema");
 const Guide = require("../../model/guideSchema");
 
-const NO_BOOKING_TIME_NOTE =
-  "Booking has no scheduled trip time, availability filtering could not be applied.";
 const GUIDE_USER_SELECT = "name email role";
 
 const isPaidStripeSession = (session) =>
@@ -56,83 +54,34 @@ const parseTimeToMinutes = (value) => {
 
 const getTripSchedule = (booking) => {
   const schedule = booking.tripSchedule;
-  if (!schedule?.date || !schedule?.startTime || !schedule?.endTime) return null;
+  if (!schedule?.date && !schedule?.dayofweek) return null;
 
-  const date = new Date(schedule.date);
-  if (Number.isNaN(date.getTime())) return null;
+  const date = schedule.date ? new Date(schedule.date) : null;
+  const dateDay =
+    date && !Number.isNaN(date.getTime())
+      ? date.toLocaleDateString("en-US", { weekday: "long" })
+      : "";
+  const dayofweek = schedule.dayofweek || dateDay;
+  if (!dayofweek) return null;
 
   const startMinutes = parseTimeToMinutes(schedule.startTime);
   const endMinutes = parseTimeToMinutes(schedule.endTime);
-  if (startMinutes === null || endMinutes === null) return null;
 
   return {
-    dayofweek:
-      schedule.dayofweek || date.toLocaleDateString("en-US", { weekday: "long" }),
+    dayofweek,
     startMinutes,
     endMinutes,
+    hasTime: startMinutes !== null && endMinutes !== null,
   };
 };
 
-const getDateTimeCandidate = (dateValue, timeValue) => {
-  if (!dateValue) return null;
-
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return null;
-
-  const explicitMinutes = parseTimeToMinutes(timeValue);
-  if (explicitMinutes !== null) {
-    return {
-      dayofweek: date.toLocaleDateString("en-US", { weekday: "long" }),
-      startMinutes: explicitMinutes,
-      endMinutes: explicitMinutes,
-    };
-  }
-
-  const dateMinutes = date.getHours() * 60 + date.getMinutes();
-  const hasPersistedTime =
-    dateMinutes !== 0 ||
-    date.getSeconds() !== 0 ||
-    date.getMilliseconds() !== 0;
-
-  if (!hasPersistedTime) return null;
-
-  return {
-    dayofweek: date.toLocaleDateString("en-US", { weekday: "long" }),
-    startMinutes: dateMinutes,
-    endMinutes: dateMinutes,
-  };
-};
-
-const bookingIncludesTrip = (booking) =>
-  Boolean(
-    (Array.isArray(booking.trip) && booking.trip.length > 0) ||
-      booking.details?.bookingType === "Trip" ||
-      booking.details?.bookingType === "Mixed",
+const guideHasAvailability = (guide) =>
+  (guide.AvailabilityTime || []).some(
+    (slot) => slot.dayofweek && slot.startTime && slot.endTime,
   );
-
-const getBookingSchedule = (booking) => {
-  if (bookingIncludesTrip(booking)) {
-    return getTripSchedule(booking);
-  }
-
-  return getDateTimeCandidate(
-    booking.flight?.data?.departureDate,
-    getFirstValue([
-      booking.flight?.data?.departureTime,
-      booking.flight?.data?.time,
-    ]),
-  ) ||
-  getDateTimeCandidate(
-    booking.hotel?.data?.checkInDate,
-    getFirstValue([
-      booking.hotel?.data?.checkInTime,
-      booking.hotel?.data?.time,
-    ]),
-  );
-};
 
 const isGuideAvailableForSchedule = (guide, schedule) => {
-  if (!schedule) return true;
+  if (!schedule) return guideHasAvailability(guide);
 
   return (guide.AvailabilityTime || []).some((slot) => {
     const slotDay = String(slot.dayofweek || "").trim().toLowerCase();
@@ -142,6 +91,7 @@ const isGuideAvailableForSchedule = (guide, schedule) => {
 
     if (!slotDay || slotDay !== scheduleDay) return false;
     if (startMinutes === null || endMinutes === null) return false;
+    if (!schedule.hasTime) return true;
 
     if (endMinutes < startMinutes) {
       return (
@@ -332,15 +282,18 @@ const getAvailableGuidesForBooking = async (req, res, nxt) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    const schedule = getBookingSchedule(booking);
+    if (!booking.guideIncluded) {
+      return res.status(200).json({ guides: [] });
+    }
+
+    const schedule = getTripSchedule(booking);
     const guides = await getValidGuides();
     const availableGuides = schedule
       ? guides.filter((guide) => isGuideAvailableForSchedule(guide, schedule))
-      : guides;
+      : guides.filter(guideHasAvailability);
 
     res.status(200).json({
       guides: availableGuides.map(serializeGuide),
-      note: schedule ? undefined : NO_BOOKING_TIME_NOTE,
     });
   } catch (err) {
     nxt(err);
@@ -361,6 +314,10 @@ const assignGuideToBooking = async (req, res, nxt) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
+    if (!booking.guideIncluded) {
+      return res.status(400).json({ message: "Guide was not requested for this booking" });
+    }
+
     const guide = await Guide.findById(guideId).populate("userId", GUIDE_USER_SELECT);
     if (!guide) {
       return res.status(404).json({ message: "Guide not found" });
@@ -370,11 +327,16 @@ const assignGuideToBooking = async (req, res, nxt) => {
       return res.status(400).json({ message: "Guide is not linked to a guide user" });
     }
 
-    const schedule = getBookingSchedule(booking);
+    const schedule = getTripSchedule(booking);
     if (schedule && !isGuideAvailableForSchedule(guide, schedule)) {
       return res
         .status(400)
         .json({ message: "Guide is not available for this booking time" });
+    }
+    if (!schedule && !guideHasAvailability(guide)) {
+      return res
+        .status(400)
+        .json({ message: "Guide has no saved availability" });
     }
 
     booking.assignedGuide = guide._id;
@@ -383,9 +345,7 @@ const assignGuideToBooking = async (req, res, nxt) => {
     const updatedBooking = await getPopulatedBookingById(booking._id);
 
     res.status(200).json({
-      message: "Guide assigned successfully",
       booking: mapAdminBooking(updatedBooking),
-      note: schedule ? undefined : NO_BOOKING_TIME_NOTE,
     });
   } catch (err) {
     nxt(err);

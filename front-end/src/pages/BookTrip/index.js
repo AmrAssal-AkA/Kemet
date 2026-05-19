@@ -94,11 +94,6 @@ const initialHotelSearch = {
 const initialPayment = {
   method: "stripe-card",
 };
-const initialTripSchedule = {
-  date: "",
-  startTime: "",
-  endTime: "",
-};
 const FALLBACK_TRIP_IMAGE = "/siwa.jpeg";
 
 function getTripId(trip) {
@@ -123,9 +118,11 @@ function getTripImage(trip) {
 }
 
 function getTripPrice(trip) {
-  const basePrice = Number(trip?.price || 0);
-  const guideCost = trip?.guideAvailable ? Number(trip?.guidefees || 0) : 0;
-  return basePrice + guideCost;
+  return Number(trip?.price || 0);
+}
+
+function getGuideFee(trip) {
+  return Number(trip?.guidefees ?? trip?.guideFee ?? 0);
 }
 
 function splitName(name = "") {
@@ -286,11 +283,11 @@ export default function BookTripPage() {
   const [traveler, setTraveler] = useState(initialTraveler);
   const [extraGuests, setExtraGuests] = useState([]);
   const [notes, setNotes] = useState("");
-  const [tripSchedule, setTripSchedule] = useState(initialTripSchedule);
   const [payment, setPayment] = useState(initialPayment);
   const [policyAgreed, setPolicyAgreed] = useState(false);
   const [includeFlight, setIncludeFlight] = useState(false);
   const [includeHotel, setIncludeHotel] = useState(false);
+  const [includeGuide, setIncludeGuide] = useState(false);
   const [flightSearch, setFlightSearch] = useState(initialFlightSearch);
   const [hotelSearch, setHotelSearch] = useState(initialHotelSearch);
   const [flightResults, setFlightResults] = useState([]);
@@ -377,6 +374,7 @@ export default function BookTripPage() {
     const guests = Math.max(Number(numberOfGuests) || 0, 0);
     const flightPrice = includeFlight && selectedFlight ? getFlightPrice(selectedFlight) : 0;
     const hotelPrice = includeHotel && selectedHotel ? getHotelPrice(selectedHotel) : 0;
+    const guideFee = includeGuide ? getGuideFee(selectedTrip) : 0;
 
     return {
       tripPrice,
@@ -384,10 +382,11 @@ export default function BookTripPage() {
       tripTotal: tripPrice * guests,
       flightPrice,
       hotelPrice,
+      guideFee,
       serviceFee,
-      totalPrice: tripPrice * guests + flightPrice + hotelPrice + serviceFee,
+      totalPrice: tripPrice * guests + flightPrice + hotelPrice + guideFee + serviceFee,
     };
-  }, [includeFlight, includeHotel, numberOfGuests, selectedFlight, selectedHotel, selectedTrip]);
+  }, [includeFlight, includeGuide, includeHotel, numberOfGuests, selectedFlight, selectedHotel, selectedTrip]);
 
   if (!sessionReady) {
     return (
@@ -474,11 +473,6 @@ export default function BookTripPage() {
     setHotelSearch((current) => ({ ...current, [name]: value }));
   }
 
-  function updateTripSchedule(event) {
-    const { name, value } = event.target;
-    setTripSchedule((current) => ({ ...current, [name]: value }));
-  }
-
   async function handleFlightSearch() {
     setError("");
     setNotice("");
@@ -534,9 +528,6 @@ export default function BookTripPage() {
     if (!hasPassportDetails(traveler)) return "Guest 1 passport details are required.";
     if (!passportImage) return "Passport image is required.";
     if (!selectedTrip) return "Please select a trip.";
-    if (!tripSchedule.date || !tripSchedule.startTime || !tripSchedule.endTime) {
-      return "Trip date, start time, and end time are required.";
-    }
     if (Number(numberOfGuests) < 1) return "Number of guests must be at least 1.";
     if (Number(numberOfGuests) > 1) {
       const missingGuestIndex = extraGuests.findIndex(
@@ -577,7 +568,8 @@ export default function BookTripPage() {
       paymentMethod: payment.method,
       payment,
       notes: notes.trim(),
-      tripSchedule,
+      guideIncluded: includeGuide,
+      guideFee: includeGuide ? totals.guideFee : 0,
       totalPrice: totals.totalPrice,
       passportImage,
     };
@@ -711,38 +703,6 @@ export default function BookTripPage() {
               )}
             </Section>
 
-            <Section eyebrow="Step 1A" title="Trip Schedule">
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Trip date">
-                  <TextInput
-                    name="date"
-                    type="date"
-                    value={tripSchedule.date}
-                    onChange={updateTripSchedule}
-                    required
-                  />
-                </Field>
-                <Field label="Start time">
-                  <TextInput
-                    name="startTime"
-                    type="time"
-                    value={tripSchedule.startTime}
-                    onChange={updateTripSchedule}
-                    required
-                  />
-                </Field>
-                <Field label="End time">
-                  <TextInput
-                    name="endTime"
-                    type="time"
-                    value={tripSchedule.endTime}
-                    onChange={updateTripSchedule}
-                    required
-                  />
-                </Field>
-              </div>
-            </Section>
-
             <Section eyebrow="Step 2" title="Traveler Details / Guest 1">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="First name">
@@ -782,7 +742,7 @@ export default function BookTripPage() {
             </Section>
 
             <Section eyebrow="Step 3" title="Guests & Add-ons">
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-4">
                 <Field label="Number of guests">
                   <TextInput
                     name="numberOfGuests"
@@ -816,6 +776,15 @@ export default function BookTripPage() {
                     className="h-4 w-4 accent-amber-500"
                   />
                   Include Hotel
+                </label>
+                <label className="mt-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold">
+                  <input
+                    type="checkbox"
+                    checked={includeGuide}
+                    onChange={(event) => setIncludeGuide(event.target.checked)}
+                    className="h-4 w-4 accent-amber-500"
+                  />
+                  Include guide
                 </label>
               </div>
             </Section>
@@ -1122,6 +1091,12 @@ export default function BookTripPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-500">Hotel price</span>
                   <strong>{formatMoney(totals.hotelPrice)}</strong>
+                </div>
+              )}
+              {includeGuide && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Guide fee</span>
+                  <strong>{formatMoney(totals.guideFee)}</strong>
                 </div>
               )}
               {serviceFee > 0 && (

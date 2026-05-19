@@ -2,9 +2,11 @@ const User = require("../../model/userSchema");
 const Booking = require("../../model/BookingSchema");
 const cloudinary = require("../../config/cloudinary");
 
+const getAuthenticatedUserId = (req) => req.user?.id || req.user?._id || req.user?.userId;
+
 const updateProfilePicture = async (req, res, nxt) => {
   try {
-    const userId = req.cookies["userId"];
+    const userId = getAuthenticatedUserId(req);
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -33,7 +35,7 @@ const updateProfilePicture = async (req, res, nxt) => {
 
 const saveTrip = async (req, res, nxt) => {
   try {
-    const userId = req.cookies["userId"];
+    const userId = getAuthenticatedUserId(req);
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -51,7 +53,7 @@ const saveTrip = async (req, res, nxt) => {
 
 const getSavedTrips = async (req, res, nxt) => {
   try {
-    const userId = req.cookies["userId"];
+    const userId = getAuthenticatedUserId(req);
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -66,7 +68,10 @@ const getSavedTrips = async (req, res, nxt) => {
 
 const removeSavedTrip = async (req, res, nxt) => {
   try {
-    const userId = req.cookies["userId"];
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const tripId = req.params.tripId;
 
     await User.findByIdAndUpdate(
@@ -81,7 +86,7 @@ const removeSavedTrip = async (req, res, nxt) => {
 };
 
 const getBookedTrips = async (req, res, nxt) => {
-  const userId = req.cookies["userId"];
+  const userId = getAuthenticatedUserId(req);
   if (!userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }

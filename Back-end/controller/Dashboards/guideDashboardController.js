@@ -1,6 +1,5 @@
 const User = require("../../model/userSchema");
 const Guide = require("../../model/guideSchema");
-const Trip = require("../../model/tripSchema");
 const Booking = require("../../model/BookingSchema");
 
 const findAuthenticatedUser = async (req) => {
@@ -92,8 +91,37 @@ const guideRequiredTrips = async (req, res, nxt) => {
 
 const guideFee = async (req, res, nxt) => {
     try{
-        const getGuideFee = await Trip.findOne({guideAvailable: true}, {guideFee: 1, _id: 0}); 
-        res.json({ getGuideFee });
+        const user = await findAuthenticatedUser(req);
+
+        if (!user || user.role !== "guide") {
+            return res.status(404).json({ message: "Guide not found" });
+        }
+
+        const guide = await Guide.findOne({ userId: user._id });
+        if (!guide) {
+            return res.json({
+                confirmedBookingsCount: 0,
+                totalGuideProfit: 0,
+                currency: "EGP",
+            });
+        }
+
+        const confirmedBookings = await Booking.find({
+            assignedGuide: guide._id,
+            status: "Confirmed",
+            guideIncluded: true,
+        }).select("guideFee");
+
+        const totalGuideProfit = confirmedBookings.reduce(
+            (total, booking) => total + Number(booking.guideFee || 0),
+            0,
+        );
+
+        res.json({
+            confirmedBookingsCount: confirmedBookings.length,
+            totalGuideProfit,
+            currency: "EGP",
+        });
     }catch (err) {
         nxt(err);
     }

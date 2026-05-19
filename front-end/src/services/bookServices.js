@@ -97,6 +97,8 @@ function buildBookingRequest(payload) {
     PassportNumber: passportNumber,
     totalPrice: Number(payload.totalPrice || 0),
     currency: payload.currency || "EGP",
+    guideIncluded: Boolean(payload.guideIncluded),
+    guideFee: payload.guideIncluded ? Number(payload.guideFee || 0) : 0,
     items: normalizeCheckoutItems(payload.items?.length ? payload.items : [
       {
         name: payload.tripName || "KEMET booking",

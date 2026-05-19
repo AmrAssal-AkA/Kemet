@@ -350,7 +350,7 @@ function Header() {
                           My Account
                         </Link>
                         <Link
-                          href="/account-setting"
+                          href="/user-dashboard?tab=settings"
                           className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                           onClick={() => setMenuOpen(false)}
                         >
@@ -572,7 +572,7 @@ function Header() {
                         </button>
                       </Link>
                     ) : (
-                      <Link onClick={() => setOpen(false)} href="/account-setting">
+                      <Link onClick={() => setOpen(false)} href="/user-dashboard?tab=settings">
                         <button className="w-full rounded-full border border-slate-200 py-2.5 text-sm font-medium text-slate-700">
                           Account Setting
                         </button>

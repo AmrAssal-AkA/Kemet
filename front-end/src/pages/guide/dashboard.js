@@ -31,8 +31,8 @@ const primaryButtonClass =
 
 function StatCard({ label, value, note }) {
   return (
-    <div className="rounded-3xl border border-[#FFD33D]/30 bg-white p-5 shadow-sm">
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#A66D40]">
+    <div className="h-full min-w-0 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-600">
         {label}
       </p>
       <p className="mt-3 text-3xl font-extrabold text-[#0F172A]">{value}</p>
@@ -138,26 +138,52 @@ function getBookingKey(booking, index) {
   return firstValue(booking._id, booking.id, booking.tripId, booking.bookingId, booking.trip?._id, index);
 }
 
+function getGuestName(guest) {
+  if (!guest || typeof guest !== "object") return "";
+
+  return [guest.firstName, guest.lastName].filter(Boolean).join(" ").trim();
+}
+
+function getGuestSummary(booking) {
+  const explicitCount = firstValue(booking.numberOfGuests, booking.guestCount);
+  if (explicitCount !== undefined && explicitCount !== null && explicitCount !== "") {
+    return explicitCount;
+  }
+
+  if (Array.isArray(booking.guests)) {
+    const names = booking.guests.map(getGuestName).filter(Boolean);
+    if (names.length > 0) return names.join(", ");
+    return `${booking.guests.length} ${booking.guests.length === 1 ? "guest" : "guests"}`;
+  }
+
+  if (booking.guests && typeof booking.guests === "object") {
+    return getGuestName(booking.guests) || "Guest";
+  }
+
+  return booking.guests;
+}
+
 function getBookingDetails(booking) {
   return [
     ["Tourist", firstValue(booking.customerName, booking.userName, booking.user?.name, booking.customer?.name)],
     ["Date", firstValue(booking.date, booking.tripDate, booking.startDate, booking.bookingDate)],
-    ["Guests", firstValue(booking.numberOfGuests, booking.guests, booking.guestCount)],
+    ["Guests", getGuestSummary(booking)],
     ["Total", firstValue(booking.totalPrice, booking.price, booking.finalPrice)],
   ].filter(([, value]) => value !== undefined && value !== null && value !== "");
 }
 
 function getGuideFeeCards(guideFee) {
   const fee = findNumericField(guideFee, [
-    "guideFee",
-    "guideFees",
-    "guidefees",
-    "fee",
-    "totalGuideFee",
+    "totalGuideProfit",
   ]);
 
-  if (fee === null) return [];
-  return [{ label: "Guide Fee", value: formatMoney(fee) }];
+  return [
+    {
+      label: "Guide Profit",
+      value: formatMoney(fee ?? 0),
+      note: `${Number(guideFee?.confirmedBookingsCount || 0)} confirmed bookings`,
+    },
+  ];
 }
 
 function getAssignedBookingsLabel(status, count) {
@@ -176,7 +202,7 @@ function getAvailabilityErrorMessage(error) {
 
 function Field({ label, children }) {
   return (
-    <label className="block">
+    <label className="block w-full">
       <span className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-[#162766]">
         {label}
       </span>
@@ -198,7 +224,7 @@ function BookingCard({ booking }) {
           {location && <p className="mt-1 text-xs text-[#162766]">{location}</p>}
         </div>
         {status && (
-          <span className="rounded-full bg-[#FFD33D]/25 px-3 py-1 text-xs font-bold text-[#A66D40]">
+          <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-bold text-gray-700">
             {status}
           </span>
         )}
@@ -429,7 +455,7 @@ export default function GuideDashboard() {
         </section>
 
         {(statsStatus === "loading" || statsStatus === "error" || stats.length > 0) && (
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-4 md:grid-cols-3">
             {statsStatus === "loading" && <StatCard label="Guide Fee" value="Loading..." />}
             {statsStatus === "error" && <ErrorCard label="Guide Fee" message={statsError} />}
             {stats.map((card) => (
@@ -448,7 +474,7 @@ export default function GuideDashboard() {
                 </p>
               </div>
               {getAssignedBookingsLabel(bookingsStatus, bookings.length) && (
-                <span className="inline-flex w-fit rounded-full bg-[#FFD33D]/25 px-3 py-1 text-xs font-bold text-[#A66D40]">
+                <span className="inline-flex w-fit rounded-full bg-gray-50 px-3 py-1 text-xs font-bold text-gray-700">
                   {getAssignedBookingsLabel(bookingsStatus, bookings.length)}
                 </span>
               )}
@@ -482,13 +508,13 @@ export default function GuideDashboard() {
               <h2 className="text-2xl font-extrabold">Availability</h2>
               <p className="mt-1 text-sm text-[#162766]">Add guide availability for tour delivery.</p>
 
-              <form onSubmit={handleAvailabilitySubmit} className="mt-5 space-y-4">
+              <form onSubmit={handleAvailabilitySubmit} className="mt-5 w-full space-y-4">
                 <Field label="Available Day">
                   <select
                     name="dayofweek"
                     value={availability.dayofweek}
                     onChange={handleAvailabilityChange}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-[#FFD33D]"
+                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
                   >
                     {days.map((day) => (
                       <option key={day}>{day}</option>
@@ -496,14 +522,14 @@ export default function GuideDashboard() {
                   </select>
                 </Field>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid w-full gap-4">
                   <Field label="Start Time">
                     <input
                       type="time"
                       name="startTime"
                       value={availability.startTime}
                       onChange={handleAvailabilityChange}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-[#FFD33D]"
+                      className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
                     />
                   </Field>
                   <Field label="End Time">
@@ -512,7 +538,7 @@ export default function GuideDashboard() {
                       name="endTime"
                       value={availability.endTime}
                       onChange={handleAvailabilityChange}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-[#FFD33D]"
+                      className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
                     />
                   </Field>
                 </div>

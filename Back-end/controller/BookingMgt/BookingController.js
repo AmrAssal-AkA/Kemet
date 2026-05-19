@@ -46,6 +46,12 @@ function buildTripSchedule(value) {
   };
 }
 
+function parseBoolean(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  return Boolean(value);
+}
+
 const createBooking = async (req, res, nxt) => {
   try {
     const userId = req.user?.id;
@@ -65,6 +71,8 @@ const createBooking = async (req, res, nxt) => {
     const tripSchedule = buildTripSchedule(parseJsonField(req.body.tripSchedule));
     const items = parseJsonField(req.body.items);
     const { PassportNumber, totalPrice } = req.body;
+    const guideIncluded = parseBoolean(req.body.guideIncluded);
+    const guideFee = guideIncluded ? Number(req.body.guideFee || 0) : 0;
 
     if (!Array.isArray(guests)) {
       return res.status(400).json({ message: "Guests must be an array" });
@@ -188,6 +196,8 @@ const createBooking = async (req, res, nxt) => {
       trip,
       tripDetails,
       tripSchedule,
+      guideIncluded,
+      guideFee: Number.isFinite(guideFee) && guideFee > 0 ? guideFee : 0,
       PassportNumber,
       totalPrice,
       currency,

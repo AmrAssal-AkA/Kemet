@@ -2,7 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Head from "next/head";
-import axios from "axios";
+import { getHiddenGems } from "@/services/contentServices";
+import { getTrips } from "@/services/tripServices";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATIC DATA
@@ -94,6 +95,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 const FALLBACK_TRIP_IMAGE = "/siwa.jpeg";
+const FALLBACK_GEM_IMAGE = "/images/home/gem1.jpg";
 
 function getImageValue(image) {
   if (typeof image === "string") return image;
@@ -108,6 +110,25 @@ function getTripImage(trip) {
   if (Array.isArray(trip?.images)) return getImageValue(trip.images[0]) || FALLBACK_TRIP_IMAGE;
   if (trip?.images)                return getImageValue(trip.images)     || FALLBACK_TRIP_IMAGE;
   return FALLBACK_TRIP_IMAGE;
+}
+
+function getHiddenGemImage(gem) {
+  if (gem?.img) return gem.img;
+  if (gem?.imageUrl) return gem.imageUrl;
+  if (Array.isArray(gem?.images)) return getImageValue(gem.images[0]) || FALLBACK_GEM_IMAGE;
+  if (gem?.images) return getImageValue(gem.images) || FALLBACK_GEM_IMAGE;
+  return FALLBACK_GEM_IMAGE;
+}
+
+function normalizeHiddenGem(gem) {
+  return {
+    ...gem,
+    img: getHiddenGemImage(gem),
+    title: gem?.title || gem?.placeName || gem?.PlaceName || "Hidden gem",
+    desc: gem?.desc || gem?.description || gem?.Description || "",
+    tag: gem?.tag || "Hidden Gem",
+    location: gem?.location || gem?.city || "Egypt",
+  };
 }
 
 function StarRow({ count = 5 }) {
@@ -744,14 +765,14 @@ export default function Home({ trips, hiddenGems }) {
 // ─────────────────────────────────────────────────────────────────────────────
 export async function getStaticProps() {
   try {
-    const [tripsRes, gemsRes] = await Promise.all([
-      axios.get("http://localhost:8000/api/Trip/"),
-      axios.get("http://localhost:8000/api/hiddenGem/"),
+    const [trips, hiddenGems] = await Promise.all([
+      getTrips({ force: true }),
+      getHiddenGems(),
     ]);
     return {
       props: {
-        trips: tripsRes.data || [],
-        hiddenGems: gemsRes.data || [],
+        trips,
+        hiddenGems: hiddenGems.map(normalizeHiddenGem),
       },
       revalidate: 60,
     };

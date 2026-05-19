@@ -49,6 +49,14 @@ const bookingSchema = new mongoose.Schema(
       ref: "Guide",
       default: null,
     },
+    guideIncluded: {
+      type: Boolean,
+      default: false,
+    },
+    guideFee: {
+      type: Number,
+      default: 0,
+    },
     PassportNumber: {
       type: String,
       required: true,
