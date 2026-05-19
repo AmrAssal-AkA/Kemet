@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useState, useEffect } from "react";
-
+import Link from "next/link";
 import {FaGreaterThan, FaLessThan} from 'react-icons/fa'
 import { ArrowRightIcon } from "@/components/ui/ArrowRightIcon";
 import { CheckIcon } from "@/components/ui/CheckIcon";
@@ -231,9 +231,11 @@ function DestinationPage(props) {
                   </li>
                 ))}
               </ul>
-              <button className="bg-[#111827] text-white px-10 py-5 rounded-full font-bold text-sm uppercase tracking-widest w-max hover:bg-black transition-all shadow-md transform hover:-translate-y-1">
-                View Itinerary
-              </button>
+              <Link href="/BookTrip">
+                <button className="bg-yellow-400 text-[#1f2a44] px-8 py-4 rounded-full font-semibold tracking-wider">
+                   View Trip
+                 </button>
+              </Link>
             </div>
           </div>
         </section>
@@ -271,9 +273,11 @@ function DestinationPage(props) {
                 Join us to explore the hidden gems and timeless monuments of
                 Alexandria.
               </p>
+                <Link href="/BookTrip">
               <button className="bg-[#FBBF24] text-[#111827] px-12 py-5 rounded-full font-black text-sm uppercase tracking-widest hover:bg-[#e5a913] hover:shadow-lg hover:shadow-[#FBBF24]/20 transition-all transform hover:-translate-y-1">
-                Book Your Expedition
+                Book Your Trip 
               </button>
+                 </Link>
             </div>
           </div>
         </section>

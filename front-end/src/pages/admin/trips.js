@@ -272,25 +272,25 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
             Loading trips...
           </p>
         ) : trips.length > 0 ? (
-          <div className="mt-6 grid gap-5 xl:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
             {trips.map((trip) => {
               const tripId = getTripId(trip);
               const imageUrl = getTripImage(trip);
 
               return (
-                <article key={tripId} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                <article key={tripId} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm ">
                   <Image
                     src={imageUrl}
                     alt={trip.name || "Trip image"}
                     width={800}
                     height={420}
                     unoptimized
-                    className="h-52 w-full object-cover"
+                    className="h-40 w-full object-cover"
                   />
-                  <div className="p-5">
+                  <div className="flex flex-1 flex-col p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <h2 className="text-xl font-extrabold text-slate-900">
+                        <h2 className="text-lg font-extrabold text-slate-900">
                           {trip.name || trip.title || "Untitled Trip"}
                         </h2>
                         <p className="mt-1 text-sm font-semibold text-amber-700">
@@ -314,7 +314,7 @@ export default function AdminTrips({ admin, initialTrips = [], initialError = ""
                       <Detail label="Guest Capacity" value={trip.guestCapacity} />
                     </div>
 
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                    <div className="mt-auto flex flex-col gap-3 pt-5 sm:flex-row">
                       <button
                         type="button"
                         onClick={() => openEditModal(trip)}

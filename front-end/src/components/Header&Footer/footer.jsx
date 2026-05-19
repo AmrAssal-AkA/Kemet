@@ -119,10 +119,9 @@ function Footer() {
             <div className="mt-5 flex flex-col gap-2.5">
               {[
                 { href: "/offerings", label: "Smart Trip Planner" },
-                { href: "/offerings", label: "Destination Discovery" },
+                { href: "/Destination", label: "Destination Discovery" },
                 { href: "/offerings", label: "Local Experiences" },
-                { href: "/offerings", label: "Travel Community" },
-                { href: "/blogs", label: "Blog & Guides" },
+                { href: "/Communities", label: "Travel Community" },
               ].map(({ href, label }) => (
                 <Link
                   key={label}
@@ -143,7 +142,7 @@ function Footer() {
               {[
                 { href: "/about", label: "About Us" },
                 { href: "/contact", label: "Contact Us" },
-                { href: "/offerings", label: "Features" },
+                { href: "/offerings", label: "Offerings" },
                 { href: "/blogs", label: "Blog" },
               ].map(({ href, label }) => (
                 <Link

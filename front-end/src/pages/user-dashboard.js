@@ -1,30 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Head from "next/head";
+import { useRouter } from "next/router";
+import { useAuth } from "@/context/AuthContext";
+import { getBookedTrips } from "@/services/userServices";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
-
-const upcomingTrips = [
-  {
-    img: "/redballon.jpg",
-    title: "Luxor: Sunrise Hot Air Balloon Ride",
-    date: "Jun 14, 2025",
-    status: "Confirmed",
-    statusColor: "#22c55e",
-    price: "$250",
-    daysLeft: 28,
-  },
-  {
-    img: "/valley.jpeg",
-    title: "Valley of the Kings Full Day Tour",
-    date: "Jun 17, 2025",
-    status: "Pending",
-    statusColor: "#FFCE2A",
-    price: "$180",
-    daysLeft: 31,
-  },
-];
 
 const pastTrips = [
   {
@@ -40,30 +22,6 @@ const pastTrips = [
     date: "Jan 22, 2025",
     rating: 4,
     review: null,
-  },
-];
-
-const savedGems = [
-  {
-    img: "/images/home/gem1.jpg",
-    location: "Western Desert",
-    title: "Siwa White Desert",
-    tag: "Off the beaten path",
-    href: "/hidden-gems",
-  },
-  {
-    img: "/images/home/gem2.jpg",
-    location: "South Sinai",
-    title: "Colored Canyon",
-    tag: "Nature wonder",
-    href: "/hidden-gems",
-  },
-  {
-    img: "/images/home/gem3.jpg",
-    location: "Fayoum",
-    title: "Lake Qaroun",
-    tag: "Hidden escape",
-    href: "/hidden-gems",
   },
 ];
 
@@ -100,12 +58,8 @@ const recommendedCities = [
   { img: "siwa.jpeg", name: "Siwa", match: "81% match" },
 ];
 
-const stats = [
-  { value: "4", label: "Trips Taken" },
-  { value: "2", label: "Upcoming" },
-  { value: "12", label: "Places Saved" },
-  { value: "3", label: "Stories Shared" },
-];
+const STORIES_SHARED_COUNT = 3;
+const VALID_DASHBOARD_TABS = ["overview", "trips", "liked", "community", "settings"];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -114,6 +68,162 @@ const fadeUp = (delay = 0) => ({
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] },
 });
+
+const firstValue = (values) =>
+  values.find((value) => value !== undefined && value !== null && value !== "");
+
+function getItemId(item) {
+  return firstValue([item?._id, item?.id, item?.tripId, item?.bookingId]);
+}
+
+function getTripObject(source) {
+  const trip = Array.isArray(source?.trip) ? source.trip[0] : source?.trip;
+  const item = Array.isArray(source?.items) ? source.items[0] : source?.items;
+  const candidate = firstValue([
+    trip,
+    source?.tripDetails,
+    source?.package,
+    item,
+    source,
+  ]);
+
+  return candidate && typeof candidate === "object" ? candidate : {};
+}
+
+function normalizeImagePath(value, fallback) {
+  if (!value) return fallback;
+  if (String(value).startsWith("http") || String(value).startsWith("/")) return value;
+  return `/${value}`;
+}
+
+function getImage(source, fallback) {
+  const image = firstValue([
+    source?.imageUrl,
+    source?.img,
+    source?.image?.[0]?.imageUrl,
+    source?.images?.[0]?.imageUrl,
+    source?.image?.[0]?.url,
+    source?.images?.[0]?.url,
+    source?.passportImages?.[0]?.url,
+  ]);
+
+  return normalizeImagePath(image, fallback);
+}
+
+function formatDateText(value) {
+  if (!value) return "Date pending";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getBookingDateValue(booking) {
+  return firstValue([
+    booking?.tripSchedule?.date,
+    booking?.date,
+    booking?.tripDate,
+    booking?.startDate,
+    booking?.bookingDate,
+    booking?.createdAt,
+  ]);
+}
+
+function getDaysLeft(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return 0;
+
+  const diff = date.getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+function formatMoney(amount, currency = "EGP") {
+  if (amount === undefined || amount === null || amount === "") return "";
+
+  const numericAmount = Number(amount);
+  if (Number.isNaN(numericAmount)) return String(amount);
+
+  return `${currency || "EGP"} ${numericAmount.toLocaleString()}`;
+}
+
+function normalizeStatus(value) {
+  return String(value || "").trim();
+}
+
+function getStatusColor(status) {
+  const normalized = normalizeStatus(status).toLowerCase();
+  if (normalized === "confirmed" || normalized === "completed") return "#22c55e";
+  if (normalized === "cancelled" || normalized === "canceled") return "#ef4444";
+  return "#FFCE2A";
+}
+
+function isCompletedBooking(booking) {
+  const status = normalizeStatus(booking?.status).toLowerCase();
+  return status === "confirmed" || status === "completed";
+}
+
+function isUpcomingBooking(booking) {
+  const status = normalizeStatus(booking?.status).toLowerCase();
+  if (status !== "confirmed") return false;
+
+  const dateValue = getBookingDateValue(booking);
+  if (!dateValue) return true;
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return true;
+  return date.getTime() >= Date.now();
+}
+
+function mapBookingToTrip(booking, index) {
+  const trip = getTripObject(booking);
+  const dateValue = getBookingDateValue(booking);
+  const status = normalizeStatus(booking?.status) || "Pending";
+  const paymentStatus = normalizeStatus(booking?.paymentStatus);
+  const title = firstValue([
+    trip?.name,
+    trip?.title,
+    booking?.tripName,
+    booking?.tripTitle,
+    booking?.name,
+    booking?.title,
+    "Booked trip",
+  ]);
+
+  return {
+    id: getItemId(booking) || `booking-${index}`,
+    img: getImage(trip, "/redballon.jpg"),
+    title,
+    location: firstValue([trip?.city, trip?.location, booking?.city, booking?.location]),
+    date: formatDateText(dateValue),
+    status,
+    statusColor: getStatusColor(status),
+    paymentStatus,
+    price: formatMoney(
+      firstValue([booking?.totalPrice, booking?.price, booking?.amount, trip?.finalPrice, trip?.basePrice]),
+      booking?.currency,
+    ),
+    daysLeft: getDaysLeft(dateValue),
+  };
+}
+
+function getUserInitials(name = "") {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "ME";
+  return parts.slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+}
+
+function getDashboardErrorMessage(error) {
+  if (!error) return "";
+  if (error.status === 401 || error.status === 403) {
+    return "Your session may have expired. Please sign in again to view your dashboard data.";
+  }
+  return error.message || "Dashboard data could not be loaded.";
+}
 
 function StarRow({ count = 5, total = 5 }) {
   return (
@@ -158,11 +268,11 @@ function SectionHeading({ eyebrow, title, subtitle, light = false }) {
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ activeTab, setActiveTab }) {
+function Sidebar({ activeTab, setActiveTab, onLogout }) {
   const nav = [
     { key: "overview", icon: "⬡", label: "Overview" },
     { key: "trips", icon: "🗺️", label: "My Trips" },
-    { key: "saved", icon: "♥", label: "Saved Places" },
+    { key: "liked", icon: "♥", label: "Liked Articles" },
     { key: "community", icon: "✦", label: "Community" },
     { key: "settings", icon: "⚙", label: "Settings" },
   ];
@@ -196,10 +306,13 @@ function Sidebar({ activeTab, setActiveTab }) {
 
         <div className="mx-2 my-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
 
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+        <button
+          type="button"
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
           style={{ color: "rgba(255,255,255,0.4)" }}>
           <span style={{ fontSize: 15 }}>↩</span>
-          Sign Out
+          Logout
         </button>
       </div>
     </aside>
@@ -209,7 +322,86 @@ function Sidebar({ activeTab, setActiveTab }) {
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
 export default function UserDashboard() {
+  const { user, sessionReady, logout } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
+  const [bookedTrips, setBookedTrips] = useState([]);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(true);
+  const [bookedError, setBookedError] = useState("");
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    const tab = Array.isArray(router.query.tab) ? router.query.tab[0] : router.query.tab;
+    setActiveTab(VALID_DASHBOARD_TABS.includes(tab) ? tab : "overview");
+  }, [router.isReady, router.query.tab]);
+
+  useEffect(() => {
+    if (!sessionReady) return;
+
+    if (!user) {
+      setBookedTrips([]);
+      setBookedError("Your session may have expired. Please sign in again to view your dashboard data.");
+      setIsDashboardLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadDashboardData() {
+      setIsDashboardLoading(true);
+      setBookedError("");
+
+      try {
+        const bookedResult = await getBookedTrips();
+        if (!isMounted) return;
+        setBookedTrips(Array.isArray(bookedResult) ? bookedResult : []);
+      } catch (error) {
+        if (!isMounted) return;
+        setBookedTrips([]);
+        setBookedError(getDashboardErrorMessage(error));
+      } finally {
+        if (isMounted) {
+          setIsDashboardLoading(false);
+        }
+      }
+    }
+
+    loadDashboardData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [sessionReady, user]);
+
+  const dashboardName = user?.name || "Explorer";
+  const dashboardEmail = user?.email || "Not provided";
+  const dashboardLocation = user?.Nationality || user?.nationality || "Egypt";
+  const upcomingTripCards = useMemo(
+    () => bookedTrips.filter(isUpcomingBooking).map(mapBookingToTrip),
+    [bookedTrips],
+  );
+  const dashboardStats = useMemo(
+    () => [
+      {
+        value: String(bookedTrips.filter(isCompletedBooking).length),
+        label: "Trips Taken",
+      },
+      { value: String(upcomingTripCards.length), label: "Upcoming" },
+      { value: "0", label: "Liked Articles" },
+      { value: String(STORIES_SHARED_COUNT), label: "Stories Shared" },
+    ],
+    [bookedTrips, upcomingTripCards.length],
+  );
+  const settingsFields = useMemo(
+    () => [
+      { label: "Full Name", value: dashboardName },
+      { label: "Email", value: dashboardEmail },
+      { label: "Phone", value: user?.phone || user?.phoneNumber || "+20 100 000 0000" },
+      { label: "Location", value: dashboardLocation },
+    ],
+    [dashboardEmail, dashboardLocation, dashboardName, user?.phone, user?.phoneNumber],
+  );
 
   return (
     <>
@@ -292,7 +484,7 @@ export default function UserDashboard() {
                     border: "3px solid rgba(255,255,255,0.85)",
                   }}
                 >
-                  AM
+                  {getUserInitials(dashboardName)}
                 </div>
                 <div
                   className="absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white"
@@ -308,10 +500,10 @@ export default function UserDashboard() {
                   className="text-2xl md:text-3xl font-extrabold text-white leading-none"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  Ahmed Mostafa
+                  {dashboardName}
                 </h1>
                 <p className="text-gray-400 text-xs mt-1">
-                  📍 Alexandria, Egypt &nbsp;·&nbsp; Member since Jan 2024
+                  📍 {dashboardLocation} &nbsp;·&nbsp; Explorer Member
                 </p>
               </div>
             </motion.div>
@@ -321,7 +513,7 @@ export default function UserDashboard() {
               {...fadeUp(0.25)}
               className="hidden md:flex flex-wrap gap-3 ml-auto pb-1"
             >
-              {stats.map(({ value, label }) => (
+              {dashboardStats.map(({ value, label }) => (
                 <div key={label} className="stat-chip rounded-xl px-4 py-2 text-center">
                   <div className="text-base font-extrabold text-yellow-400 leading-none">{value}</div>
                   <div className="text-[10px] uppercase tracking-widest text-gray-400 mt-0.5">{label}</div>
@@ -333,7 +525,7 @@ export default function UserDashboard() {
 
         {/* Mobile stat row */}
         <div className="flex md:hidden gap-2 px-4 pt-4 overflow-x-auto">
-          {stats.map(({ value, label }) => (
+          {dashboardStats.map(({ value, label }) => (
             <div
               key={label}
               className="shrink-0 rounded-xl px-4 py-2 text-center"
@@ -348,7 +540,7 @@ export default function UserDashboard() {
         {/* ══════ BODY ══════ */}
         <div className="px-4 md:px-20 py-8 flex gap-8 items-start">
           {/* Sidebar */}
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />
 
           {/* Main content */}
           <div className="flex-1 min-w-0">
@@ -363,7 +555,7 @@ export default function UserDashboard() {
                     <SectionHeading
                       eyebrow="Your Itinerary"
                       title="Upcoming Trips"
-                      subtitle="You have 2 adventures coming up."
+                      subtitle={`You have ${upcomingTripCards.length} ${upcomingTripCards.length === 1 ? "adventure" : "adventures"} coming up.`}
                     />
                     <button
                       onClick={() => setActiveTab("trips")}
@@ -374,7 +566,22 @@ export default function UserDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {upcomingTrips.map((trip, i) => (
+                    {isDashboardLoading && (
+                      <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
+                        Loading your booked trips...
+                      </p>
+                    )}
+                    {!isDashboardLoading && bookedError && (
+                      <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
+                        {bookedError}
+                      </p>
+                    )}
+                    {!isDashboardLoading && !bookedError && upcomingTripCards.length === 0 && (
+                      <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
+                        No confirmed upcoming trips yet.
+                      </p>
+                    )}
+                    {!isDashboardLoading && !bookedError && upcomingTripCards.map((trip, i) => (
                       <motion.div
                         key={i}
                         initial={{ opacity: 0, y: 20 }}
@@ -397,8 +604,14 @@ export default function UserDashboard() {
                         </div>
                         <div className="p-4">
                           <h4 className="font-bold text-sm text-gray-900 mb-1 leading-snug">{trip.title}</h4>
+                          {trip.location && (
+                            <p className="text-xs text-gray-400">{trip.location}</p>
+                          )}
+                          {trip.paymentStatus && (
+                            <p className="text-xs text-gray-400">Payment: {trip.paymentStatus}</p>
+                          )}
                           <div className="flex items-center justify-between mt-3">
-                            <span className="text-yellow-600 font-extrabold text-base">{trip.price}</span>
+                            <span className="text-yellow-600 font-extrabold text-base">{trip.price || "N/A"}</span>
                             <div className="flex gap-2">
                               <span className="text-xs font-medium text-gray-500 border border-gray-200 rounded-full px-3 py-1">Details</span>
                               <span className="text-xs font-medium text-red-400 border border-red-100 rounded-full px-3 py-1 hover:border-red-300 transition-colors cursor-pointer">Cancel</span>
@@ -556,7 +769,22 @@ export default function UserDashboard() {
                 <motion.div {...fadeUp(0)}>
                   <SectionHeading eyebrow="Your Itinerary" title="Upcoming Trips" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
-                    {upcomingTrips.map((trip, i) => (
+                    {isDashboardLoading && (
+                      <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
+                        Loading your booked trips...
+                      </p>
+                    )}
+                    {!isDashboardLoading && bookedError && (
+                      <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
+                        {bookedError}
+                      </p>
+                    )}
+                    {!isDashboardLoading && !bookedError && upcomingTripCards.length === 0 && (
+                      <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
+                        No confirmed upcoming trips yet.
+                      </p>
+                    )}
+                    {!isDashboardLoading && !bookedError && upcomingTripCards.map((trip, i) => (
                       <div key={i} className="trip-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="overflow-hidden h-40 relative">
                           <img src={trip.img} alt={trip.title} className="trip-img w-full h-full object-cover" />
@@ -571,8 +799,14 @@ export default function UserDashboard() {
                         </div>
                         <div className="p-4">
                           <h4 className="font-bold text-sm text-gray-900 mb-3 leading-snug">{trip.title}</h4>
+                          {trip.location && (
+                            <p className="text-xs text-gray-400">{trip.location}</p>
+                          )}
+                          {trip.paymentStatus && (
+                            <p className="text-xs text-gray-400">Payment: {trip.paymentStatus}</p>
+                          )}
                           <div className="flex items-center justify-between">
-                            <span className="text-yellow-600 font-extrabold text-base">{trip.price}</span>
+                            <span className="text-yellow-600 font-extrabold text-base">{trip.price || "N/A"}</span>
                             <div className="flex gap-2">
                               <span className="text-xs font-medium text-gray-500 border border-gray-200 rounded-full px-3 py-1 cursor-pointer hover:border-yellow-400 transition-colors">Details</span>
                               <span className="text-xs font-medium text-red-400 border border-red-100 rounded-full px-3 py-1 hover:border-red-300 transition-colors cursor-pointer">Cancel</span>
@@ -600,7 +834,7 @@ export default function UserDashboard() {
                           </div>
                           <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                             {trip.review ? (
-                              <p className="text-xs text-gray-400 italic max-w-xs">"{trip.review}"</p>
+                              <p className="text-xs text-gray-400 italic max-w-xs">&quot;{trip.review}&quot;</p>
                             ) : (
                               <button className="btn-gold rounded-full px-5 py-2 font-semibold text-black text-xs">
                                 Leave a Review
@@ -628,56 +862,23 @@ export default function UserDashboard() {
               </div>
             )}
 
-            {/* ── SAVED PLACES ── */}
-            {activeTab === "saved" && (
+            {/* ── LIKED ARTICLES ── */}
+            {activeTab === "liked" && (
               <motion.div {...fadeUp(0)}>
                 <SectionHeading
-                  eyebrow="Wishlist"
-                  title="Your Saved Places"
-                  subtitle="Hidden gems and destinations you've bookmarked."
+                  eyebrow="Articles"
+                  title="Liked Articles"
+                  subtitle="Blog articles you've liked will appear here."
                 />
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {savedGems.map((gem, i) => (
-                    <Link href={gem.href} key={i}>
-                      <motion.div
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1, duration: 0.5 }}
-                        className="gem-card relative rounded-2xl overflow-hidden cursor-pointer shadow-md"
-                        style={{ height: 300 }}
-                      >
-                        <img src={gem.img} alt={gem.title} className="gem-img w-full h-full object-cover" />
-                        <div className="gem-overlay absolute inset-0" />
-                        <div className="absolute top-4 left-4">
-                          <span className="inline-block bg-yellow-400 text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
-                            {gem.tag}
-                          </span>
-                        </div>
-                        {/* unsave */}
-                        <button
-                          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-red-400 text-sm font-bold"
-                          style={{ background: "rgba(0,0,0,0.4)" }}
-                          onClick={(e) => e.preventDefault()}
-                        >
-                          ♥
-                        </button>
-                        <div className="absolute bottom-0 left-0 right-0 p-5">
-                          <p className="text-xs font-semibold uppercase tracking-widest text-yellow-400 mb-1">{gem.location}</p>
-                          <h3 className="text-xl font-extrabold text-white leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-                            {gem.title}
-                          </h3>
-                          <div className="inline-flex items-center gap-1 mt-2 text-yellow-400 text-xs font-semibold">
-                            Discover <span>→</span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </Link>
-                  ))}
+                  <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
+                    No liked articles yet.
+                  </p>
                 </div>
                 <div className="text-center mt-8">
-                  <Link href="/hidden-gems">
+                  <Link href="/blogs">
                     <button className="btn-gold rounded-full px-9 py-3.5 font-semibold text-black text-sm">
-                      Explore More Hidden Gems
+                      Explore Blog Articles
                     </button>
                   </Link>
                 </div>
@@ -746,12 +947,7 @@ export default function UserDashboard() {
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      { label: "Full Name", value: "Ahmed Mostafa" },
-                      { label: "Email", value: "ahmed@example.com" },
-                      { label: "Phone", value: "+20 100 000 0000" },
-                      { label: "Location", value: "Alexandria, Egypt" },
-                    ].map(({ label, value }) => (
+                    {settingsFields.map(({ label, value }) => (
                       <div key={label}>
                         <label className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-1.5 block">
                           {label}

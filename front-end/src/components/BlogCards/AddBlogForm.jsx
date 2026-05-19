@@ -74,7 +74,6 @@ export default function AddBlogForm({ onSuccess }) {
 
   return (
     <>
-      <div className="bg-black opacity-60 " />
       <form className="w-full flex flex-col gap-6" onSubmit={handleSubmit}>
         <div>
           <label

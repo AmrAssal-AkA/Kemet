@@ -23,7 +23,9 @@ async function handleResponse(res, fallbackMessage, logLabel = "userServices") {
       status: res.status,
       body: data,
     });
-    throw new Error(data?.message || data?.error || fallbackMessage);
+    const error = new Error(data?.message || data?.error || fallbackMessage);
+    error.status = res.status;
+    throw error;
   }
 
   return data;
@@ -59,4 +61,75 @@ export async function updateUserRole(userId, role) {
   });
 
   return handleResponse(res, "User role could not be updated.", "updateUserRole");
+}
+
+function getArray(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.trips)) return data.trips;
+  if (Array.isArray(data?.bookings)) return data.bookings;
+  if (Array.isArray(data?.savedTrips)) return data.savedTrips;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.data?.trips)) return data.data.trips;
+  if (Array.isArray(data?.data?.bookings)) return data.data.bookings;
+  if (Array.isArray(data?.data?.savedTrips)) return data.data.savedTrips;
+  return [];
+}
+
+export async function getBookedTrips() {
+  const res = await fetch(buildApiUrl("/api/userdashboard/BookedTrips"), {
+    credentials: "include",
+  });
+  const data = await handleResponse(res, "Booked trips could not be loaded.", "getBookedTrips");
+  return getArray(data);
+}
+
+export async function getSavedTrips() {
+  const res = await fetch(buildApiUrl("/api/userdashboard/savedTrips"), {
+    credentials: "include",
+  });
+  const data = await handleResponse(res, "Saved trips could not be loaded.", "getSavedTrips");
+  return getArray(data);
+}
+
+export async function saveTrip(tripId) {
+  if (!tripId) {
+    throw new Error("Trip ID is required.");
+  }
+
+  const res = await fetch(buildApiUrl(`/api/userdashboard/saveTrips/${tripId}`), {
+    method: "POST",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Trip could not be saved.", "saveTrip");
+}
+
+export async function removeSavedTrip(tripId) {
+  if (!tripId) {
+    throw new Error("Trip ID is required.");
+  }
+
+  const res = await fetch(buildApiUrl(`/api/userdashboard/removeSavedTrip/${tripId}`), {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  return handleResponse(res, "Saved trip could not be removed.", "removeSavedTrip");
+}
+
+export async function updateProfilePicture(file) {
+  if (!file) {
+    throw new Error("Profile picture is required.");
+  }
+
+  const formData = new FormData();
+  formData.append("profilePicture", file);
+
+  const res = await fetch(buildApiUrl("/api/userdashboard/AddProfilePicture"), {
+    method: "PATCH",
+    credentials: "include",
+    body: formData,
+  });
+
+  return handleResponse(res, "Profile picture could not be updated.", "updateProfilePicture");
 }
