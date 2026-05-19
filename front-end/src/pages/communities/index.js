@@ -5,18 +5,25 @@ import Head from "next/head";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
-const TAG_HREF = { Luxor:"/Luxor", Cairo:"/Cairo", Siwa:"/Siwa", Alexandria:"/Alexandria", Aswan:"/Aswan",  "Tips & Advice":"/offerings" };
-const TAGS = ["All", ...Object.keys(TAG_HREF)];
-const SERIF = { fontFamily: "'Playfair Display', serif" };
-const fadeUp = (d=0) => ({ initial:{opacity:0,y:32}, animate:{opacity:1,y:0}, transition:{duration:0.6,delay:d,ease:[0.22,1,0.36,1]} });
+const TAG_HREF = {
+  Luxor: "/Luxor", Cairo: "/Cairo", Siwa: "/Siwa",
+  Alexandria: "/Alexandria", Aswan: "/Aswan", "Tips & Advice": "/offerings",
+};
+const TAGS   = ["All", ...Object.keys(TAG_HREF)];
+const SERIF  = { fontFamily: "'Playfair Display', serif" };
+const fadeUp = (d = 0) => ({
+  initial: { opacity: 0, y: 32 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, delay: d, ease: [0.22, 1, 0.36, 1] },
+});
 
 const POSTS = [
-  { id:1, type:"story",    tag:"Luxor",         img:"/images/communities/story1.jpg", category:"Luxor · Travel Story",       title:"Waking up at 4 AM for the balloon ride that changed how I see Egypt forever", excerpt:"I almost skipped it — too tired, too cold. Then we rose above the Valley of the Kings as the sun cracked the horizon.", author:"Sara Al-Masri",   initials:"SA", avatarBg:"#c0392b", date:"2 days ago",  likes:284, readTime:"4 min read" },
-  { id:2, type:"story",    tag:"Siwa",          img:"/images/communities/story2.jpg", category:"Siwa · Hidden Gem",          title:"The oasis that Instagram hasn't discovered yet",                               excerpt:"3 days completely offline, salt lake sunsets, and the friendliest locals I've ever met.",                            author:"Karim Mansour",  initials:"KM", avatarBg:"#2980b9", date:"5 days ago",  likes:156, readTime:"3 min read" },
-  { id:3, type:"tip",      tag:"Tips & Advice", img:"/images/communities/story3.jpg", category:"Tips & Advice · First-Timer", title:"Everything I wish I knew before my first trip to Egypt",                    excerpt:"Visas, scams to avoid, what to pack, and why you should always carry small bills.",                                  author:"Nour Fahmy",     initials:"NF", avatarBg:"#27ae60", date:"1 week ago",  likes:412, readTime:"7 min read" },
-  { id:4, type:"story",    tag:"Cairo",         img:"/images/communities/story4.jpg", category:"Cairo · History",            title:"Standing inside the Great Pyramid — what the photos never show you",          excerpt:"The heat, the silence, the weight of 4,000 years pressing in. It rewires something in your brain.",                 author:"Youssef Hassan", initials:"YH", avatarBg:"#8e44ad", date:"2 weeks ago", likes:210, readTime:"5 min read" },
-  { id:5, type:"question", tag:"Tips & Advice", img:"/images/communities/photo3.jpg", category:"Q&A · Planning",            title:"Is 10 days enough to see Luxor, Aswan AND Cairo?",                           excerpt:"Planning my first Egypt trip and feeling overwhelmed.",                                                               author:"Marco Bianchi",  initials:"MB", avatarBg:"#e67e22", date:"3 days ago",  likes:34,  readTime:"Discussion" },
-  { id:6, type:"story",    tag:"Alexandria",    img:"/images/communities/photo2.jpg", category:"Alexandria · Local Life",   title:"Eating ful medames by the sea at sunrise — an Alexandrian morning ritual",   excerpt:"The corniche at 6 AM with a paper cup of tea. This is the city nobody tells you about.",                             author:"Layla Rizk",     initials:"LR", avatarBg:"#d35400", date:"4 days ago",  likes:98,  readTime:"3 min read" },
+  { id:1, type:"story",    tag:"Luxor",         img:"/images/communities/story1.jpg", category:"Luxor · Travel Story",        title:"Waking up at 4 AM for the balloon ride that changed how I see Egypt forever", excerpt:"I almost skipped it — too tired, too cold. Then we rose above the Valley of the Kings as the sun cracked the horizon.", author:"Sara Al-Masri",   initials:"SA", avatarBg:"#c0392b", date:"2 days ago",  likes:284, readTime:"4 min read" },
+  { id:2, type:"story",    tag:"Siwa",          img:"/images/communities/story2.jpg", category:"Siwa · Hidden Gem",           title:"The oasis that Instagram hasn't discovered yet",                               excerpt:"3 days completely offline, salt lake sunsets, and the friendliest locals I've ever met.",                            author:"Karim Mansour",  initials:"KM", avatarBg:"#2980b9", date:"5 days ago",  likes:156, readTime:"3 min read" },
+  { id:3, type:"tip",      tag:"Tips & Advice", img:"/images/communities/story3.jpg", category:"Tips & Advice · First-Timer", title:"Everything I wish I knew before my first trip to Egypt",                     excerpt:"Visas, scams to avoid, what to pack, and why you should always carry small bills.",                                  author:"Nour Fahmy",     initials:"NF", avatarBg:"#27ae60", date:"1 week ago",  likes:412, readTime:"7 min read" },
+  { id:4, type:"story",    tag:"Cairo",         img:"/images/communities/story4.jpg", category:"Cairo · History",             title:"Standing inside the Great Pyramid — what the photos never show you",          excerpt:"The heat, the silence, the weight of 4,000 years pressing in. It rewires something in your brain.",                 author:"Youssef Hassan", initials:"YH", avatarBg:"#8e44ad", date:"2 weeks ago", likes:210, readTime:"5 min read" },
+  { id:5, type:"question", tag:"Tips & Advice", img:"/images/communities/photo3.jpg", category:"Q&A · Planning",             title:"Is 10 days enough to see Luxor, Aswan AND Cairo?",                           excerpt:"Planning my first Egypt trip and feeling overwhelmed.",                                                               author:"Marco Bianchi",  initials:"MB", avatarBg:"#e67e22", date:"3 days ago",  likes:34,  readTime:"Discussion" },
+  { id:6, type:"story",    tag:"Alexandria",    img:"/images/communities/photo2.jpg", category:"Alexandria · Local Life",    title:"Eating ful medames by the sea at sunrise — an Alexandrian morning ritual",   excerpt:"The corniche at 6 AM with a paper cup of tea. This is the city nobody tells you about.",                             author:"Layla Rizk",     initials:"LR", avatarBg:"#d35400", date:"4 days ago",  likes:98,  readTime:"3 min read" },
 ];
 
 const TRENDING = [
@@ -28,7 +35,7 @@ const TRENDING = [
 ];
 
 const POLL_OPTIONS = [
-  { label:"Siwa Oasis", votes:412 }, { label:"Dahab", votes:298 },
+  { label:"Siwa Oasis", votes:412 }, { label:"Dahab",        votes:298 },
   { label:"El Minya",   votes:187 }, { label:"Marsa Matruh", votes:143 },
 ];
 
@@ -59,9 +66,9 @@ const QA = [
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
 function TagBar({ active, onChange }) {
-  const ref = useRef(null);
+  const ref     = useRef(null);
   const btnRefs = useRef({});
-  const [ind, setInd] = useState({ left:0, width:0 });
+  const [ind, setInd] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
     const btn = btnRefs.current[active];
@@ -78,7 +85,8 @@ function TagBar({ active, onChange }) {
         className="absolute top-0 h-full bg-yellow-400 rounded-full pointer-events-none z-0" />
       {TAGS.map(tag => (
         <button key={tag} ref={el => (btnRefs.current[tag] = el)} onClick={() => onChange(tag)}
-          className={`relative z-10 px-4 py-1.5 rounded-full text-[13px] font-medium border whitespace-nowrap cursor-pointer transition-colors ${active===tag ? "border-yellow-400 text-gray-900" : "border-gray-200 text-gray-500 hover:border-yellow-300"}`}
+          className={`relative z-10 px-4 py-1.5 rounded-full text-[13px] font-medium border whitespace-nowrap cursor-pointer transition-colors
+            ${active === tag ? "border-yellow-400 text-gray-900" : "border-gray-200 text-gray-500 hover:border-yellow-300"}`}
           style={{ background:"transparent" }}>
           {tag}
         </button>
@@ -95,7 +103,7 @@ function PostCard({ post, index, onLike, liked }) {
         whileHover={{y:-4}} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer flex flex-col h-full">
         <div className="h-48 overflow-hidden relative shrink-0">
           <img src={post.img} alt={post.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
           <span className={`absolute top-3 left-3 ${typeColor[post.type]} text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full`}>{post.type}</span>
           <span className="absolute bottom-2.5 right-3 text-white/80 text-[11px]">{post.readTime}</span>
         </div>
@@ -121,10 +129,10 @@ function PostCard({ post, index, onLike, liked }) {
 }
 
 function Poll() {
-  const [voted, setVoted] = useState(null);
+  const [voted,  setVoted]  = useState(null);
   const [counts, setCounts] = useState(POLL_OPTIONS.map(o => o.votes));
   const total = counts.reduce((s,v) => s+v, 0);
-  const vote = i => { if (voted!==null) return; setVoted(i); setCounts(p => p.map((v,j) => j===i ? v+1:v)); };
+  const vote  = i => { if (voted!==null) return; setVoted(i); setCounts(p => p.map((v,j) => j===i ? v+1:v)); };
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
       <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-violet-600 bg-violet-50 px-2.5 py-1 rounded-full">Weekly Poll</span>
@@ -132,7 +140,9 @@ function Poll() {
       {POLL_OPTIONS.map((opt,i) => {
         const pct = Math.round((counts[i]/total)*100);
         return (
-          <div key={i} onClick={() => vote(i)} className={`relative rounded-xl border overflow-hidden cursor-pointer transition-colors mb-2.5 ${voted===i ? "border-yellow-400":"border-gray-200"}`} style={{background:"#fafafa"}}>
+          <div key={i} onClick={() => vote(i)}
+            className={`relative rounded-xl border overflow-hidden cursor-pointer transition-colors mb-2.5 ${voted===i ? "border-yellow-400":"border-gray-200"}`}
+            style={{background:"#fafafa"}}>
             {voted!==null && <motion.div initial={{width:0}} animate={{width:`${pct}%`}} transition={{duration:0.6}} className={`absolute inset-0 z-0 ${voted===i ? "bg-yellow-50":"bg-gray-100"}`} />}
             <div className="relative z-10 flex items-center justify-between px-3.5 py-2.5">
               <span className={`text-[13px] ${voted===i ? "font-semibold":""} text-gray-900`}>{opt.label}</span>
@@ -181,11 +191,11 @@ function Sidebar() {
 function QASection() {
   const [open, setOpen] = useState(null);
   return (
-    <section className="px-4 md:px-20 pb-12 max-w-300 mx-auto">
-      <div className="rounded-3xl p-8" style={{background:"linear-gradient(135deg,#06122e 0%,#0b1f46 50%,#102554 100%)"}}>
+    <section className="px-4 md:px-20 pb-12 max-w-[1200px] mx-auto">
+      <div className="rounded-3xl p-6 md:p-8" style={{background:"linear-gradient(135deg,#06122e 0%,#0b1f46 50%,#102554 100%)"}}>
         <div className="flex items-start justify-between gap-6 flex-wrap mb-7">
           <div>
-            <h3 className="text-xl font-bold text-white mb-1" style={SERIF}>Common questions about Egypt</h3>
+            <h3 className="text-lg md:text-xl font-bold text-white mb-1" style={SERIF}>Common questions about Egypt</h3>
             <p className="text-[13px] text-gray-500">Everything travelers ask most — answered.</p>
           </div>
           <Link href="/offerings" className="text-[13px] text-yellow-400 border-b border-yellow-400/30 pb-0.5 hover:border-yellow-400 transition-colors whitespace-nowrap">Browse all offerings →</Link>
@@ -193,7 +203,7 @@ function QASection() {
         {QA.map((item,i) => (
           <div key={i} className={`rounded-xl border overflow-hidden transition-colors mb-2 ${open===i ? "border-yellow-400":"border-gray-700"}`} style={{background:"rgba(255,255,255,0.05)"}}>
             <button onClick={() => setOpen(open===i ? null:i)} className="w-full flex items-center justify-between px-4 py-3.5 bg-transparent border-none cursor-pointer text-left gap-3">
-              <span className="text-[14px] font-semibold text-gray-100 leading-snug flex-1">{item.q}</span>
+              <span className="text-[13px] md:text-[14px] font-semibold text-gray-100 leading-snug flex-1">{item.q}</span>
               <motion.span animate={{rotate:open===i ? 45:0}} transition={{type:"spring",stiffness:400,damping:28}} className="text-yellow-400 text-xl shrink-0 inline-block leading-none">+</motion.span>
             </button>
             <AnimatePresence initial={false}>
@@ -214,8 +224,8 @@ function QASection() {
 
 export default function Community() {
   const [activeTag, setActiveTag] = useState("All");
-  const [liked, setLiked] = useState({});
-  const filtered = activeTag === "All" ? POSTS : POSTS.filter(p => p.tag === activeTag);
+  const [liked,     setLiked]     = useState({});
+  const filtered   = activeTag === "All" ? POSTS : POSTS.filter(p => p.tag === activeTag);
   const toggleLike = id => setLiked(p => ({ ...p, [id]: !p[id] }));
 
   return (
@@ -223,10 +233,14 @@ export default function Community() {
       <Head>
         <title>Community — Kemet Travel</title>
         <meta name="description" content="Stories, tips and questions from real Egypt travelers." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
       </Head>
 
-      <style>{`.btn-gold{background:linear-gradient(135deg,#FFCE2A 0%,#e8b800 100%);box-shadow:0 4px 14px rgba(255,206,42,.35);transition:transform .18s,box-shadow .18s}.btn-gold:hover{transform:translateY(-2px)}`}</style>
+      <style>{`
+        .btn-gold { background:linear-gradient(135deg,#FFCE2A 0%,#e8b800 100%); box-shadow:0 4px 14px rgba(255,206,42,.35); transition:transform .18s,box-shadow .18s; }
+        .btn-gold:hover { transform:translateY(-2px); }
+      `}</style>
 
       <main className="font-sans bg-gray-50">
 
@@ -236,25 +250,25 @@ export default function Community() {
             style={{backgroundImage:"url('/images/communities/hero-bg.jpg')",backgroundSize:"cover",backgroundPosition:"center"}}>
             <div className="absolute inset-0" style={{background:"linear-gradient(135deg,rgba(26,18,9,.88) 0%,rgba(45,37,25,.82) 60%,rgba(61,48,32,.78) 100%)"}} />
             <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none" style={{background:"radial-gradient(circle,rgba(245,197,24,.18) 0%,transparent 70%)",transform:"translate(60px,-60px)"}} />
-            <div className="relative z-10 px-8 md:px-12 py-14">
-              <motion.span {...fadeUp(0.15)} className="inline-block mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-4 py-1.5 rounded-full">Community Hub</motion.span>
-              <motion.h1 {...fadeUp(0.22)} className="text-4xl md:text-5xl font-extrabold text-white leading-tight max-w-xl mb-4" style={SERIF}>
+            <div className="relative z-10 px-5 md:px-12 py-10 md:py-14">
+              <motion.span {...fadeUp(0.15)} className="inline-block mb-4 md:mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-4 py-1.5 rounded-full">Community Hub</motion.span>
+              <motion.h1 {...fadeUp(0.22)} className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight max-w-xl mb-4" style={SERIF}>
                 Where every traveler becomes a <em className="not-italic text-yellow-400">storyteller</em>
               </motion.h1>
-              <motion.p {...fadeUp(0.3)} className="text-gray-400 text-sm md:text-base max-w-md leading-relaxed mb-8">
+              <motion.p {...fadeUp(0.3)} className="text-gray-400 text-sm md:text-base max-w-md leading-relaxed mb-7 md:mb-8">
                 Join thousands of explorers sharing their real Egypt experiences — from Siwa sunsets to Luxor nights.
               </motion.p>
               <motion.div {...fadeUp(0.38)} className="flex gap-3 flex-wrap">
-                <Link href="/Destination"><button className="btn-gold rounded-full px-8 py-3.5 font-semibold text-gray-900 text-sm border-none cursor-pointer">Explore Destinations</button></Link>
+                <Link href="/Destination"><button className="btn-gold rounded-full px-6 py-3 md:px-8 md:py-3.5 font-semibold text-gray-900 text-sm border-none cursor-pointer">Explore Destinations</button></Link>
                 <button onClick={() => document.getElementById("community-feed")?.scrollIntoView({behavior:"smooth"})}
-                  className="rounded-full px-8 py-3.5 font-medium text-white text-sm cursor-pointer border border-white/25 bg-transparent hover:bg-white/10 transition-colors">
+                  className="rounded-full px-6 py-3 md:px-8 md:py-3.5 font-medium text-white text-sm cursor-pointer border border-white/25 bg-transparent hover:bg-white/10 transition-colors">
                   Browse Community
                 </button>
               </motion.div>
-              <motion.div {...fadeUp(0.46)} className="flex flex-wrap gap-12 mt-10 pt-6 border-t border-white/10">
+              <motion.div {...fadeUp(0.46)} className="flex flex-wrap gap-6 md:gap-12 mt-8 md:mt-10 pt-6 border-t border-white/10">
                 {[["12,400+","Members"],["6,200+","Posts"],["840+","Questions Answered"],["6","Destinations"]].map(([num,label]) => (
                   <div key={label}>
-                    <div className="text-2xl font-extrabold text-white" style={SERIF}>{num}</div>
+                    <div className="text-xl md:text-2xl font-extrabold text-white" style={SERIF}>{num}</div>
                     <div className="text-[10px] uppercase tracking-widest text-gray-500 mt-0.5">{label}</div>
                   </div>
                 ))}
@@ -264,7 +278,7 @@ export default function Community() {
         </section>
 
         {/* ── FEED + SIDEBAR ── */}
-        <section id="community-feed" className="px-4 md:px-20 py-12 max-w-300 mx-auto">
+        <section id="community-feed" className="px-4 md:px-20 py-10 md:py-12 max-w-[1200px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
             <div>
               <TagBar active={activeTag} onChange={setActiveTag} />
@@ -279,11 +293,11 @@ export default function Community() {
         </section>
 
         {/* ── TIPS ── */}
-        <section className="px-4 md:px-20 pb-12 max-w-300 mx-auto">
-          <div className="bg-yellow-50 rounded-3xl p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-extrabold text-gray-900" style={SERIF}>Essential Egypt Travel Tips</h2>
-              <Link href="/offerings" className="text-[13px] text-amber-600 border-b border-yellow-200 hover:border-amber-400 transition-colors">All tips →</Link>
+        <section className="px-4 md:px-20 pb-12 max-w-[1200px] mx-auto">
+          <div className="bg-yellow-50 rounded-3xl p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+              <h2 className="text-xl md:text-2xl font-extrabold text-gray-900" style={SERIF}>Essential Egypt Travel Tips</h2>
+              <Link href="/offerings" className="text-[13px] text-amber-600 border-b border-yellow-200 hover:border-amber-400 transition-colors self-start sm:self-auto">All tips →</Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {TIPS.map(tip => (
@@ -302,17 +316,30 @@ export default function Community() {
         </section>
 
         {/* ── PHOTO WALL ── */}
-        <section className="px-4 md:px-20 pb-12 max-w-300 mx-auto">
-          <div className="flex items-end justify-between mb-5">
-            <h2 className="text-3xl font-extrabold text-gray-900" style={SERIF}>Community Photo Wall</h2>
-            <Link href="/hidden-gems" className="text-[13px] text-gray-400 border-b border-gray-200 hover:text-yellow-600 hover:border-yellow-400 transition-colors">Explore hidden gems →</Link>
+        <section className="px-4 md:px-20 pb-12 max-w-[1200px] mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900" style={SERIF}>Community Photo Wall</h2>
+            <Link href="/hidden-gems" className="text-[13px] text-gray-400 border-b border-gray-200 hover:text-yellow-600 hover:border-yellow-400 transition-colors self-start sm:self-auto">Explore hidden gems →</Link>
           </div>
-          <div className="grid gap-2.5" style={{gridTemplateColumns:"repeat(4, 1fr)",gridTemplateRows:"repeat(2, 160px)"}}>
+          {/* Desktop: 4-col fixed grid */}
+          <div className="hidden md:grid gap-2.5" style={{gridTemplateColumns:"repeat(4, 1fr)",gridTemplateRows:"repeat(2, 160px)"}}>
             {PHOTOS.map((photo,i) => (
               <Link key={i} href={photo.href} style={{gridColumn:photo.wide?"span 2":undefined,gridRow:photo.wide?"span 2":undefined}}>
                 <motion.div whileHover={{scale:1.02}} className="relative rounded-2xl overflow-hidden h-full cursor-pointer">
                   <img src={photo.img} alt={photo.label} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+                  <span className="absolute bottom-0 left-0 right-0 text-white text-[11px] font-semibold px-3 py-2">{photo.label}</span>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+          {/* Mobile: simple 2-col grid */}
+          <div className="grid md:hidden grid-cols-2 gap-2.5 auto-rows-[140px]">
+            {PHOTOS.map((photo,i) => (
+              <Link key={i} href={photo.href} className={i===0 ? "col-span-2":""}>
+                <motion.div whileHover={{scale:1.02}} className="relative rounded-2xl overflow-hidden h-full cursor-pointer">
+                  <img src={photo.img} alt={photo.label} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
                   <span className="absolute bottom-0 left-0 right-0 text-white text-[11px] font-semibold px-3 py-2">{photo.label}</span>
                 </motion.div>
               </Link>
@@ -323,14 +350,34 @@ export default function Community() {
         {/* ── Q&A ── */}
         <QASection />
 
-        {/* ── NEWSLETTER ── */}
-        <section className="px-4 md:px-20 pb-16 max-w-300 mx-auto">
-          <div className="rounded-3xl text-center px-6 py-14" style={{background:"linear-gradient(135deg,#FFCE2A 0%,#e8a800 100%)"}}>
-            <h3 className="text-3xl font-extrabold text-gray-900 mb-2" style={SERIF}>Get the weekly Egypt digest</h3>
-            <p className="text-sm text-yellow-900/70 mb-8">New stories, hidden gems, meetups, and community highlights — straight to your inbox.</p>
-            <div className="flex gap-2 max-w-sm mx-auto">
-              <input type="email" placeholder="your@email.com" className="flex-1 px-5 py-3 rounded-full text-sm font-medium text-gray-900 placeholder-gray-400 outline-none border-none" style={{boxShadow:"0 2px 12px rgba(0,0,0,.10)"}} />
-              <button className="shrink-0 rounded-full px-6 py-3 text-sm font-bold text-white border-none cursor-pointer hover:-translate-y-0.5 transition-transform" style={{background:"#06122e",whiteSpace:"nowrap"}}>Subscribe →</button>
+        {/* ── SIGN IN CTA (replaces newsletter) ── */}
+        <section className="px-4 md:px-20 pb-16 max-w-[1200px] mx-auto">
+          <div className="rounded-3xl text-center px-5 py-10 md:px-6 md:py-14 relative overflow-hidden"
+            style={{background:"linear-gradient(135deg,#FFCE2A 0%,#f5c000 50%,#e8a800 100%)"}}>
+            {/* Decorative circles */}
+            <div className="absolute left-0 top-0 w-64 h-64 rounded-full pointer-events-none" style={{background:"rgba(255,255,255,0.12)",transform:"translate(-80px,-80px)"}} />
+            <div className="absolute right-0 bottom-0 w-48 h-48 rounded-full pointer-events-none" style={{background:"rgba(255,255,255,0.10)",transform:"translate(60px,60px)"}} />
+
+            <div className="relative z-10 max-w-xl mx-auto">
+              <span className="inline-block mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-900/70 bg-yellow-900/10 px-3 py-1 rounded-full">
+                Stay in the loop
+              </span>
+              <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 leading-tight" style={SERIF}>
+                Get the weekly Egypt digest
+              </h3>
+              <p className="text-yellow-900/70 text-sm mb-8 leading-relaxed">
+                New stories, hidden gems, meetups, and community highlights — straight to your inbox.
+              </p>
+              <Link href="/auth/auth">
+                <motion.button
+                  whileHover={{ scale: 1.05, translateY: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="rounded-full px-10 py-3.5 text-sm font-bold text-white border-none cursor-pointer"
+                  style={{ background:"#06122e", boxShadow:"0 4px 14px rgba(6,18,46,.35)" }}>
+                  Sign In →
+                </motion.button>
+              </Link>
+             
             </div>
           </div>
         </section>

@@ -13,19 +13,6 @@ const fadeUp = (delay = 0) => ({
 
 // ─── MAIN TEMPLATE ────────────────────────────────────────────────────────────
 
-/**
- * CityPage — reusable template for all 6 city pages.
- *
- * Props:
- *  city        — string  e.g. "Alexandria"
- *  heroImg     — string  path to hero image
- *  tagline     — string  short italic line under the city name
- *  description — string  paragraph shown in hero
- *  highlights  — array   [{ icon, label }]   up to 4 stat chips
- *  packages    — array   [{ img, days, title, desc, price }]
- *  tips        — array   [{ img, title, text }]
- *  gems        — array   [{ img, tag, location, title, desc }]
- */
 export default function CityPage({
   city,
   heroImg,
@@ -75,32 +62,43 @@ export default function CityPage({
         .gem-overlay { background:linear-gradient(to top,rgba(6,18,46,.85) 0%,rgba(6,18,46,.2) 55%,transparent 100%); }
 
         .stat-chip { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(8px); }
+
+        /* Highlights scroll on tiny screens */
+        .highlights-row { display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:1.75rem; }
+        @media (max-width:480px) {
+          .highlights-row { flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+          .highlights-row::-webkit-scrollbar { display:none; }
+        }
       `}</style>
 
       <main className="font-sans bg-[#f9fafb]">
 
         {/* ══════ HERO ══════ */}
         <section className="relative overflow-hidden">
-          <img src={heroImg} alt={city} className="w-full h-[75vh] object-cover" />
+          <img
+            src={heroImg}
+            alt={city}
+            className="w-full object-cover"
+            style={{ height: "clamp(420px, 75vh, 860px)" }}
+          />
           <div
             className="absolute inset-0"
             style={{ background: "linear-gradient(105deg,rgba(6,18,46,.85) 0%,rgba(11,31,70,.55) 50%,rgba(0,0,0,.15) 100%)" }}
           />
-          {/* gold accent line */}
           <div
-            className="absolute left-0 bottom-0 w-full  pointer-events-none"
+            className="absolute left-0 bottom-0 w-full h-px pointer-events-none"
             style={{ background: "linear-gradient(90deg,transparent,#FFCE2A 40%,#f5b800 60%,transparent)" }}
           />
 
-          <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-20 text-white">
+          <div className="absolute inset-0 flex flex-col justify-center px-4 sm:px-8 md:px-20 pb-6 text-white">
             <motion.span {...fadeUp(0.1)}
-              className="inline-block self-start mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-4 py-1.5 rounded-full">
+              className="inline-block self-start mb-3 sm:mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-4 py-1.5 rounded-full">
               ✦ Kemet Travel Guide
             </motion.span>
 
             <motion.h1
               {...fadeUp(0.2)}
-              className="text-5xl md:text-7xl font-extrabold leading-[1.05] mb-3"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] mb-2 sm:mb-3"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
               {city}
@@ -108,35 +106,35 @@ export default function CityPage({
 
             {tagline && (
               <motion.p {...fadeUp(0.28)}
-                className="text-yellow-400 text-lg md:text-xl font-semibold mb-4 italic"
+                className="text-yellow-400 text-base sm:text-lg md:text-xl font-semibold mb-3 sm:mb-4 italic"
                 style={{ fontFamily: "'Playfair Display', serif" }}>
                 {tagline}
               </motion.p>
             )}
 
-            <motion.p {...fadeUp(0.35)} className="mb-8 max-w-md text-base text-gray-300 leading-relaxed">
+            <motion.p {...fadeUp(0.35)} className="hidden sm:block mb-6 sm:mb-8 max-w-md text-sm sm:text-base text-gray-300 leading-relaxed">
               {description}
             </motion.p>
 
-            <motion.div {...fadeUp(0.44)} className="flex gap-3 flex-wrap">
-              <Link href="/BookTrip">
-                <button className="btn-gold rounded-full px-8 py-3.5 font-semibold text-black text-sm">
+            <motion.div {...fadeUp(0.44)} className="flex flex-col sm:flex-row gap-3">
+              <Link href="/BookTrip" className="w-full sm:w-auto">
+                <button className="btn-gold w-full sm:w-auto rounded-full px-6 sm:px-8 py-3 sm:py-3.5 font-semibold text-black text-sm">
                   Book a Trip
                 </button>
               </Link>
-              <Link href="/offerings">
-                <button className="btn-ghost-white rounded-full px-8 py-3.5 font-medium text-white text-sm">
+              <Link href="/offerings" className="w-full sm:w-auto">
+                <button className="btn-ghost-white w-full sm:w-auto rounded-full px-6 sm:px-8 py-3 sm:py-3.5 font-medium text-white text-sm">
                   View Packages
                 </button>
               </Link>
             </motion.div>
 
             {highlights.length > 0 && (
-              <motion.div {...fadeUp(0.52)} className="flex flex-wrap gap-3 mt-10">
+              <motion.div {...fadeUp(0.52)} className="highlights-row">
                 {highlights.map(({ icon, label }) => (
-                  <div key={label} className="stat-chip rounded-xl px-4 py-2.5 text-center">
-                    <div className="text-lg font-extrabold text-yellow-400 leading-none">{icon}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-gray-400 mt-0.5">{label}</div>
+                  <div key={label} className="stat-chip flex-shrink-0 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-center">
+                    <div className="text-base sm:text-lg font-extrabold text-yellow-400 leading-none">{icon}</div>
+                    <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 mt-0.5 whitespace-nowrap">{label}</div>
                   </div>
                 ))}
               </motion.div>
@@ -146,13 +144,13 @@ export default function CityPage({
 
         {/* ══════ PACKAGES ══════ */}
         {packages.length > 0 && (
-          <section className="py-16 px-4 md:px-20">
-            <div className="mb-10">
+          <section className="py-12 sm:py-16 px-4 sm:px-8 md:px-20">
+            <div className="mb-8 sm:mb-10">
               <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
                 Top Experiences
               </span>
               <h2
-                className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1"
+                className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 {city} Packages
@@ -162,7 +160,7 @@ export default function CityPage({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {packages.map((pkg, i) => (
                 <Link href="/BookTrip" key={i}>
                   <motion.div
@@ -170,7 +168,8 @@ export default function CityPage({
                     transition={{ delay: i * 0.08, duration: 0.45 }}
                     className="pkg-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer"
                   >
-                    <div className="overflow-hidden h-52 relative">
+                    {/* shorter image on mobile */}
+                    <div className="overflow-hidden h-44 sm:h-52 relative">
                       <img src={pkg.img} alt={pkg.title} className="pkg-img w-full h-full object-cover" />
                       {pkg.days && (
                         <span className="absolute top-3 left-3 bg-black/60 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
@@ -178,12 +177,12 @@ export default function CityPage({
                         </span>
                       )}
                     </div>
-                    <div className="p-5">
+                    <div className="p-4 sm:p-5">
                       <span className="inline-block mb-2 bg-yellow-50 text-yellow-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-yellow-200">
                         From {pkg.price}
                       </span>
                       <h4 className="font-bold text-sm text-gray-900 mb-1 leading-snug">{pkg.title}</h4>
-                      <p className="text-xs text-gray-400 mb-4 leading-relaxed">{pkg.desc}</p>
+                      <p className="text-xs text-gray-400 mb-3 sm:mb-4 leading-relaxed">{pkg.desc}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-yellow-500 font-extrabold text-base">{pkg.price}</span>
                         <span className="text-xs font-semibold text-gray-500 border border-gray-200 rounded-full px-3 py-1 hover:border-yellow-400 hover:text-yellow-600 transition-colors">
@@ -196,9 +195,9 @@ export default function CityPage({
               ))}
             </div>
 
-            <div className="text-center mt-10">
+            <div className="text-center mt-8 sm:mt-10">
               <Link href="/offerings">
-                <button className="btn-gold rounded-full px-9 py-3.5 font-semibold text-black text-sm">
+                <button className="btn-gold rounded-full px-7 sm:px-9 py-3 sm:py-3.5 font-semibold text-black text-sm">
                   View All Packages
                 </button>
               </Link>
@@ -208,24 +207,26 @@ export default function CityPage({
 
         {/* ══════ TRAVEL TIPS ══════ */}
         {tips.length > 0 && (
-          <section className="px-4 md:px-20 pb-16">
-            <div className="bg-yellow-50 rounded-2xl p-8">
+          <section className="px-4 sm:px-8 md:px-20 pb-12 sm:pb-16">
+            <div className="bg-yellow-50 rounded-2xl p-5 sm:p-8">
               <h2
-                className="text-2xl font-bold mb-6"
+                className="text-xl sm:text-2xl font-bold mb-5 sm:mb-6"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 Essential {city} Tips
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 {tips.map((tip) => (
                   <motion.div
                     key={tip.title}
                     whileHover={{ y: -3 }}
                     className="tip-card bg-white rounded-xl overflow-hidden border border-yellow-100 flex flex-col"
-                    style={{ minHeight: "320px" }}
                   >
-                    <img src={tip.img} alt={tip.title} className="w-full h-48 object-cover shrink-0" />
-                    <div className="p-4 flex flex-col flex-1">
+                    <div className="w-full overflow-hidden" style={{ aspectRatio: "16/9" }}>
+                      <img src={tip.img} alt={tip.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-3 sm:p-4 flex flex-col flex-1">
                       <h4 className="font-semibold text-sm mb-1">{tip.title}</h4>
                       <p className="text-xs text-gray-500 leading-relaxed">{tip.text}</p>
                     </div>
@@ -238,39 +239,39 @@ export default function CityPage({
 
         {/* ══════ HIDDEN GEMS ══════ */}
         {gems.length > 0 && (
-          <section className="px-4 md:px-20 pb-20">
-            <div className="mb-10">
+          <section className="px-4 sm:px-8 md:px-20 pb-16 sm:pb-20">
+            <div className="mb-8 sm:mb-10">
               <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
                 Off the Beaten Path
               </span>
               <h2
-                className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1"
+                className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 {city} Hidden Gems
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {gems.map((gem, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className="gem-card relative rounded-2xl overflow-hidden cursor-pointer shadow-md"
-                  style={{ height: 300 }}
+                  style={{ aspectRatio: "4/3" }}
                 >
-                  <img src={gem.img} alt={gem.title} className="gem-img w-full h-full object-cover" />
+                  <img src={gem.img} alt={gem.title} className="gem-img w-full h-full object-cover absolute inset-0" />
                   <div className="gem-overlay absolute inset-0" />
-                  <div className="absolute top-4 left-4">
-                    <span className="inline-block bg-yellow-400 text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                  <div className="absolute top-3 sm:top-4 left-3 sm:left-4">
+                    <span className="inline-block bg-yellow-400 text-black text-[10px] font-bold uppercase tracking-widest px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">
                       {gem.tag}
                     </span>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-yellow-400 mb-1">{gem.location}</p>
+                  <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-yellow-400 mb-1">{gem.location}</p>
                     <h3
-                      className="text-xl font-extrabold text-white leading-tight mb-1.5"
+                      className="text-lg sm:text-xl font-extrabold text-white leading-tight mb-1 sm:mb-1.5"
                       style={{ fontFamily: "'Playfair Display', serif" }}
                     >
                       {gem.title}
@@ -284,30 +285,31 @@ export default function CityPage({
         )}
 
         {/* ══════ CTA ══════ */}
-        <section className="px-4 md:px-20 pb-20">
+        <section className="px-4 sm:px-8 md:px-20 pb-16 sm:pb-20">
           <div
-            className="rounded-3xl p-10 flex flex-col md:flex-row items-center justify-between gap-6"
+            className="rounded-2xl sm:rounded-3xl p-7 sm:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
             style={{ background: "linear-gradient(135deg,#06122e 0%,#0b1f46 50%,#102554 100%)" }}
           >
-            <div>
+            <div className="max-w-md">
               <h3
-                className="text-2xl md:text-3xl font-extrabold text-white mb-2"
+                className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white mb-2"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 Ready to explore {city}?
               </h3>
-              <p className="text-gray-400 text-sm leading-relaxed max-w-md">
+              <p className="text-gray-400 text-sm leading-relaxed">
                 Let our local experts craft the perfect itinerary for you — from hidden spots to iconic landmarks.
               </p>
             </div>
-            <div className="flex gap-3 shrink-0 flex-wrap">
-              <Link href="/BookTrip">
-                <button className="btn-gold rounded-full px-8 py-3.5 font-semibold text-black text-sm whitespace-nowrap">
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+              <Link href="/BookTrip" className="w-full sm:w-auto">
+                <button className="btn-gold w-full sm:w-auto rounded-full px-7 sm:px-8 py-3 sm:py-3.5 font-semibold text-black text-sm whitespace-nowrap">
                   Plan My Trip
                 </button>
               </Link>
-              <Link href="/communities">
-                <button className="btn-ghost-white rounded-full px-8 py-3.5 font-medium text-white text-sm whitespace-nowrap">
+              <Link href="/communities" className="w-full sm:w-auto">
+                <button className="btn-ghost-white w-full sm:w-auto rounded-full px-7 sm:px-8 py-3 sm:py-3.5 font-medium text-white text-sm whitespace-nowrap">
                   Read Stories
                 </button>
               </Link>
