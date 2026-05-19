@@ -130,6 +130,10 @@ function SectionHeading({ eyebrow, title, subtitle, light = false }) {
           {eyebrow}
         </span>
       )}
+      
+/ 
+
+
       <h2
         className={`text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight ${
           light ? "text-white" : "text-gray-900"
@@ -159,7 +163,6 @@ export default function Home({ trips, hiddenGems }) {
       <Head>
         <title>Kemet Travel — Discover Egypt through Egyptian Eyes</title>
         <meta name="description" content="Plan your smart trip to Egypt with Kemet Travel. Explore temples, beaches, and hidden gems through Egyptian eyes." />
-        {/* FIX: viewport meta ensures no horizontal scroll on mobile */}
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
       </Head>
@@ -223,7 +226,6 @@ export default function Home({ trips, hiddenGems }) {
             SECTION 1 — HERO
         ═══════════════════════════════════════════ */}
         <section className="relative overflow-hidden">
-          {/* FIX: clamp prevents hero being too tall on short phones or too short on landscape */}
           <img
             src="/hero.png"
             alt="Egypt hero"
