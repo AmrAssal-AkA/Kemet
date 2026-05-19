@@ -3,10 +3,10 @@ import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import { getUserRole } from "@/utils/authSession";
 import {
-  getGuideAvailability,
-  getGuideBookings,
+  getGuideFee,
   getGuideProfile,
-  updateGuideAvailability,
+  getGuideRequiredTrips,
+  setGuideSchedule,
 } from "@/services/guideServices";
 
 const days = [
@@ -26,6 +26,9 @@ const initialAvailability = {
   isAvailable: true,
 };
 
+const primaryButtonClass =
+  "w-full rounded-full px-5 py-3 text-sm font-extrabold text-slate-950 shadow-sm shadow-amber-200 transition [background:linear-gradient(135deg,#FFCE2A_0%,#f5b800_100%)] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-200 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:[background:#cbd5e1] disabled:shadow-none disabled:hover:translate-y-0";
+
 function StatCard({ label, value, note }) {
   return (
     <div className="rounded-3xl border border-[#FFD33D]/30 bg-white p-5 shadow-sm">
@@ -38,19 +41,137 @@ function StatCard({ label, value, note }) {
   );
 }
 
+function ErrorCard({ label, message }) {
+  return (
+    <div className="rounded-3xl border border-red-100 bg-red-50 p-5 text-sm font-semibold text-red-700 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-500">
+        {label}
+      </p>
+      <p className="mt-2">{message}</p>
+    </div>
+  );
+}
+
 function StatusMessage({ type, message }) {
   if (!message) return null;
 
   const className =
     type === "success"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-amber-200 bg-amber-50 text-amber-800";
+      : "border-red-100 bg-red-50 text-red-700";
 
   return (
     <div className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${className}`}>
       {message}
     </div>
   );
+}
+
+function firstValue(...values) {
+  return values.find((value) => value !== undefined && value !== null && value !== "");
+}
+
+function formatMoney(value) {
+  const numberValue = Number(value);
+  if (Number.isNaN(numberValue)) return value;
+  return `EGP ${numberValue.toLocaleString()}`;
+}
+
+function findNumericField(data, fieldNames, allowDirectValue = true) {
+  if (data === null || data === undefined) return null;
+  if (allowDirectValue && typeof data === "number") return data;
+  if (allowDirectValue && typeof data === "string" && data.trim() !== "" && !Number.isNaN(Number(data))) {
+    return Number(data);
+  }
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      const value = findNumericField(item, fieldNames, false);
+      if (value !== null) return value;
+    }
+    return null;
+  }
+  if (typeof data !== "object") return null;
+
+  const normalizedFields = fieldNames.map((field) => field.toLowerCase());
+  for (const [key, value] of Object.entries(data)) {
+    if (normalizedFields.includes(key.toLowerCase())) {
+      const numericValue = findNumericField(value, fieldNames, true);
+      if (numericValue !== null) return numericValue;
+    }
+  }
+
+  for (const value of Object.values(data)) {
+    const nestedValue = findNumericField(value, fieldNames, false);
+    if (nestedValue !== null) return nestedValue;
+  }
+
+  return null;
+}
+
+function getBookingStatus(booking) {
+  return firstValue(booking.status, booking.bookingStatus, booking.tripStatus);
+}
+
+function getBookingTitle(booking) {
+  return firstValue(
+    booking.tripName,
+    booking.name,
+    booking.title,
+    booking.trip?.name,
+    booking.trip?.title,
+    booking.booking?.tripName,
+    "Trip details",
+  );
+}
+
+function getBookingLocation(booking) {
+  return firstValue(
+    booking.location,
+    booking.city,
+    booking.trip?.location,
+    booking.trip?.city,
+    booking.booking?.location,
+  );
+}
+
+function getBookingKey(booking, index) {
+  return firstValue(booking._id, booking.id, booking.tripId, booking.bookingId, booking.trip?._id, index);
+}
+
+function getBookingDetails(booking) {
+  return [
+    ["Tourist", firstValue(booking.customerName, booking.userName, booking.user?.name, booking.customer?.name)],
+    ["Date", firstValue(booking.date, booking.tripDate, booking.startDate, booking.bookingDate)],
+    ["Guests", firstValue(booking.numberOfGuests, booking.guests, booking.guestCount)],
+    ["Total", firstValue(booking.totalPrice, booking.price, booking.finalPrice)],
+  ].filter(([, value]) => value !== undefined && value !== null && value !== "");
+}
+
+function getGuideFeeCards(guideFee) {
+  const fee = findNumericField(guideFee, [
+    "guideFee",
+    "guideFees",
+    "guidefees",
+    "fee",
+    "totalGuideFee",
+  ]);
+
+  if (fee === null) return [];
+  return [{ label: "Guide Fee", value: formatMoney(fee) }];
+}
+
+function getAssignedBookingsLabel(status, count) {
+  if (status === "loading") return "Loading assigned bookings...";
+  if (status !== "success") return "";
+  return `${count} assigned ${count === 1 ? "booking" : "bookings"}`;
+}
+
+function getAvailabilityErrorMessage(error) {
+  const message = error?.message || "Availability could not be saved.";
+  if (message.toLowerCase().includes("guide not found")) {
+    return `${message}. The backend could not find a guide record for this logged-in account. If this account was recently upgraded to guide, log out and log in again.`;
+  }
+  return message;
 }
 
 function Field({ label, children }) {
@@ -65,23 +186,32 @@ function Field({ label, children }) {
 }
 
 function BookingCard({ booking }) {
+  const status = getBookingStatus(booking);
+  const location = getBookingLocation(booking);
+  const details = getBookingDetails(booking);
+
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-bold text-[#0F172A]">{booking.tripName}</p>
-          <p className="mt-1 text-xs text-[#162766]">{booking.location}</p>
+          <p className="text-sm font-bold text-[#0F172A]">{getBookingTitle(booking)}</p>
+          {location && <p className="mt-1 text-xs text-[#162766]">{location}</p>}
         </div>
-        <span className="rounded-full bg-[#FFD33D]/25 px-3 py-1 text-xs font-bold text-[#A66D40]">
-          {booking.status}
-        </span>
+        {status && (
+          <span className="rounded-full bg-[#FFD33D]/25 px-3 py-1 text-xs font-bold text-[#A66D40]">
+            {status}
+          </span>
+        )}
       </div>
-      <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-        <p>Tourist: {booking.customerName}</p>
-        <p>Date: {booking.date}</p>
-        <p>Guests: {booking.numberOfGuests}</p>
-        <p>Total: {booking.totalPrice}</p>
-      </div>
+      {details.length > 0 && (
+        <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+          {details.map(([label, value]) => (
+            <p key={label}>
+              {label}: {value}
+            </p>
+          ))}
+        </div>
+      )}
     </article>
   );
 }
@@ -91,12 +221,15 @@ export default function GuideDashboard() {
   const { logout, user, sessionReady } = useAuth();
   const [profile, setProfile] = useState(null);
   const [bookings, setBookings] = useState([]);
-  const [schedule, setSchedule] = useState([]);
+  const [guideFee, setGuideFee] = useState(null);
   const [availability, setAvailability] = useState(initialAvailability);
   const [loading, setLoading] = useState(true);
+  const [bookingsStatus, setBookingsStatus] = useState("idle");
+  const [bookingsError, setBookingsError] = useState("");
+  const [statsStatus, setStatsStatus] = useState("idle");
+  const [statsError, setStatsError] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
   const [saveStatus, setSaveStatus] = useState({ type: "", message: "" });
 
   useEffect(() => {
@@ -116,7 +249,12 @@ export default function GuideDashboard() {
     async function loadDashboard() {
       setLoading(true);
       setError("");
-      setInfo("");
+      setBookings([]);
+      setGuideFee(null);
+      setBookingsStatus("idle");
+      setBookingsError("");
+      setStatsStatus("idle");
+      setStatsError("");
 
       try {
         const guideProfile = await getGuideProfile();
@@ -125,20 +263,37 @@ export default function GuideDashboard() {
         if (!guideProfile || (guideRole !== "guide" && guideRole !== "localguide")) {
           setError("Please login as a local guide to access this dashboard.");
           setProfile(guideProfile);
+          setLoading(false);
           return;
         }
 
         setProfile(guideProfile);
-        const [bookingsResult, availabilityResult] = await Promise.all([
-          getGuideBookings(),
-          getGuideAvailability(),
+        setLoading(false);
+        setBookingsStatus("loading");
+        setStatsStatus("loading");
+
+        const [bookingsResult, guideFeeResult] = await Promise.allSettled([
+          getGuideRequiredTrips(),
+          getGuideFee(),
         ]);
 
-        setBookings(bookingsResult.bookings || []);
-        setSchedule(availabilityResult.schedule || []);
-        setInfo(
-          [bookingsResult.message, availabilityResult.message].filter(Boolean).join(" "),
-        );
+        if (bookingsResult.status === "fulfilled") {
+          setBookings(bookingsResult.value);
+          setBookingsStatus("success");
+        } else {
+          setBookings([]);
+          setBookingsError(bookingsResult.reason?.message || "Assigned bookings could not be loaded.");
+          setBookingsStatus("error");
+        }
+
+        if (guideFeeResult.status === "fulfilled") {
+          setGuideFee(guideFeeResult.value);
+          setStatsStatus("success");
+        } else {
+          setGuideFee(null);
+          setStatsError(guideFeeResult.reason?.message || "Guide fee could not be loaded.");
+          setStatsStatus("error");
+        }
       } catch (error) {
         setError(error?.message || "Please login as a local guide to access this dashboard.");
       } finally {
@@ -150,18 +305,27 @@ export default function GuideDashboard() {
   }, [sessionReady, router, user]);
 
   const stats = useMemo(() => {
-    const upcoming = bookings.filter((booking) =>
-      ["Pending", "Confirmed"].includes(booking.status),
-    ).length;
-    const completed = bookings.filter((booking) => booking.status === "Completed").length;
+    const cards = [];
 
-    return {
-      total: bookings.length,
-      upcoming,
-      completed,
-      availableDays: schedule.length,
-    };
-  }, [bookings, schedule]);
+    if (bookingsStatus === "success") {
+      const bookingsWithStatus = bookings.filter((booking) => getBookingStatus(booking));
+      if (bookingsWithStatus.length > 0) {
+        const upcoming = bookingsWithStatus.filter((booking) =>
+          ["pending", "confirmed", "upcoming"].includes(
+            String(getBookingStatus(booking)).toLowerCase(),
+          ),
+        ).length;
+        const completed = bookingsWithStatus.filter(
+          (booking) => String(getBookingStatus(booking)).toLowerCase() === "completed",
+        ).length;
+
+        cards.push({ label: "Upcoming Bookings", value: upcoming });
+        cards.push({ label: "Completed Trips", value: completed });
+      }
+    }
+
+    return [...cards, ...getGuideFeeCards(guideFee)];
+  }, [bookings, bookingsStatus, guideFee]);
 
   async function handleLogout() {
     await logout();
@@ -190,13 +354,16 @@ export default function GuideDashboard() {
 
     setSaving(true);
     try {
-      await updateGuideAvailability(availability);
-      setSchedule((prev) => [...prev, availability]);
+      await setGuideSchedule({
+        dayofweek: availability.dayofweek,
+        startTime: availability.startTime,
+        endTime: availability.endTime,
+      });
       setSaveStatus({ type: "success", message: "Availability saved successfully." });
     } catch (error) {
       setSaveStatus({
         type: "error",
-        message: error?.message || "Availability could not be saved.",
+        message: getAvailabilityErrorMessage(error),
       });
     } finally {
       setSaving(false);
@@ -261,27 +428,50 @@ export default function GuideDashboard() {
           </div>
         </section>
 
-        <StatusMessage type="error" message={info} />
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Assigned Bookings" value={stats.total} note="Documented API pending" />
-          <StatCard label="Upcoming Bookings" value={stats.upcoming} />
-          <StatCard label="Completed Trips" value={stats.completed} />
-          <StatCard label="Available Days" value={stats.availableDays} />
-        </section>
+        {(statsStatus === "loading" || statsStatus === "error" || stats.length > 0) && (
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {statsStatus === "loading" && <StatCard label="Guide Fee" value="Loading..." />}
+            {statsStatus === "error" && <ErrorCard label="Guide Fee" message={statsError} />}
+            {stats.map((card) => (
+              <StatCard key={card.label} label={card.label} value={card.value} note={card.note} />
+            ))}
+          </section>
+        )}
 
         <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-3xl bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-extrabold">Assigned Bookings</h2>
-            <p className="text-sm text-[#162766]">Trip delivery queue for your assigned tours.</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-extrabold">Assigned Bookings</h2>
+                <p className="text-sm text-[#162766]">
+                  Trip delivery queue for your assigned tours.
+                </p>
+              </div>
+              {getAssignedBookingsLabel(bookingsStatus, bookings.length) && (
+                <span className="inline-flex w-fit rounded-full bg-[#FFD33D]/25 px-3 py-1 text-xs font-bold text-[#A66D40]">
+                  {getAssignedBookingsLabel(bookingsStatus, bookings.length)}
+                </span>
+              )}
+            </div>
             <div className="mt-5 space-y-3">
-              {bookings.length > 0 ? (
-                bookings.map((booking) => (
-                  <BookingCard key={booking.id || booking.tripName} booking={booking} />
+              {bookingsStatus === "loading" && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm font-semibold text-slate-500">
+                  Loading assigned bookings...
+                </div>
+              )}
+              {bookingsStatus === "error" && (
+                <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-sm font-semibold text-red-700">
+                  {bookingsError}
+                </div>
+              )}
+              {bookingsStatus === "success" && bookings.length > 0 && (
+                bookings.map((booking, index) => (
+                  <BookingCard key={getBookingKey(booking, index)} booking={booking} />
                 ))
-              ) : (
+              )}
+              {bookingsStatus === "success" && bookings.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-                  No assigned bookings are available from the current documented APIs.
+                  No assigned bookings found.
                 </div>
               )}
             </div>
@@ -339,38 +529,20 @@ export default function GuideDashboard() {
                 </label>
 
                 <StatusMessage type={saveStatus.type} message={saveStatus.message} />
+                {!availability.isAvailable && (
+                  <p className="text-sm font-semibold text-red-600">
+                    Mark available before saving. The documented API only accepts available time ranges.
+                  </p>
+                )}
 
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="w-full rounded-full bg-[#A66D40] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#0F172A] disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={saving || !availability.isAvailable}
+                  className={primaryButtonClass}
                 >
                   {saving ? "Saving..." : "Save Availability"}
                 </button>
               </form>
-            </section>
-
-            <section className="rounded-3xl bg-white p-6 shadow-sm">
-              <h2 className="text-2xl font-extrabold">Schedule List</h2>
-              <div className="mt-4 space-y-3">
-                {schedule.length > 0 ? (
-                  schedule.map((item, index) => (
-                    <div
-                      key={`${item.dayofweek}-${item.startTime}-${index}`}
-                      className="rounded-2xl bg-[#FFD33D]/15 p-4 text-sm"
-                    >
-                      <p className="font-bold">{item.dayofweek}</p>
-                      <p className="text-[#162766]">
-                        {item.startTime} - {item.endTime}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-                    No existing schedule can be fetched from the current documented APIs.
-                  </p>
-                )}
-              </div>
             </section>
           </div>
         </section>

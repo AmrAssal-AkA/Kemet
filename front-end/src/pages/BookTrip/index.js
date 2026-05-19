@@ -94,6 +94,11 @@ const initialHotelSearch = {
 const initialPayment = {
   method: "stripe-card",
 };
+const initialTripSchedule = {
+  date: "",
+  startTime: "",
+  endTime: "",
+};
 const FALLBACK_TRIP_IMAGE = "/siwa.jpeg";
 
 function getTripId(trip) {
@@ -281,6 +286,7 @@ export default function BookTripPage() {
   const [traveler, setTraveler] = useState(initialTraveler);
   const [extraGuests, setExtraGuests] = useState([]);
   const [notes, setNotes] = useState("");
+  const [tripSchedule, setTripSchedule] = useState(initialTripSchedule);
   const [payment, setPayment] = useState(initialPayment);
   const [policyAgreed, setPolicyAgreed] = useState(false);
   const [includeFlight, setIncludeFlight] = useState(false);
@@ -468,6 +474,11 @@ export default function BookTripPage() {
     setHotelSearch((current) => ({ ...current, [name]: value }));
   }
 
+  function updateTripSchedule(event) {
+    const { name, value } = event.target;
+    setTripSchedule((current) => ({ ...current, [name]: value }));
+  }
+
   async function handleFlightSearch() {
     setError("");
     setNotice("");
@@ -523,6 +534,9 @@ export default function BookTripPage() {
     if (!hasPassportDetails(traveler)) return "Guest 1 passport details are required.";
     if (!passportImage) return "Passport image is required.";
     if (!selectedTrip) return "Please select a trip.";
+    if (!tripSchedule.date || !tripSchedule.startTime || !tripSchedule.endTime) {
+      return "Trip date, start time, and end time are required.";
+    }
     if (Number(numberOfGuests) < 1) return "Number of guests must be at least 1.";
     if (Number(numberOfGuests) > 1) {
       const missingGuestIndex = extraGuests.findIndex(
@@ -563,6 +577,7 @@ export default function BookTripPage() {
       paymentMethod: payment.method,
       payment,
       notes: notes.trim(),
+      tripSchedule,
       totalPrice: totals.totalPrice,
       passportImage,
     };
@@ -694,6 +709,38 @@ export default function BookTripPage() {
                   })}
                 </div>
               )}
+            </Section>
+
+            <Section eyebrow="Step 1A" title="Trip Schedule">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Trip date">
+                  <TextInput
+                    name="date"
+                    type="date"
+                    value={tripSchedule.date}
+                    onChange={updateTripSchedule}
+                    required
+                  />
+                </Field>
+                <Field label="Start time">
+                  <TextInput
+                    name="startTime"
+                    type="time"
+                    value={tripSchedule.startTime}
+                    onChange={updateTripSchedule}
+                    required
+                  />
+                </Field>
+                <Field label="End time">
+                  <TextInput
+                    name="endTime"
+                    type="time"
+                    value={tripSchedule.endTime}
+                    onChange={updateTripSchedule}
+                    required
+                  />
+                </Field>
+              </div>
             </Section>
 
             <Section eyebrow="Step 2" title="Traveler Details / Guest 1">

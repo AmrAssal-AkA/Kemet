@@ -38,6 +38,17 @@ const bookingSchema = new mongoose.Schema(
         ref: "Trip",
       },
     ],
+    tripSchedule: {
+      date: Date,
+      startTime: String,
+      endTime: String,
+      dayofweek: String,
+    },
+    assignedGuide: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Guide",
+      default: null,
+    },
     PassportNumber: {
       type: String,
       required: true,

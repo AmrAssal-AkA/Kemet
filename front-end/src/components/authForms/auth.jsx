@@ -42,7 +42,8 @@ function AuthForm() {
             aria-label={
               isLogin ? "Switch to register form" : "Switch to login form"
             }
-            className="w-full bg-black hover:bg-amber-600 disabled:bg-amber-400 text-white font-medium py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 focus:ring-offset-2 cursor-pointer transition-all duration-200 mt-4 flex items-center justify-center text-sm sm:text-base"
+            className="w-full text-black font-medium py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-600 focus:ring-offset-2 cursor-pointer transition-all duration-200 mt-4 flex items-center justify-center text-sm sm:text-base shadow-[0_2px_10px_rgba(255,206,42,0.28)] disabled:cursor-not-allowed disabled:opacity-70"
+            style={{ background: "linear-gradient(135deg, #FFCE2A 0%, #f5b800 100%)" }}
           >
             {isLogin ? "Switch to Register" : "Switch to Login"}
           </button>

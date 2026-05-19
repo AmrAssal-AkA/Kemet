@@ -125,6 +125,10 @@ function buildBookingRequest(payload) {
     request.trip = [payload.tripId];
   }
 
+  if (payload.tripSchedule) {
+    request.tripSchedule = payload.tripSchedule;
+  }
+
   if (!request.flight && !request.hotel && !request.trip) {
     throw new Error("Booking must include a trip, flight, or hotel.");
   }

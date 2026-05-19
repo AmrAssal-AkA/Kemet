@@ -4,8 +4,10 @@ import toast from "react-hot-toast";
 import AdminLayout from "@/components/adminDashboard/AdminLayout";
 import { useAuth } from "@/context/AuthContext";
 import {
+  assignGuideToBooking,
   cancelAdminBooking,
   confirmAdminBooking,
+  getAvailableGuidesForBooking,
   getAdminBookings,
   requireAdmin,
 } from "@/services/adminService";
@@ -32,6 +34,40 @@ function isVisibleBooking(booking) {
 
 function getBookingId(booking) {
   return booking._id || booking.bookingId || booking.id || "";
+}
+
+function getGuideId(guide) {
+  return guide?._id || guide?.id || "";
+}
+
+function normalizeGuide(guide) {
+  if (!guide) return null;
+
+  const user = guide.userId && typeof guide.userId === "object" ? guide.userId : {};
+  const id = getGuideId(guide);
+
+  if (!id) return null;
+
+  return {
+    id,
+    name: guide.name || user.name || "",
+    email: guide.email || user.email || "",
+  };
+}
+
+function getGuideLabel(guide) {
+  const normalizedGuide = normalizeGuide(guide);
+  if (!normalizedGuide) return "Not assigned";
+
+  const name = normalizedGuide.name || "Guide";
+  return normalizedGuide.email ? `${name} (${normalizedGuide.email})` : name;
+}
+
+function getGuideArray(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.guides)) return data.guides;
+  if (Array.isArray(data?.data?.guides)) return data.data.guides;
+  return [];
 }
 
 function formatDate(value) {
@@ -160,6 +196,7 @@ function mapBooking(booking) {
     paymentStatus: getPaymentStatus(booking),
     status: booking.status || "Pending",
     createdDate: formatDate(booking.createdAt || booking.created_at || booking.date),
+    assignedGuide: normalizeGuide(booking.assignedGuide),
   };
 }
 
@@ -171,6 +208,9 @@ export default function AdminBookings({ admin }) {
   const [successMessage, setSuccessMessage] = useState("");
   const [confirmStatus, setConfirmStatus] = useState({});
   const [cancelStatus, setCancelStatus] = useState({});
+  const [guideOptionsByBooking, setGuideOptionsByBooking] = useState({});
+  const [selectedGuideByBooking, setSelectedGuideByBooking] = useState({});
+  const [assignStatus, setAssignStatus] = useState({});
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -313,6 +353,88 @@ export default function AdminBookings({ admin }) {
     }));
   };
 
+  const loadAvailableGuides = async (bookingId, force = false) => {
+    if (!bookingId) return;
+
+    const existingOptions = guideOptionsByBooking[bookingId];
+    if (!force && (existingOptions?.loaded || existingOptions?.loading)) return;
+
+    setGuideOptionsByBooking((current) => ({
+      ...current,
+      [bookingId]: {
+        ...(current[bookingId] || {}),
+        loading: true,
+        error: "",
+      },
+    }));
+
+    try {
+      const data = await getAvailableGuidesForBooking(bookingId);
+      setGuideOptionsByBooking((current) => ({
+        ...current,
+        [bookingId]: {
+          loading: false,
+          loaded: true,
+          error: "",
+          guides: getGuideArray(data).map(normalizeGuide).filter(Boolean),
+        },
+      }));
+    } catch (error) {
+      const message = error.message || "Available guides could not be loaded.";
+      setGuideOptionsByBooking((current) => ({
+        ...current,
+        [bookingId]: {
+          ...(current[bookingId] || {}),
+          loading: false,
+          loaded: true,
+          error: message,
+          guides: [],
+        },
+      }));
+      toast.error(message);
+    }
+  };
+
+  const handleAssignGuide = async (bookingId) => {
+    const guideId = selectedGuideByBooking[bookingId];
+    if (!guideId) {
+      toast.error("Select a guide before assigning.");
+      return;
+    }
+
+    setSuccessMessage("");
+    setPageError("");
+    setAssignStatus((current) => ({
+      ...current,
+      [bookingId]: { loading: true, error: "" },
+    }));
+
+    try {
+      const response = await assignGuideToBooking(bookingId, guideId);
+      const returnedBooking = response?.booking || response?.data?.booking;
+
+      if (returnedBooking) {
+        setBookings((current) =>
+          current.map((booking) =>
+            getBookingId(booking) === bookingId ? returnedBooking : booking,
+          ),
+        );
+      }
+
+      setAssignStatus((current) => ({
+        ...current,
+        [bookingId]: { loading: false, error: "" },
+      }));
+    } catch (error) {
+      const message = error.message || "Guide could not be assigned.";
+      setAssignStatus((current) => ({
+        ...current,
+        [bookingId]: { loading: false, error: message },
+      }));
+      toast.error(message);
+    }
+  };
+
   const handleSearch = (event) => {
     event.preventDefault();
     setSearchQuery(searchInput);
@@ -326,9 +448,21 @@ export default function AdminBookings({ admin }) {
   const renderBookingCard = (booking, index) => {
     const confirmAction = confirmStatus[booking.id] || {};
     const cancelAction = cancelStatus[booking.id] || {};
+    const guideOptions = guideOptionsByBooking[booking.id] || {};
+    const assignAction = assignStatus[booking.id] || {};
     const canConfirm = isPendingBooking(booking);
     const canCancel = !isCancelledBooking(booking);
-    const actionError = confirmAction.error || cancelAction.error;
+    const selectedGuideId =
+      selectedGuideByBooking[booking.id] ?? booking.assignedGuide?.id ?? "";
+    const guideOptionsList = guideOptions.guides || [];
+    const selectedAssignedGuideMissing =
+      booking.assignedGuide &&
+      !guideOptionsList.some((guide) => guide.id === booking.assignedGuide.id);
+    const actionError =
+      confirmAction.error ||
+      cancelAction.error ||
+      assignAction.error ||
+      guideOptions.error;
 
     return (
       <li
@@ -353,7 +487,7 @@ export default function AdminBookings({ admin }) {
               <button
                 type="button"
                 onClick={() => handleConfirmBooking(booking.id)}
-                disabled={!booking.id || confirmAction.loading}
+                disabled={!booking.id || confirmAction.loading || assignAction.loading}
                 className="rounded-xl bg-[#0b1d3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 {confirmAction.loading ? "Confirming..." : "Confirm Booking"}
@@ -370,6 +504,75 @@ export default function AdminBookings({ admin }) {
               </button>
             )}
           </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase text-slate-400">
+                Assigned guide
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">
+                {booking.assignedGuide ? getGuideLabel(booking.assignedGuide) : "Not assigned"}
+              </p>
+            </div>
+            {canConfirm && (
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500">
+                Assign before or while confirming
+              </span>
+            )}
+          </div>
+
+          {canConfirm && (
+            <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+              <select
+                value={selectedGuideId}
+                onFocus={() => loadAvailableGuides(booking.id)}
+                onClick={() => loadAvailableGuides(booking.id)}
+                onChange={(event) =>
+                  setSelectedGuideByBooking((current) => ({
+                    ...current,
+                    [booking.id]: event.target.value,
+                  }))
+                }
+                disabled={guideOptions.loading || assignAction.loading}
+                className="min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+              >
+                <option value="">
+                  {guideOptions.loading ? "Loading guides..." : "Select available guide"}
+                </option>
+                {selectedAssignedGuideMissing && (
+                  <option value={booking.assignedGuide.id}>
+                    {getGuideLabel(booking.assignedGuide)}
+                  </option>
+                )}
+                {guideOptionsList.map((guide) => (
+                  <option key={guide.id} value={guide.id}>
+                    {getGuideLabel(guide)}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => handleAssignGuide(booking.id)}
+                disabled={
+                  !booking.id ||
+                  !selectedGuideId ||
+                  guideOptions.loading ||
+                  assignAction.loading
+                }
+                className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                {assignAction.loading ? "Assigning..." : "Assign Guide"}
+              </button>
+            </div>
+          )}
+
+          {guideOptions.loaded && !guideOptions.loading && guideOptionsList.length === 0 && (
+            <p className="mt-3 text-sm font-semibold text-slate-500">
+              No available guides for this booking time.
+            </p>
+          )}
         </div>
 
         <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

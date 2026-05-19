@@ -655,6 +655,28 @@ const definition = {
             type: "array",
             items: { type: "string", description: "Reference to Trip" },
           },
+          tripSchedule: {
+            type: "object",
+            description:
+              "Scheduled trip date and time used for guide availability matching.",
+            properties: {
+              date: { type: "string", format: "date-time" },
+              startTime: { type: "string", example: "09:00" },
+              endTime: { type: "string", example: "17:00" },
+              dayofweek: { type: "string", example: "Saturday" },
+            },
+          },
+          assignedGuide: {
+            oneOf: [
+              { type: "string", description: "Reference to Guide" },
+              {
+                type: "object",
+                description:
+                  "Populated Guide document with linked user details when returned by admin/guide endpoints.",
+              },
+            ],
+            nullable: true,
+          },
           PassportNumber: {
             type: "string",
             description:
@@ -795,6 +817,17 @@ const definition = {
             items: { type: "string" },
             description:
               "Optional trip IDs. At least one of `flight`, `hotel`, or `trip` must be supplied.",
+          },
+          tripSchedule: {
+            type: "object",
+            description:
+              "Required for trip bookings that may need guide assignment. Stores the real trip date and time used against Guide.AvailabilityTime.",
+            properties: {
+              date: { type: "string", format: "date" },
+              startTime: { type: "string", example: "09:00" },
+              endTime: { type: "string", example: "17:00" },
+              dayofweek: { type: "string", example: "Saturday" },
+            },
           },
           PassportNumber: {
             type: "string",
@@ -1840,6 +1873,108 @@ const definition = {
         responses: {
           200: { description: "Booking confirmed" },
           404: { description: "Booking not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/adminDashboard/bookings/{bookingId}/available-guides": {
+      get: {
+        tags: ["Admin"],
+        summary: "Get available guides for a booking",
+        description:
+          "Returns real guide records linked to users with role `guide`. Trip bookings are filtered using `booking.tripSchedule` against `Guide.AvailabilityTime`. If no trip schedule is stored, all valid guides are returned with a note explaining that availability filtering could not be applied.",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "bookingId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Available guides returned",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    guides: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          _id: { type: "string" },
+                          id: { type: "string" },
+                          userId: { type: "string" },
+                          name: { type: "string" },
+                          email: { type: "string" },
+                        },
+                      },
+                    },
+                    note: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Booking not found" },
+          500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/adminDashboard/bookings/{bookingId}/assign-guide": {
+      patch: {
+        tags: ["Admin"],
+        summary: "Assign a guide to a booking",
+        description:
+          "Assigns a real Guide record to a booking. When the booking has `tripSchedule`, the guide must match `Guide.AvailabilityTime`; otherwise manual assignment is allowed and the response includes a note that availability could not be fully verified.",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "bookingId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["guideId"],
+                properties: {
+                  guideId: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Guide assigned successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string" },
+                    booking: { $ref: "#/components/schemas/Booking" },
+                    note: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+          400: { description: "Invalid guide or guide unavailable" },
+          401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
+          404: { description: "Booking or guide not found" },
           500: { description: "Server error" },
         },
       },

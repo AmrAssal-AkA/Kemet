@@ -19,6 +19,33 @@ function parseJsonField(value) {
   }
 }
 
+function normalizeTime(value) {
+  if (value === undefined || value === null || value === "") return "";
+
+  return String(value).trim().slice(0, 5);
+}
+
+function buildTripSchedule(value) {
+  if (!value || typeof value !== "object") return undefined;
+
+  const date = value.date ? new Date(value.date) : null;
+  const startTime = normalizeTime(value.startTime);
+  const endTime = normalizeTime(value.endTime);
+
+  if (!date || Number.isNaN(date.getTime()) || !startTime || !endTime) {
+    return undefined;
+  }
+
+  return {
+    date,
+    startTime,
+    endTime,
+    dayofweek:
+      value.dayofweek ||
+      date.toLocaleDateString("en-US", { weekday: "long" }),
+  };
+}
+
 const createBooking = async (req, res, nxt) => {
   try {
     const userId = req.user?.id;
@@ -35,6 +62,7 @@ const createBooking = async (req, res, nxt) => {
     const hotel = parseJsonField(req.body.hotel);
     const trip = parseJsonField(req.body.trip);
     const tripDetails = parseJsonField(req.body.tripDetails);
+    const tripSchedule = buildTripSchedule(parseJsonField(req.body.tripSchedule));
     const items = parseJsonField(req.body.items);
     const { PassportNumber, totalPrice } = req.body;
 
@@ -66,6 +94,7 @@ const createBooking = async (req, res, nxt) => {
     req.body.hotel = hotel;
     req.body.trip = trip;
     req.body.tripDetails = tripDetails;
+    req.body.tripSchedule = tripSchedule;
     req.body.items = items;
 
     const ChildAge = (guest) => {
@@ -158,6 +187,7 @@ const createBooking = async (req, res, nxt) => {
       hotel,
       trip,
       tripDetails,
+      tripSchedule,
       PassportNumber,
       totalPrice,
       currency,

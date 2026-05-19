@@ -1,18 +1,19 @@
 import Image from "next/image";
 import { useRouter } from "next/router";
 
-function BlogCard({ title, content, image, id , index}) {
+function BlogCard({ title, content, image, id, index }) {
   const router = useRouter();
 
   return (
-    <li className="bg-white rounded-lg text-center shadow-md overflow-hidden justify-center items-center flex flex-col border border-orange-300 border-dashed p-3">
+    <li className="bg-white rounded-lg text-center shadow-md overflow-hidden justify-between items-center flex flex-col border border-orange-300 border-dashed p-3">
       <Image
         src={image}
         alt={title}
         width={500}
         height={250}
         priority={index === 0}
-        className="w-full h-80 object-cover mb-4 rounded-t-lg"
+        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+        className="w-full h-56 object-cover mb-4 rounded-t-lg sm:h-64 lg:h-72"
       />
       <div className="p-4">
         <h3 className="text-xl font-semibold mb-2">{title}</h3>

@@ -126,7 +126,8 @@ export default function RegisterForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-black text-white py-2 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer mt-4"
+        className="w-full text-black py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer mt-4 font-semibold shadow-[0_2px_10px_rgba(255,206,42,0.28)] disabled:cursor-not-allowed disabled:opacity-70"
+        style={{ background: "linear-gradient(135deg, #FFCE2A 0%, #f5b800 100%)" }}
       >
         {loading ? "Registering..." : "Register"}
       </button>

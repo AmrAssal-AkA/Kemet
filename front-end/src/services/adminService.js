@@ -131,6 +131,43 @@ export async function cancelAdminBooking(bookingId) {
   return handleResponse(res, "Booking could not be cancelled.");
 }
 
+export async function getAvailableGuidesForBooking(bookingId) {
+  if (!bookingId) {
+    throw new Error("Booking ID is required.");
+  }
+
+  const res = await fetch(
+    buildApiUrl(`/api/adminDashboard/bookings/${bookingId}/available-guides`),
+    {
+      credentials: "include",
+    },
+  );
+
+  return handleResponse(res, "Available guides could not be loaded.");
+}
+
+export async function assignGuideToBooking(bookingId, guideId) {
+  if (!bookingId) {
+    throw new Error("Booking ID is required.");
+  }
+
+  if (!guideId) {
+    throw new Error("Guide ID is required.");
+  }
+
+  const res = await fetch(
+    buildApiUrl(`/api/adminDashboard/bookings/${bookingId}/assign-guide`),
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ guideId }),
+    },
+  );
+
+  return handleResponse(res, "Guide could not be assigned.");
+}
+
 export async function getTripStats(cookie = "") {
   const res = await fetch(buildApiUrl("/api/adminDashboard/stats/trips"), {
     headers: getHeaders(cookie),

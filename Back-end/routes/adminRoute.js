@@ -32,6 +32,20 @@ router.get(
 );
 
 router.get(
+  "/bookings/:bookingId/available-guides",
+  authenticate,
+  authorize("admin"),
+  adminDashboardController.getAvailableGuidesForBooking,
+);
+
+router.patch(
+  "/bookings/:bookingId/assign-guide",
+  authenticate,
+  authorize("admin"),
+  adminDashboardController.assignGuideToBooking,
+);
+
+router.get(
   "/stats/trips",
   authenticate,
   authorize("admin"),
