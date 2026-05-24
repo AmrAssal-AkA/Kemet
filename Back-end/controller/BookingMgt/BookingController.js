@@ -41,8 +41,7 @@ function buildTripSchedule(value) {
     startTime,
     endTime,
     dayofweek:
-      value.dayofweek ||
-      date.toLocaleDateString("en-US", { weekday: "long" }),
+      value.dayofweek || date.toLocaleDateString("en-US", { weekday: "long" }),
   };
 }
 
@@ -63,23 +62,28 @@ const createBooking = async (req, res, nxt) => {
         .json({ error: "Missing required fields: userId, email" });
     }
 
-    const guests = parseJsonField(req.body.guests);
-    const flight = parseJsonField(req.body.flight);
-    const hotel = parseJsonField(req.body.hotel);
-    const trip = parseJsonField(req.body.trip);
-    const tripDetails = parseJsonField(req.body.tripDetails);
-    const tripSchedule = buildTripSchedule(parseJsonField(req.body.tripSchedule));
-    const items = parseJsonField(req.body.items);
-    const { PassportNumber, totalPrice } = req.body;
-    const guideIncluded = parseBoolean(req.body.guideIncluded);
-    const guideFee = guideIncluded ? Number(req.body.guideFee || 0) : 0;
+    const {
+      guests,
+      flight,
+      hotel,
+      trip,
+      tripDetails,
+      flightDetails,
+      tripSchedule,
+      items,
+      passportNumber,
+      totalPrice,
+      guideIncluded,
+      guideFee,
+    } = parseJsonField(req.body);
 
     if (!Array.isArray(guests)) {
       return res.status(400).json({ message: "Guests must be an array" });
     }
     const normalizedGuests = guests.map((guest) => ({
       ...guest,
-      name: guest.name || `${guest.firstName || ""} ${guest.lastName || ""}`.trim(),
+      name:
+        guest.name || `${guest.firstName || ""} ${guest.lastName || ""}`.trim(),
     }));
     const hasValidGuest = normalizedGuests.every(
       (g) =>
@@ -98,12 +102,6 @@ const createBooking = async (req, res, nxt) => {
       });
     }
     req.body.guests = normalizedGuests;
-    req.body.flight = flight;
-    req.body.hotel = hotel;
-    req.body.trip = trip;
-    req.body.tripDetails = tripDetails;
-    req.body.tripSchedule = tripSchedule;
-    req.body.items = items;
 
     const ChildAge = (guest) => {
       const today = new Date();
@@ -123,7 +121,6 @@ const createBooking = async (req, res, nxt) => {
     if (!childerentAgeUnder16 && (!req.files || req.files.length === 0)) {
       return res.status(400).json({ error: "Passport image is required" });
     }
-
 
     if (req.files && req.files.length > 0) {
       const passportValidationResult = await PassportValidation({
@@ -198,7 +195,7 @@ const createBooking = async (req, res, nxt) => {
       tripSchedule,
       guideIncluded,
       guideFee: Number.isFinite(guideFee) && guideFee > 0 ? guideFee : 0,
-      PassportNumber,
+      passportNumber,
       totalPrice,
       currency,
       details: bookingDetails,

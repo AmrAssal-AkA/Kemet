@@ -24,7 +24,6 @@ const { authLimiter, apiLimiter } = require("./middleware/rateLimiter");
 const Logger = require("./services/logger");
 const morganMiddleware = require("./middleware/morganMW");
 const swaggerSpec = require("./docs/swagger");
-const port = process.env.PORT;
 const userRoutes = require("./routes/userdashboardRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const guideDashboardRoute = require("./routes/guideDashboardRoute");
@@ -37,6 +36,7 @@ const SearchRoute = require("./routes/searchRoutes");
 const newsletterRoute = require("./routes/newsletterRoute");
 const offeringsRoute = require("./routes/offeringsRoutes");
 const hiddenGemRoute = require("./routes/hiddenGemRoutes");
+const port = process.env.PORT;
 
 // Connect to databas
 connectDB();
@@ -156,10 +156,9 @@ app.get("/", (req, res) => {
 
 app.use(errorHandlerMW);
 
-if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {
     Logger.info(`Server is running on port ${port}`);
   });
-}
 
-module.exports = app;
+
+
