@@ -699,9 +699,7 @@ Check:
 ## Contributors
 
 - Amr Assal — Backend Developer
-- Mahmoud Hazem Shatout — Backend Developer
+- Mahmoud Hazem Shahtout — Backend Developer
 
-## License
 
-This project is licensed under the **ISC** License.
 
