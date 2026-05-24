@@ -36,7 +36,7 @@ const SearchRoute = require("./routes/searchRoutes");
 const newsletterRoute = require("./routes/newsletterRoute");
 const offeringsRoute = require("./routes/offeringsRoutes");
 const hiddenGemRoute = require("./routes/hiddenGemRoutes");
-const port = process.env.PORT;
+const port = process.env.PORT || 8000;
 
 // Connect to databas
 connectDB();
