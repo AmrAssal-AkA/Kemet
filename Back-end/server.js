@@ -156,9 +156,10 @@ app.get("/", (req, res) => {
 
 app.use(errorHandlerMW);
 
-  app.listen(port, () => {
-    Logger.info(`Server is running on port ${port}`);
-  });
 
-
-
+  if (process.env.NODE_ENV !== "production") {
+    app.listen(port, () => {
+      Logger.info(`Server is running on port ${port}`);
+    });
+  }
+module.exports = app;
