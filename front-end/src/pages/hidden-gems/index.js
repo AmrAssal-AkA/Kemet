@@ -56,7 +56,7 @@ function HiddenGemsPage() {
   useEffect(() => {
     const fetchHiddenGems = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/hidden-gems');
+        const response = await fetch('https://kemet-ochre.vercel.app/api/hidden-gems');
         if (response.ok) {
            const data = await response.json();
            setTours(data.tours || []);

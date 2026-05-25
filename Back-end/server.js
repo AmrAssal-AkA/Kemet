@@ -52,7 +52,11 @@ app.use(
     secret: "SessionSecretKey",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 },
+    cookie: { 
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      httpOnly: true,
+     },
   }),
 );
 app.use(

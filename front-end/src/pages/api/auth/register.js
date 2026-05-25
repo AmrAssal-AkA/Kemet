@@ -2,8 +2,7 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 
 const API_BASE_URL =
-  process.env.API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.Backend_URL ||
   "http://localhost:8000";
 
 function normalizeAuthCookies(cookies = [], req) {
