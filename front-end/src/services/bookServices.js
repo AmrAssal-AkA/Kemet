@@ -91,7 +91,10 @@ function buildBookingRequest(payload) {
     ? payload.travelers
     : [payload.traveler];
   const guests = travelers.map(toBackendGuest);
-  const passportNumber = payload.PassportNumber || guests[0]?.passportNumber;
+  const passportNumber =
+    payload.PassportNumber ||
+    guests[0]?.passportNumber ||
+    payload.traveler?.passportNumber;
 
   if (
     !passportNumber ||
@@ -104,7 +107,7 @@ function buildBookingRequest(payload) {
 
   const request = {
     guests,
-    PassportNumber: passportNumber,
+    passportNumber: passportNumber,
     totalPrice: Number(payload.totalPrice || 0),
     currency: payload.currency || "EGP",
     guideIncluded: Boolean(payload.guideIncluded),

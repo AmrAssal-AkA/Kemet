@@ -35,7 +35,14 @@ export function extractUserFromAuthResponse(data) {
 
 export function getUserRole(user) {
   if (user?.isAdmin === true) return "admin";
-  return String(user?.role || user?.userRole || user?.type || "").toLowerCase();
+  
+  const rawRole = String(user?.role || user?.userRole || user?.type || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+  
+  if (rawRole === "localguide" || rawRole === "guide") return "guide";
+  return rawRole || "user";
 }
 
 export function getAuthRedirectPath(user) {

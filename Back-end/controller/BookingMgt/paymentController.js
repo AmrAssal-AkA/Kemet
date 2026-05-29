@@ -32,7 +32,7 @@ async function markBookingPaidFromSession(session) {
   );
 }
 
-const stripeCheckout = async (req, nxt) => {
+const stripeCheckout = async (req, res, next) => {
   try {
     const bookingId = req.body.bookingId;
     const email = req.body.email;
@@ -66,7 +66,7 @@ const stripeCheckout = async (req, nxt) => {
     });
     return session;
   } catch (err) {
-    nxt(err);
+    throw err;
   }
 };
 
