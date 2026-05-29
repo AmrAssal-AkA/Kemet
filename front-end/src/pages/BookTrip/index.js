@@ -118,7 +118,7 @@ function getTripImage(trip) {
 }
 
 function getTripPrice(trip) {
-  return Number(trip?.price || 0);
+  return Number(trip?.finalPrice || 0);
 }
 
 function getGuideFee(trip) {

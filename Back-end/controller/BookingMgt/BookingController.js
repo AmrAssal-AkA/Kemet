@@ -204,7 +204,7 @@ const createBooking = async (req, res, nxt) => {
       tripSchedule,
       guideIncluded,
       guideFee: Number.isFinite(guideFee) && guideFee > 0 ? guideFee : 0,
-      passportNumber,
+      PassportNumber: passportNumber,
       totalPrice,
       currency,
       details: bookingDetails,

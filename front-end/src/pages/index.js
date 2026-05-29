@@ -453,7 +453,7 @@ export default function Home({ trips, hiddenGems }) {
                     </div>
                     <div className="p-4 flex flex-col flex-1">
                       <span className="inline-block mb-2 bg-yellow-50 text-yellow-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-yellow-200">
-                        From {pkg.price}
+                        From {pkg.basePrice}
                       </span>
                       <h4 className="font-bold text-sm text-gray-900 mb-1 leading-snug">{pkg.name}</h4>
                       <p className="text-xs text-gray-400 mb-3 leading-relaxed flex-1">{pkg.description}</p>
