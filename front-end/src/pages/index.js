@@ -185,7 +185,6 @@ export default function Home({ trips, hiddenGems }) {
         <title>Kemet Travel — Discover Egypt through Egyptian Eyes</title>
         <meta name="description" content="Plan your smart trip to Egypt with Kemet Travel. Explore temples, beaches, and hidden gems through Egyptian eyes." />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
       </Head>
 
       <style>{`
@@ -308,7 +307,7 @@ export default function Home({ trips, hiddenGems }) {
               style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
             >
               {stats.map(({ value, label }) => (
-                <div key={label} className="stat-chip flex-shrink-0 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-center">
+                <div key={label} className="stat-chip shrink-0 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-center">
                   <div className="text-base sm:text-lg font-extrabold text-yellow-400 leading-none">{value}</div>
                   <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 mt-0.5 whitespace-nowrap">{label}</div>
                 </div>
@@ -474,7 +473,7 @@ export default function Home({ trips, hiddenGems }) {
           )}
 
           <div className="text-center mt-8 sm:mt-10">
-            <Link href="/Luxor">
+            <Link href="/offerings">
               <button className="btn-gold rounded-full px-7 sm:px-9 py-3 sm:py-3.5 font-semibold text-black text-sm">
                 View All Packages
               </button>

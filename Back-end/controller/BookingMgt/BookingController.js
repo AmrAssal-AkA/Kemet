@@ -62,7 +62,7 @@ const createBooking = async (req, res, nxt) => {
         .json({ error: "Missing required fields: userId, email" });
     }
 
-    const {
+    let {
       guests,
       flight,
       hotel,
@@ -75,7 +75,16 @@ const createBooking = async (req, res, nxt) => {
       totalPrice,
       guideIncluded,
       guideFee,
-    } = parseJsonField(req.body);
+    } = req.body;
+
+    guests = parseJsonField(guests);
+    flight = parseJsonField(flight);
+    hotel = parseJsonField(hotel);
+    trip = parseJsonField(trip);
+    tripDetails = parseJsonField(tripDetails);
+    flightDetails = parseJsonField(flightDetails);
+    tripSchedule = parseJsonField(tripSchedule);
+    items = parseJsonField(items);
 
     if (!Array.isArray(guests)) {
       return res.status(400).json({ message: "Guests must be an array" });

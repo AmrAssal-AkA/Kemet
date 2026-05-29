@@ -1,5 +1,3 @@
-import { buildApiUrl } from "@/utils/apiBaseUrl";
-
 export class BookingApiError extends Error {
   constructor(message, status, data) {
     super(message);
@@ -38,7 +36,9 @@ async function handleResponse(res, errorMessage) {
 }
 
 function getHotelOfferId(hotelOffer) {
-  return hotelOffer?.offers?.[0]?.id || hotelOffer?.id || hotelOffer?.hotel?.hotelId;
+  return (
+    hotelOffer?.offers?.[0]?.id || hotelOffer?.id || hotelOffer?.hotel?.hotelId
+  );
 }
 
 function toBackendGuest(traveler, index) {
@@ -75,18 +75,28 @@ function normalizeCheckoutItems(items = []) {
 }
 
 function buildBookingRequest(payload) {
-  if (payload.guests && payload.PassportNumber && payload.totalPrice && payload.items) {
+  if (
+    payload.guests &&
+    payload.PassportNumber &&
+    payload.totalPrice &&
+    payload.items
+  ) {
     return {
       ...payload,
       items: normalizeCheckoutItems(payload.items),
     };
   }
 
-  const travelers = payload.travelers?.length ? payload.travelers : [payload.traveler];
+  const travelers = payload.travelers?.length
+    ? payload.travelers
+    : [payload.traveler];
   const guests = travelers.map(toBackendGuest);
   const passportNumber = payload.PassportNumber || guests[0]?.passportNumber;
 
-  if (!passportNumber || guests.some((guest) => !hasRequiredGuestFields(guest))) {
+  if (
+    !passportNumber ||
+    guests.some((guest) => !hasRequiredGuestFields(guest))
+  ) {
     throw new Error(
       "Booking requires guest passport details: type, firstName, lastName, nationality, passportNumber, dateOfBirth, and expiryDate.",
     );
@@ -99,15 +109,19 @@ function buildBookingRequest(payload) {
     currency: payload.currency || "EGP",
     guideIncluded: Boolean(payload.guideIncluded),
     guideFee: payload.guideIncluded ? Number(payload.guideFee || 0) : 0,
-    items: normalizeCheckoutItems(payload.items?.length ? payload.items : [
-      {
-        name: payload.tripName || "KEMET booking",
-        description: payload.notes || "KEMET travel booking",
-        image: payload.image,
-        price: Number(payload.totalPrice || 0),
-        quantity: 1,
-      },
-    ]),
+    items: normalizeCheckoutItems(
+      payload.items?.length
+        ? payload.items
+        : [
+            {
+              name: payload.tripName || "KEMET booking",
+              description: payload.notes || "KEMET travel booking",
+              image: payload.image,
+              price: Number(payload.totalPrice || 0),
+              quantity: 1,
+            },
+          ],
+    ),
   };
 
   if (payload.selectedFlight) {
@@ -201,7 +215,7 @@ export async function createBooking(payload) {
     ? undefined
     : { "Content-Type": "application/json" };
 
-  const res = await fetch(buildApiUrl("/api/booking/create"), {
+  const res = await fetch("/api/booking/create", {
     method: "POST",
     headers,
     credentials: "include",

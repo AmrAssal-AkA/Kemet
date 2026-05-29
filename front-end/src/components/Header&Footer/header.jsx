@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -278,7 +276,7 @@ function Header() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:py-2.5">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image
-              src="/logo.png"
+              src="/Logo.png"
               alt="Kemet logo"
               width={120}
               height={50}

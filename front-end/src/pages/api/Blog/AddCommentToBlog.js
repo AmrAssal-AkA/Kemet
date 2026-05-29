@@ -1,8 +1,7 @@
 import axios from 'axios';
+import { getApiBaseUrl } from "../../../utils/apiBaseUrl";
 
-const API_BASE_URL =
-    process.env.Backend_URL||
-    "http://localhost:8000";
+const API_BASE_URL =getApiBaseUrl();
 
 async function handler(req, res) {
     if (req.method !== 'POST') {

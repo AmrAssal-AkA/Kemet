@@ -94,13 +94,13 @@ function HiddenGemsPage() {
             
             <div className="relative h-150 flex items-center justify-center gap-x-6">
                 <div className="absolute top-1/2 left-[18%] transform -translate-y-[45%] flex gap-x-6">
-                    <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl relative">
+                    <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl relative">
                         <img src="/images/hidden-gems/Rectangle 178.png" alt="Sunset boat" className="w-full h-full object-cover"/> 
                     </div>
-                    <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl mt-12 relative">
+                    <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl mt-12 relative">
                         <img src="/images/hidden-gems/Rectangle 177.png" alt="Temple Ruin" className="w-full h-full object-cover"/> 
                     </div>
-                    <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl relative">
+                    <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl relative">
                         <img src="/images/hidden-gems/Rectangle 176.png" alt="Pyramid View" className="w-full h-full object-cover"/> 
                     </div>
                 </div>

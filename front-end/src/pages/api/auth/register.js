@@ -1,9 +1,8 @@
 import axios from "axios";
 import jwt from "jsonwebtoken";
+import { getApiBaseUrl } from "../../../utils/apiBaseUrl";
 
-const API_BASE_URL =
-  process.env.Backend_URL ||
-  "http://localhost:8000";
+const API_BASE_URL = getApiBaseUrl();
 
 function normalizeAuthCookies(cookies = [], req) {
   const host = req.headers.host || "";

@@ -36,14 +36,19 @@ function getRequestOrigin(context) {
 }
 
 export async function getAdminFromSession(cookie = "", origin = "") {
-  const sessionUrl = origin ? `${origin}/api/auth/refresh` : "/api/auth/refresh";
+  const sessionUrl = origin
+    ? `${origin}/api/auth/refresh`
+    : "/api/auth/refresh";
 
   const res = await fetch(sessionUrl, {
     method: "POST",
     headers: getHeaders(cookie),
     credentials: "include",
   });
-  const data = await handleResponse(res, "Admin session could not be verified.");
+  const data = await handleResponse(
+    res,
+    "Admin session could not be verified.",
+  );
   return extractUserFromAuthResponse(data);
 }
 
@@ -75,7 +80,10 @@ export async function requireAdmin(context) {
 }
 
 export async function getAdminUsers(cookie = "") {
-  const res = await fetch(buildApiUrl("/api/adminDashboard/AllUsers"), {
+  const endpoint = cookie
+    ? buildApiUrl("/api/adminDashboard/AllUsers")
+    : "/api/admin/getusers";
+  const res = await fetch(endpoint, {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -84,7 +92,10 @@ export async function getAdminUsers(cookie = "") {
 }
 
 export async function getAdminBookingDetails(cookie = "") {
-  const res = await fetch(buildApiUrl("/api/adminDashboard/bookingDetails"), {
+  const endpoint = cookie
+    ? buildApiUrl("/api/adminDashboard/bookingDetails")
+    : "/api/admin/getBookingDetails";
+  const res = await fetch(endpoint, {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -110,10 +121,13 @@ export async function confirmAdminBooking(bookingId) {
     throw new Error("Booking ID is required.");
   }
 
-  const res = await fetch(buildApiUrl(`/api/adminDashboard/confirmBooking/${bookingId}`), {
-    method: "PATCH",
-    credentials: "include",
-  });
+  const res = await fetch(
+    buildApiUrl(`/api/adminDashboard/confirmBooking/${bookingId}`),
+    {
+      method: "PATCH",
+      credentials: "include",
+    },
+  );
 
   return handleResponse(res, "Booking could not be confirmed.");
 }
@@ -193,7 +207,10 @@ export async function getRevenueStats(cookie = "") {
 }
 
 export async function getAdminContacts(cookie = "") {
-  const res = await fetch(buildApiUrl("/api/contact/contacts"), {
+  const endpoint = cookie
+    ? buildApiUrl("/api/contact/contacts")
+    : "/api/admin/getContactus";
+  const res = await fetch(endpoint, {
     headers: getHeaders(cookie),
     credentials: "include",
   });

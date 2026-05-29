@@ -1,10 +1,9 @@
 import axios from "axios";
 import multer from "multer";
 import FormData from "form-data";
+import { getApiBaseUrl } from "../../../utils/apiBaseUrl";
 
-const API_BASE_URL =
-  process.env.Backend_URL ||
-  "http://localhost:8000";
+const API_BASE_URL = getApiBaseUrl();
 
 export const config = {
   api: {

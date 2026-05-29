@@ -1,6 +1,7 @@
 import axios from "axios";
+import { getApiBaseUrl } from "../../../utils/apiBaseUrl";
 
-const Backend_URL = process.env.Backend_URL || "http://localhost:8000";
+const Backend_URL = getApiBaseUrl();
 
 export default async function handler(req, res) {
     if (req.method !== "POST") {
