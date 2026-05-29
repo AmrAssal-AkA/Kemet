@@ -17,19 +17,35 @@ const CONFIRMED_STATUSES = ["confirmed"];
 const CANCELLED_STATUSES = ["cancelled", "canceled"];
 
 function isPendingBooking(booking) {
-  return PENDING_STATUSES.includes(String(booking.status || "").trim().toLowerCase());
+  return PENDING_STATUSES.includes(
+    String(booking.status || "")
+      .trim()
+      .toLowerCase(),
+  );
 }
 
 function isConfirmedBooking(booking) {
-  return CONFIRMED_STATUSES.includes(String(booking.status || "").trim().toLowerCase());
+  return CONFIRMED_STATUSES.includes(
+    String(booking.status || "")
+      .trim()
+      .toLowerCase(),
+  );
 }
 
 function isCancelledBooking(booking) {
-  return CANCELLED_STATUSES.includes(String(booking.status || "").trim().toLowerCase());
+  return CANCELLED_STATUSES.includes(
+    String(booking.status || "")
+      .trim()
+      .toLowerCase(),
+  );
 }
 
 function isVisibleBooking(booking) {
-  return isPendingBooking(booking) || isConfirmedBooking(booking) || isCancelledBooking(booking);
+  return (
+    isPendingBooking(booking) ||
+    isConfirmedBooking(booking) ||
+    isCancelledBooking(booking)
+  );
 }
 
 function getBookingId(booking) {
@@ -43,7 +59,8 @@ function getGuideId(guide) {
 function normalizeGuide(guide) {
   if (!guide) return null;
 
-  const user = guide.userId && typeof guide.userId === "object" ? guide.userId : {};
+  const user =
+    guide.userId && typeof guide.userId === "object" ? guide.userId : {};
   const id = getGuideId(guide);
 
   if (!id) return null;
@@ -89,7 +106,9 @@ function formatTotalPrice(amount, currency) {
 }
 
 function getFirstValue(values) {
-  return values.find((value) => value !== undefined && value !== null && value !== "");
+  return values.find(
+    (value) => value !== undefined && value !== null && value !== "",
+  );
 }
 
 function normalizePaymentStatus(value) {
@@ -114,7 +133,9 @@ function getPaymentStatus(booking) {
     booking.transaction?.status,
     booking.paymentIntent?.status,
   ].filter((value) => value !== undefined && value !== null && value !== "");
-  const normalizedStatuses = statuses.map((value) => String(value).trim().toLowerCase());
+  const normalizedStatuses = statuses.map((value) =>
+    String(value).trim().toLowerCase(),
+  );
   const paidStatus = normalizedStatuses.find((value) =>
     ["paid", "succeeded", "complete"].includes(value),
   );
@@ -195,11 +216,14 @@ function mapBooking(booking) {
     ),
     paymentStatus: getPaymentStatus(booking),
     status: booking.status || "Pending",
-    createdDate: formatDate(booking.createdAt || booking.created_at || booking.date),
+    createdDate: formatDate(
+      booking.createdAt || booking.created_at || booking.date,
+    ),
     assignedGuide: normalizeGuide(booking.assignedGuide),
     guideIncluded: booking.guideIncluded === true,
   };
 }
+
 
 export default function AdminBookings({ admin }) {
   const { user, logout } = useAuth();
@@ -221,7 +245,9 @@ export default function AdminBookings({ admin }) {
       .filter(isVisibleBooking)
       .filter((booking) => {
         if (!normalizedSearch) return true;
-        return String(getBookingId(booking)).toLowerCase().includes(normalizedSearch);
+        return String(getBookingId(booking))
+          .toLowerCase()
+          .includes(normalizedSearch);
       })
       .map(mapBooking);
   }, [bookings, searchQuery]);
@@ -252,7 +278,9 @@ export default function AdminBookings({ admin }) {
         if (isMounted) setBookings(bookingDetails);
       } catch (error) {
         if (isMounted) {
-          setPageError(error.message || "Pending bookings could not be loaded.");
+          setPageError(
+            error.message || "Pending bookings could not be loaded.",
+          );
           setBookings([]);
         }
       } finally {
@@ -300,7 +328,8 @@ export default function AdminBookings({ admin }) {
   };
 
   const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    if (!window.confirm("Are you sure you want to cancel this booking?"))
+      return;
 
     setPageError("");
     setCancelStatus((current) => ({
@@ -325,9 +354,12 @@ export default function AdminBookings({ admin }) {
 
           return {
             ...booking,
-            ...(returnedBooking && typeof returnedBooking === "object" ? returnedBooking : {}),
+            ...(returnedBooking && typeof returnedBooking === "object"
+              ? returnedBooking
+              : {}),
             status: returnedBooking?.status || "Cancelled",
-            paymentStatus: returnedBooking?.paymentStatus || booking.paymentStatus,
+            paymentStatus:
+              returnedBooking?.paymentStatus || booking.paymentStatus,
           };
         }),
       );
@@ -448,7 +480,8 @@ export default function AdminBookings({ admin }) {
     const assignAction = assignStatus[booking.id] || {};
     const canConfirm = isPendingBooking(booking);
     const canCancel = !isCancelledBooking(booking);
-    const canAssignGuide = booking.guideIncluded && !isCancelledBooking(booking);
+    const canAssignGuide =
+      booking.guideIncluded && !isCancelledBooking(booking);
     const selectedGuideId =
       selectedGuideByBooking[booking.id] ?? booking.assignedGuide?.id ?? "";
     const guideOptionsList = guideOptions.guides || [];
@@ -484,7 +517,9 @@ export default function AdminBookings({ admin }) {
               <button
                 type="button"
                 onClick={() => handleConfirmBooking(booking.id)}
-                disabled={!booking.id || confirmAction.loading || assignAction.loading}
+                disabled={
+                  !booking.id || confirmAction.loading || assignAction.loading
+                }
                 className="rounded-xl bg-[#0b1d3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 {confirmAction.loading ? "Confirming..." : "Confirm Booking"}
@@ -510,7 +545,9 @@ export default function AdminBookings({ admin }) {
                 Assigned guide
               </p>
               <p className="mt-1 text-sm font-semibold text-slate-800">
-                {booking.assignedGuide ? getGuideLabel(booking.assignedGuide) : "Not assigned"}
+                {booking.assignedGuide
+                  ? getGuideLabel(booking.assignedGuide)
+                  : "Not assigned"}
               </p>
             </div>
             {canAssignGuide && canConfirm && (
@@ -536,7 +573,9 @@ export default function AdminBookings({ admin }) {
                 className="min-w-0 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 outline-none transition focus:border-gray-400 focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:bg-slate-100"
               >
                 <option value="">
-                  {guideOptions.loading ? "Loading guides..." : "Select available guide"}
+                  {guideOptions.loading
+                    ? "Loading guides..."
+                    : "Select available guide"}
                 </option>
                 {selectedAssignedGuideMissing && (
                   <option value={booking.assignedGuide.id}>
@@ -565,16 +604,21 @@ export default function AdminBookings({ admin }) {
             </div>
           )}
 
-          {canAssignGuide && guideOptions.loaded && !guideOptions.loading && guideOptionsList.length === 0 && (
-            <p className="mt-3 text-sm font-semibold text-slate-500">
-              No available guides for this booking.
-            </p>
-          )}
+          {canAssignGuide &&
+            guideOptions.loaded &&
+            !guideOptions.loading &&
+            guideOptionsList.length === 0 && (
+              <p className="mt-3 text-sm font-semibold text-slate-500">
+                No available guides for this booking.
+              </p>
+            )}
         </div>
 
         <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <dt className="text-xs font-semibold uppercase text-slate-400">Guests</dt>
+            <dt className="text-xs font-semibold uppercase text-slate-400">
+              Guests
+            </dt>
             <dd className="mt-1 text-sm font-semibold text-slate-800">
               {booking.guestCount}
             </dd>
@@ -588,13 +632,17 @@ export default function AdminBookings({ admin }) {
             </dd>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <dt className="text-xs font-semibold uppercase text-slate-400">Payment</dt>
+            <dt className="text-xs font-semibold uppercase text-slate-400">
+              Payment
+            </dt>
             <dd className="mt-1 text-sm font-semibold text-slate-800">
               {booking.paymentStatus}
             </dd>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <dt className="text-xs font-semibold uppercase text-slate-400">Status</dt>
+            <dt className="text-xs font-semibold uppercase text-slate-400">
+              Status
+            </dt>
             <dd
               className={`mt-1 text-sm font-semibold ${
                 isCancelledBooking(booking)
@@ -608,7 +656,9 @@ export default function AdminBookings({ admin }) {
             </dd>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <dt className="text-xs font-semibold uppercase text-slate-400">Created</dt>
+            <dt className="text-xs font-semibold uppercase text-slate-400">
+              Created
+            </dt>
             <dd className="mt-1 text-sm font-semibold text-slate-800">
               {booking.createdDate}
             </dd>
@@ -639,12 +689,13 @@ export default function AdminBookings({ admin }) {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Bookings</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Pending and confirmed customer bookings from the admin booking endpoint.
+              Pending and confirmed customer bookings from the admin booking
+              endpoint.
             </p>
           </div>
           <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
-            {pendingBookings.length} pending / {confirmedBookings.length} confirmed /{" "}
-            {cancelledBookings.length} cancelled
+            {pendingBookings.length} pending / {confirmedBookings.length}{" "}
+            confirmed / {cancelledBookings.length} cancelled
           </span>
         </div>
 

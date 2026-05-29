@@ -85,9 +85,14 @@ const createBooking = async (req, res, nxt) => {
     flightDetails = parseJsonField(flightDetails);
     tripSchedule = parseJsonField(tripSchedule);
     items = parseJsonField(items);
+    req.body.guests = guests;
+    req.body.items = items;
 
     if (!Array.isArray(guests)) {
       return res.status(400).json({ message: "Guests must be an array" });
+    }
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ message: "Items must be an array" });
     }
     const normalizedGuests = guests.map((guest) => ({
       ...guest,

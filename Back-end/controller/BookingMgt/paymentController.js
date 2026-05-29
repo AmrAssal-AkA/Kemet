@@ -44,6 +44,14 @@ const stripeCheckout = async (req, res, next) => {
       throw new Error("Booking not found for payment session");
     }
 
+    let items = req.body.items;
+    if (!Array.isArray(items)) {
+      items = [];
+    }
+    if (items.length === 0) {
+      throw new Error("Booking must have at least one item for checkout");
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -51,7 +59,7 @@ const stripeCheckout = async (req, res, next) => {
       success_url: `${backendUrl}/api/payments/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${frontendUrl}/api/payments/cancel?payment_fail=true`,
       metadata: { BookingId: bookingId, Email: email },
-      line_items: req.body.items.map((item) => ({
+      line_items: items.map((item) => ({
         price_data: {
           currency: booking.currency,
           product_data: {
