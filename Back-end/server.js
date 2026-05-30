@@ -48,31 +48,18 @@ app.use("/api/payments", paymentRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-  }),
-);
+app.use(cors({ origin: process.env.DOMAIN, credentials: true }));
 app.use(morganMiddleware);
 app.use(
   session({
     secret: "SessionSecretKey",
     resave: false,
     saveUninitialized: false,
-    cookie: {
+    cookie: { 
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       httpOnly: true,
-    },
+     },
   }),
 );
 app.use(
@@ -168,6 +155,7 @@ app.use("/api/newsletter", newsletterRoute);
 app.use("/api/offerings", offeringsRoute);
 app.use("/api/hiddenGem", hiddenGemRoute);
 
+
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");
   res.send("Welcome to the Travel Agency API");
@@ -175,9 +163,10 @@ app.get("/", (req, res) => {
 
 app.use(errorHandlerMW);
 
-if (process.env.NODE_ENV !== "production") {
-  app.listen(port, () => {
-    Logger.info(`Server is running on port ${port}`);
-  });
-}
+
+  if (process.env.NODE_ENV !== "production") {
+    app.listen(port, () => {
+      Logger.info(`Server is running on port ${port}`);
+    });
+  }
 module.exports = app;
