@@ -191,9 +191,9 @@ function DestinationPage(props) {
                   <p className="text-gray-500 text-sm leading-relaxed mb-8 grow">
                     {trip.description}
                   </p>
-                  <div className="mt-auto flex items-center justify-between font-bold text-lg transition-colors">
-                    <span>{trip.price}</span>
-                      <div className="ml-2 transform group-hover:translate-x-1 transition-transform text-[#FBBF24] group-hover:text-[#e5a913] w-6 h-6">
+                  <div className="mt-auto flex items-center justify-between font-bold text-lg transition-colors text-yellow-500">
+                    <span>{Number(trip.fullPrice || trip.finalPrice || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}  EGP</span>
+                      <div className="ml-2 transform group-hover:translate-x-1 transition-transform text-yellow-500 group-hover:text-black w-6 h-6">
                          <ArrowRightIcon />
                       </div>
                   </div>

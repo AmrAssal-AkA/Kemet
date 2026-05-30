@@ -228,9 +228,10 @@ const googleCallback = async (req, res, nxt) => {
       email: req.user.email,
       role: req.user.role,
     });
-
+    // Redirect to frontend with token and user info
+    const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
     res.redirect(
-      `http://localhost:3000/auth/auth?token=${accessToken}&user=${user}`,
+      `${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`,
     );
 
     const emailResult = await GoogleSignInTemplate(req.user.name);

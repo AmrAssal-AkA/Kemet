@@ -1,0 +1,9 @@
+{
+    "framework": "nextjs",
+    "buildCommand" : "npm run build",
+    "outputDirectory": ".next",
+    "devCommand": "npm run dev",
+    "env": {
+        "NEXT_PUBLIC_Backend_URL": "https://kemet-ochre.vercel.app"
+    }
+}

@@ -249,11 +249,11 @@ function Offerings(props) {
                       <div className="w-full h-px bg-gray-100 mb-4"></div>
                       <div className="flex items-end justify-between">
                         <div className="flex flex-col">
-                          <span className="font-bold text-lg text-[#FBBF24]">
+                          <span className="font-bold text-lg text-yellow-500">
                             {offer.price}
                           </span>
                         </div>
-                        <button className="text-[#111827] hover:text-[#FBBF24] transition-colors p-2 -mr-2">
+                        <button className="text-yellow-500 hover:text-black transition-colors p-2 -mr-2">
                           <ArrowRightIcon className="w-5 h-5" />
                         </button>
                       </div>
@@ -293,7 +293,7 @@ function Offerings(props) {
                   timeless temples of Luxor and Aswan drifting by your window.
                   From the golden hues of sunset over the water to the
                   star-filled desert sky at night, a Nile cruise is more than a
-                  vacation – it&apos;s magic brought to life.
+                  vacation it&apos;s magic brought to life.
                 </p>
               </div>
               <a
@@ -341,7 +341,7 @@ function Offerings(props) {
                               {offer.price}
                             </span>
                           </div>
-                          <button className="text-[#111827] hover:text-[#FBBF24] transition-colors p-2 -mr-2">
+                          <button className="text-yellow-500 hover:text-black transition-colors p-2 -mr-2">
                             <ArrowRightIcon className="w-5 h-5" />
                           </button>
                         </div>
