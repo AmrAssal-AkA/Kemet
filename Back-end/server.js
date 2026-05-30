@@ -39,7 +39,7 @@ const hiddenGemRoute = require("./routes/hiddenGemRoutes");
 const port = process.env.PORT || 8000;
 
 // Define allowed origins for CORS
-const allowedOrigins = process.env.DOMAIN || "http://localhost:3000"
+const allowedOrigins = (process.env.DOMAIN || "http://localhost:3000").split(",").map(o => o.trim());
 
 // Connect to databas
 connectDB();

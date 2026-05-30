@@ -80,14 +80,20 @@ const register = async (req, res, nxt) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-
     const customEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if(!customEmailRegex.test(email)){
-      return res.status(400).json({ message: "Please provide a valid email address." });
+    if (!customEmailRegex.test(email)) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a valid email address." });
     }
     const customPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if(!customPasswordRegex.test(password)){
-      return res.status(400).json({ message: "Password must contain at least one uppercase letter, one digit, and be at least 8 characters long." });
+    if (!customPasswordRegex.test(password)) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "Password must contain at least one uppercase letter, one digit, and be at least 8 characters long.",
+        });
     }
 
     const Newuser = await User.create({
@@ -109,7 +115,8 @@ const register = async (req, res, nxt) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 15 * 60 * 1000, 
+      maxAge: 15 * 60 * 1000,
+      path: "/",
     });
     // Set refresh token in HTTP-only cookie
     res.cookie("x-refresh-token", refreshToken, {
@@ -179,6 +186,7 @@ const login = async (req, res, nxt) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 15 * 60 * 1000,
+      path: "/",
     });
 
     res.cookie("x-refresh-token", refreshToken, {
@@ -186,6 +194,7 @@ const login = async (req, res, nxt) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
     res.status(200).json({
@@ -209,11 +218,14 @@ const googleCallback = async (req, res, nxt) => {
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
+
+    // Set cookies with proper path and domain settings for Vercel
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 15 * 60 * 1000,
+      path: "/",
     });
 
     res.cookie("x-refresh-token", refreshToken, {
@@ -221,6 +233,7 @@ const googleCallback = async (req, res, nxt) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
     const user = JSON.stringify({
@@ -228,17 +241,23 @@ const googleCallback = async (req, res, nxt) => {
       email: req.user.email,
       role: req.user.role,
     });
+
     // Redirect to frontend with token and user info
     const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
-    res.redirect(
-      `${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`,
-    );
+    res.redirect(`${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`);
 
-    const emailResult = await GoogleSignInTemplate(req.user.name);
-    await sendEmail({
-      to: req.user.email,
-      subject: "Kemet Travel - Google Sign-In Successful",
-      html: emailResult,
+    // Send welcome email asynchronously (don't wait)
+    setImmediate(async () => {
+      try {
+        const emailResult = await GoogleSignInTemplate(req.user.name);
+        await sendEmail({
+          to: req.user.email,
+          subject: "Kemet Travel - Google Sign-In Successful",
+          html: emailResult,
+        });
+      } catch (emailErr) {
+        console.error("Email sending failed:", emailErr);
+      }
     });
   } catch (err) {
     nxt(err);
@@ -246,7 +265,7 @@ const googleCallback = async (req, res, nxt) => {
 };
 
 // Email Verification
-const verifyEmail = async (req, res, nxt  ) => {
+const verifyEmail = async (req, res, nxt) => {
   try {
     const { token } = req.query;
     if (!token) {
@@ -256,16 +275,16 @@ const verifyEmail = async (req, res, nxt  ) => {
     }
 
     const user = await User.findOneAndUpdate(
-      { 
-        emailVerificationToken: token, 
-        emailVerificationTokenExpires: { $gt: Date.now() } 
+      {
+        emailVerificationToken: token,
+        emailVerificationTokenExpires: { $gt: Date.now() },
       },
-      { 
-        isVerified: true, 
-        emailVerificationToken: undefined, 
-        emailVerificationTokenExpires: undefined 
+      {
+        isVerified: true,
+        emailVerificationToken: undefined,
+        emailVerificationTokenExpires: undefined,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!user) {
@@ -284,7 +303,7 @@ const verifyEmail = async (req, res, nxt  ) => {
   }
 };
 
-const refresh = async (req, res, nxt  ) => {
+const refresh = async (req, res, nxt) => {
   const refreshToken = req.cookies["x-refresh-token"];
 
   if (!refreshToken) {
@@ -300,7 +319,6 @@ const refresh = async (req, res, nxt  ) => {
           return res.status(401).json({ message: "Invalid refresh token" });
         }
         await RefreshToken.deleteOne({ token: refreshToken });
-
 
         const user = await User.findOne({ userId: decoded.userId });
         if (!user) {

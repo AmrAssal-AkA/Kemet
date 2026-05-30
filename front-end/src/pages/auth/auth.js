@@ -38,13 +38,29 @@ export default function Auth() {
 
     if (!tokenValue || !userValue) return;
 
-    try {
-      const parsedUser = parseGoogleUser(userValue);
-      router.replace(getRedirectPath(parsedUser));
-    } catch (error) {
-      console.error("Invalid Google callback user payload:", error);
-      router.replace("/auth/auth");
-    }
+    (async () => {
+      try {
+        const parsedUser = parseGoogleUser(userValue);
+        
+        try {
+          await fetch("/api/auth/verify-session", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        } catch (verifyError) {
+          console.warn("Session verification warning:", verifyError.message);
+          // Continue anyway - the cookies might still be set
+        }
+
+        await router.replace(getRedirectPath(parsedUser));
+      } catch (error) {
+        console.error("Invalid Google callback user payload:", error);
+        router.replace("/auth/auth");
+      }
+    })();
   }, [router, router.isReady, router.query.token, router.query.user]);
 
   return (
