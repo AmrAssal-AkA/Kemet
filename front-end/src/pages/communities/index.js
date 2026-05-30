@@ -103,7 +103,7 @@ function PostCard({ post, index, onLike, liked }) {
         whileHover={{y:-4}} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer flex flex-col h-full">
         <div className="h-48 overflow-hidden relative shrink-0">
           <img src={post.img} alt={post.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
           <span className={`absolute top-3 left-3 ${typeColor[post.type]} text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full`}>{post.type}</span>
           <span className="absolute bottom-2.5 right-3 text-white/80 text-xs">{post.readTime}</span>
         </div>
@@ -191,7 +191,7 @@ function Sidebar() {
 function QASection() {
   const [open, setOpen] = useState(null);
   return (
-    <section className="px-4 md:px-20 pb-12 max-w-[1200px] mx-auto">
+    <section className="px-4 md:px-20 pb-12 max-w-300 mx-auto">
       <div className="rounded-3xl p-6 md:p-8" style={{background:"linear-gradient(135deg,#06122e 0%,#0b1f46 50%,#102554 100%)"}}>
         <div className="flex items-start justify-between gap-6 flex-wrap mb-7">
           <div>
@@ -278,7 +278,7 @@ export default function Community() {
         </section>
 
         {/* ── FEED + SIDEBAR ── */}
-        <section id="community-feed" className="px-4 md:px-20 py-10 md:py-12 max-w-[1200px] mx-auto">
+        <section id="community-feed" className="px-4 md:px-20 py-10 md:py-12 max-w-300 mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-8 gap-2">
             <div>
               <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">Community Stories</span>
@@ -300,7 +300,7 @@ export default function Community() {
         </section>
 
         {/* ── TIPS ── */}
-        <section className="px-4 md:px-20 pb-12 max-w-[1200px] mx-auto">
+        <section className="px-4 md:px-20 pb-12 max-w-300 mx-auto">
           <div className="bg-yellow-50 rounded-3xl p-6 md:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900" style={SERIF}>Essential Egypt Travel Tips</h2>
@@ -323,7 +323,7 @@ export default function Community() {
         </section>
 
         {/* ── PHOTO WALL ── */}
-        <section className="px-4 md:px-20 pb-12 max-w-[1200px] mx-auto">
+        <section className="px-4 md:px-20 pb-12 max-w-300 mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
             <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900" style={SERIF}>Community Photo Wall</h2>
             <Link href="/hidden-gems" className="text-sm text-gray-400 border-b border-gray-200 hover:text-yellow-600 hover:border-yellow-400 transition-colors self-start sm:self-auto">Explore hidden gems →</Link>
@@ -334,7 +334,7 @@ export default function Community() {
               <Link key={i} href={photo.href} style={{gridColumn:photo.wide?"span 2":undefined,gridRow:photo.wide?"span 2":undefined}}>
                 <motion.div whileHover={{scale:1.02}} className="relative rounded-2xl overflow-hidden h-full cursor-pointer">
                   <img src={photo.img} alt={photo.label} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
                   <span className="absolute bottom-0 left-0 right-0 text-white text-xs font-semibold px-3 py-2 whitespace-nowrap overflow-hidden text-ellipsis block">{photo.label}</span>
                 </motion.div>
               </Link>
@@ -346,7 +346,7 @@ export default function Community() {
               <Link key={i} href={photo.href} className={i===0 ? "col-span-2":""}>
                 <motion.div whileHover={{scale:1.02}} className="relative rounded-2xl overflow-hidden h-full cursor-pointer">
                   <img src={photo.img} alt={photo.label} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
                   <span className="absolute bottom-0 left-0 right-0 text-white text-xs font-semibold px-3 py-2 whitespace-nowrap overflow-hidden text-ellipsis block">{photo.label}</span>
                 </motion.div>
               </Link>
@@ -358,7 +358,7 @@ export default function Community() {
         <QASection />
 
         {/* ── SIGN IN CTA ── */}
-        <section className="px-4 md:px-20 pb-16 max-w-[1200px] mx-auto">
+        <section className="px-4 md:px-20 pb-16 max-w-300 mx-auto">
           <div className="rounded-3xl text-center px-5 py-10 md:px-6 md:py-14 relative overflow-hidden"
             style={{background:"linear-gradient(135deg,#FFCE2A 0%,#f5c000 50%,#e8a800 100%)"}}>
             <div className="absolute left-0 top-0 w-64 h-64 rounded-full pointer-events-none" style={{background:"rgba(255,255,255,0.12)",transform:"translate(-80px,-80px)"}} />

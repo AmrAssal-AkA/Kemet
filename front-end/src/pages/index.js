@@ -453,12 +453,12 @@ export default function Home({ trips, hiddenGems }) {
                     </div>
                     <div className="p-4 flex flex-col flex-1">
                       <span className="inline-block mb-2 bg-yellow-50 text-yellow-700 text-xs font-bold px-2.5 py-0.5 rounded-full border border-yellow-200">
-                        From {pkg.basePrice}
+                        From{Number(pkg.fullPrice || pkg.finalPrice || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}  EGP
                       </span>
                       <h4 className="font-bold text-sm text-gray-900 mb-1 leading-snug">{pkg.name}</h4>
                       <p className="text-xs text-gray-400 mb-3 leading-relaxed flex-1">{pkg.description}</p>
                       <div className="flex items-center justify-between mt-auto">
-                        <span className="text-yellow-500 font-extrabold text-base">{pkg.price}</span>
+                        <span className="text-yellow-500 font-extrabold text-base">{Number(pkg.fullPrice || pkg.finalPrice || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} EGP</span>
                         <span className="text-xs font-semibold text-gray-500 border border-gray-200 rounded-full px-3 py-1 hover:border-yellow-400 hover:text-yellow-600 transition-colors">
                           Book →
                         </span>

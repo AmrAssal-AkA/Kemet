@@ -131,7 +131,7 @@ function DetailCard({ type, label, value, tone = "navy", action = null }) {
         <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#0b3a78]">
           {label}
         </p>
-        <p className={`mt-1.5 break-words text-lg font-black sm:text-xl ${valueClass}`}>
+        <p className={`mt-1.5 wrap-break-word text-lg font-black sm:text-xl ${valueClass}`}>
           {value}
         </p>
       </div>

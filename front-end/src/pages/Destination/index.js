@@ -292,7 +292,7 @@ export default DestinationPage;
 export async function getStaticProps() {
   
   try{
-    const response = await axios("http://localhost:8000/api/Trip/");
+    const response = await axios.get("https://kemet-ochre.vercel.app/api/Trip/");
 
     return {
       props: {
