@@ -6,7 +6,7 @@ const {
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
-const frontendUrl = process.env.Domain || "http://localhost:3000";
+const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
 
 function getBookingIdFromSession(session) {
   return session?.metadata?.BookingId || session?.metadata?.bookingId;
