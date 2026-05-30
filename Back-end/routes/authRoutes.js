@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controller/auth/authController");
-const { generateResetToken, resetPassword } = require("../controller/auth/resetpassword");
+const {
+  generateResetToken,
+  resetPassword,
+} = require("../controller/auth/resetpassword");
 const passport = require("passport");
 const authenticate = require("../middleware/authenticate");
 const authorize = require("../middleware/authorize");
@@ -27,13 +30,11 @@ router.get(
 router.post("/login", authController.login);
 router.post("/refresh", authController.refresh);
 
-
 router.post("/logout", authenticate, async (req, res) => {
-  const refreshToken  = req.cookies["x-refresh-token"];
+  const refreshToken = req.cookies["x-refresh-token"];
   res.clearCookie("x-auth-token");
   res.clearCookie("x-refresh-token");
   res.json({ message: "Logged out successfully" });
 });
-
 
 module.exports = router;

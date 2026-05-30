@@ -38,17 +38,16 @@ const offeringsRoute = require("./routes/offeringsRoutes");
 const hiddenGemRoute = require("./routes/hiddenGemRoutes");
 const port = process.env.PORT || 8000;
 
-// Define allowed origins for CORS
-const allowedOrigins = (process.env.DOMAIN || "http://localhost:3000").split(",").map(o => o.trim());
+
 
 // Connect to databas
 connectDB();
 // Middleware
+app.use(cors({ origin: process.env.DOMAIN, credentials: true }));
 app.use("/api/payments", paymentRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({ origin: process.env.DOMAIN, credentials: true }));
 app.use(morganMiddleware);
 app.use(
   session({

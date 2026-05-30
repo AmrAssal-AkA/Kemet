@@ -219,7 +219,6 @@ const googleCallback = async (req, res, nxt) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    // Set cookies with proper path and domain settings for Vercel
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -242,23 +241,17 @@ const googleCallback = async (req, res, nxt) => {
       role: req.user.role,
     });
 
-    // Redirect to frontend with token and user info
     const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
-    res.redirect(`${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`);
-
-    // Send welcome email asynchronously (don't wait)
-    setImmediate(async () => {
-      try {
-        const emailResult = await GoogleSignInTemplate(req.user.name);
-        await sendEmail({
-          to: req.user.email,
-          subject: "Kemet Travel - Google Sign-In Successful",
-          html: emailResult,
-        });
-      } catch (emailErr) {
-        console.error("Email sending failed:", emailErr);
-      }
+    res.redirect(
+      `${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`,
+    );
+    const emailResult = await GoogleSignInTemplate(req.user.name);
+    await sendEmail({
+      to: req.user.email,
+      subject: "Kemet Travel - Google Sign-In Successful",
+      html: emailResult,
     });
+
   } catch (err) {
     nxt(err);
   }
