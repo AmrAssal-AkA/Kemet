@@ -36,15 +36,15 @@ const data = {
     },
   ],
   tips: [
-    { img: "/images/luxor/tip1.jpg", title: "Start Early",     text: "Temples open at 6AM. Be there. By 9AM the heat and crowds make exploration hard." },
-    { img: "/images/luxor/tip2.jpg", title: "East vs West",    text: "East bank is temples of the living. West bank is tombs of the dead. Split your two days accordingly." },
-    { img: "/images/luxor/tip3.jpg", title: "Balloon Booking", text: "Book balloons 2–3 days ahead in peak season. Reputable operators include Magic Horizon and Sindbad." },
-    { img: "/images/luxor/tip4.jpg", title: "Getting Around",  text: "Luxury Nile Cruise in the west bank — it's flat, quiet, and one of the best cycling experiences in Egypt." },
+    { img: "/images/Luxor/tip1.jpg", title: "Start Early",     text: "Temples open at 6AM. Be there. By 9AM the heat and crowds make exploration hard." },
+    { img: "/images/Luxor/tip2.jpg", title: "East vs West",    text: "East bank is temples of the living. West bank is tombs of the dead. Split your two days accordingly." },
+    { img: "/images/Luxor/tip3.jpg", title: "Balloon Booking", text: "Book balloons 2–3 days ahead in peak season. Reputable operators include Magic Horizon and Sindbad." },
+    { img: "/images/Luxor/tip4.jpg", title: "Getting Around",  text: "Luxury Nile Cruise in the west bank — it's flat, quiet, and one of the best cycling experiences in Egypt." },
   ],
   gems: [
-    { img: "/images/luxor/gem1.jpg", tag: "Secret Spot",  location: "West Bank, El Qarna",       title: "Bedouin lodge luxor",    desc: "A place so magical that words can’t do it justice — a hidden Bedouin retreat in Luxor where time slows down and every sunset feels unreal.." },
-    { img: "/images/luxor/gem2.jpg", tag: "Night Magic",  location: "East Bank",        title: "Karnak Sound & Light",   desc: "After the crowds leave, the temple is lit in gold and the ancient stories come alive." },
-    { img: "/images/luxor/gem3.jpg", tag: "Local Life",   location: "Banana Island",    title: "Felucca to Banana Island", desc: "A 15-minute sail to a tiny island of banana palms. The locals here live exactly as they did 100 years ago." },
+    { img: "/images/Luxor/gem1.jpg", tag: "Secret Spot",  location: "West Bank, El Qarna",       title: "Bedouin lodge luxor",    desc: "A place so magical that words can’t do it justice — a hidden Bedouin retreat in Luxor where time slows down and every sunset feels unreal.." },
+    { img: "/images/Luxor/gem2.jpg", tag: "Night Magic",  location: "East Bank",        title: "Karnak Sound & Light",   desc: "After the crowds leave, the temple is lit in gold and the ancient stories come alive." },
+    { img: "/images/Luxor/gem3.jpg", tag: "Local Life",   location: "Banana Island",    title: "Felucca to Banana Island", desc: "A 15-minute sail to a tiny island of banana palms. The locals here live exactly as they did 100 years ago." },
   ],
 };
 

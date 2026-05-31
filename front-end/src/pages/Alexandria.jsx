@@ -41,7 +41,7 @@ const data = {
     },
   ],
   tips: [
-    { img: "/images/alex/tip1.jpg", title: "Best Season",      text: "winter (Dec–Feb) is the best season in Alexandria, Egypt. The weather is mild and refreshing, with cool sea breezes and comfortable temperatures perfect for walking along the Corniche." },
+    { img: "/images/alex/tip1.jpg", title: "Best Season",      text: "winter (Dec Feb) is the best season in Alexandria, Egypt. The weather is mild and refreshing, with cool sea breezes and comfortable temperatures perfect for walking along the Corniche." },
     { img: "/images/alex/tip2.jpg", title: "Getting Around",   text: "Trams are the local secret — cheap, slow, and full of character. Grab a window seat." },
     { img: "/images/alex/tip3.jpg", title: "What to Eat",      text: "Ful medames at sunrise, fresh calamari at sunset. Ask for the fish market near the port." },
     { img: "/images/alex/tip4.jpg", title: "Hidden Tip",       text: "The rooftop of Sofitel Cecil Hotel has one of the best sea views in the city — free to visit for a coffee." },

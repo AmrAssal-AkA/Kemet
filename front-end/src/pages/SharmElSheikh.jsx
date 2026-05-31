@@ -38,7 +38,7 @@ const data = {
   tips: [
     { img: "/images/sharm/tip1.jpg", title: "Dive Level",     text: "Ras Mohammed is suitable for snorkelers too. You don't need to dive to see remarkable sea life." },
     { img: "/images/sharm/tip2.jpg", title: "Sinai Hike",     text: "Start at midnight to reach the summit for sunrise. Bring layers — the top is cold before dawn." },
-    { img: "/images/sharm/tip3.jpg", title: "Best Months",    text: "Oct–Apr for diving clarity. Water is warm year-round (22–28°C). August is hot but very quiet." },
+    { img: "/images/sharm/tip3.jpg", title: "Best Months",    text: "Oct Apr for diving clarity. Water is warm year-round (22–28°C). August is hot but very quiet." },
     { img: "/images/sharm/tip4.jpg", title: "Beyond Naama",   text: "Naama Bay is the tourist zone. Take a bus to Dahab for real Red Sea life — better food, better vibes." },
   ],
   gems: [
