@@ -248,7 +248,7 @@ const googleCallback = async (req, res, nxt) => {
     });
 
     const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
-    res.redirect(`${frontendUrl}/auth/auth`);
+    res.redirect(`${frontendUrl}/auth/auth?google=true`);
 
   } catch (err) {
     nxt(err);
