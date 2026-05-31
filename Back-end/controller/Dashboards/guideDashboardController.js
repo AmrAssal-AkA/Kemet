@@ -24,6 +24,13 @@ const formatTripSchedule = (tripSchedule) => {
     return [dateText, timeText].filter(Boolean).join(" ");
 };
 
+const formatTripDate = (tripDate) => {
+    if (!tripDate) return undefined;
+
+    const date = new Date(tripDate);
+    return Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 10);
+};
+
 const setGuideSchedule = async (req, res) => {
     try {
         const {dayofweek, startTime, endTime} = req.body;
@@ -76,11 +83,13 @@ const guideRequiredTrips = async (req, res, nxt) => {
         res.json({
             bookings: bookings.map((booking) => {
                 const bookingObject = booking.toObject();
+                const tripDateText = formatTripDate(bookingObject.tripDate);
                 const scheduleText = formatTripSchedule(bookingObject.tripSchedule);
+                const displayDate = tripDateText || scheduleText;
 
                 return {
                     ...bookingObject,
-                    ...(scheduleText ? { date: scheduleText, tripDate: scheduleText } : {}),
+                    ...(displayDate ? { date: displayDate, tripDate: displayDate } : {}),
                 };
             }),
         });

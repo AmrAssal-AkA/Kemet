@@ -13,7 +13,16 @@ module.exports = (req, res, nxt) => {
     "MUH",
     "SPX",
   ];
+  const origin = String(req.body.origin || "").trim().toUpperCase();
   const { destination } = req.body;
+
+  if (!/^[A-Z]{3}$/.test(origin)) {
+    return res.status(400).json({
+      error: "Invalid origin. Please enter a valid 3-letter IATA airport code.",
+    });
+  }
+
+  req.body.origin = origin;
 
   if (flightDestination.includes(destination)) {
     nxt();

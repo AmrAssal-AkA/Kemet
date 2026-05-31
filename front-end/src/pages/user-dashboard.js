@@ -4,6 +4,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { userDashboardMenuItems } from "@/config/dashboardMenus";
 import { getBookedTrips, getLikedBlogs } from "@/services/userServices";
 import { getUserRole } from "@/utils/authSession";
 
@@ -270,13 +271,13 @@ function SectionHeading({ eyebrow, title, subtitle, light = false }) {
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 
 function Sidebar({ activeTab, setActiveTab, onLogout }) {
-  const nav = [
-    { key: "overview", icon: "⬡", label: "Overview" },
-    { key: "trips", icon: "🗺️", label: "My Trips" },
-    { key: "liked", icon: "♥", label: "Liked Articles" },
-    { key: "community", icon: "✦", label: "Community" },
-    { key: "settings", icon: "⚙", label: "Settings" },
-  ];
+  const router = useRouter();
+  const nav = userDashboardMenuItems;
+  const handleTabClick = (key, href) => {
+    setActiveTab(key);
+    router.push(href, undefined, { shallow: true, scroll: false });
+  };
+
   return (
     <aside
       className="hidden lg:flex flex-col gap-1 w-56 shrink-0 sticky top-6 self-start"
@@ -289,10 +290,10 @@ function Sidebar({ activeTab, setActiveTab, onLogout }) {
           border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {nav.map(({ key, icon, label }) => (
+        {nav.map(({ key, icon, label, href }) => (
           <button
             key={key}
-            onClick={() => setActiveTab(key)}
+            onClick={() => handleTabClick(key, href)}
             className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 text-sm font-medium transition-all duration-200"
             style={{
               background: activeTab === key ? "rgba(255,206,42,0.15)" : "transparent",

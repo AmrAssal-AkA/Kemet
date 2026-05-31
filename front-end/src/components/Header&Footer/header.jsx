@@ -3,8 +3,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { FaChevronDown, FaSearch, FaTimes, FaUserCircle } from "react-icons/fa";
+import { userDashboardMenuItems } from "@/config/dashboardMenus";
 import { useAuth } from "@/context/AuthContext";
 import { searchTrips } from "@/services/searchServices";
+import { getUserRole } from "@/utils/authSession";
 
 const headerStyles = `
   .nav-link {
@@ -128,6 +130,28 @@ function getTripPrice(trip) {
   const value = trip?.finalPrice ?? trip?.price ?? trip?.basePrice;
   if (value === undefined || value === null || value === "") return "";
   return `EGP ${Number(value).toLocaleString()}`;
+}
+
+function DashboardMenuIcon({ icon }) {
+  if (!icon) return null;
+  if (typeof icon === "string") {
+    return <span className="w-4 text-center text-xs text-slate-400">{icon}</span>;
+  }
+
+  const Icon = icon;
+  return <Icon className="text-sm text-slate-400" />;
+}
+
+function getHeaderDashboardMenuItems(role) {
+  if (role === "admin") {
+    return [{ label: "Admin Dashboard", href: "/admin" }];
+  }
+
+  if (role === "guide" || role === "localguide") {
+    return [{ label: "Guide Dashboard", href: "/guide/dashboard" }];
+  }
+
+  return userDashboardMenuItems;
 }
 
 function Header() {
@@ -261,6 +285,8 @@ function Header() {
   const isActive = (link) =>
     link.match ? link.match.includes(pathname) : pathname === link.href;
   const homeHref = user ? "/user-dashboard" : "/";
+  const userRole = admin ? "admin" : getUserRole(user);
+  const dashboardMenuItems = user ? getHeaderDashboardMenuItems(userRole) : [];
 
   return (
     <>
@@ -329,33 +355,18 @@ function Header() {
                 </button>
 
                 {menuOpen && (
-                  <div className="dropdown-menu absolute right-0 z-50 mt-2 w-48 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
-                    {admin ? (
+                  <div className="dropdown-menu absolute right-0 z-50 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl">
+                    {dashboardMenuItems.map((item) => (
                       <Link
-                        href="/admin"
+                        key={item.href}
+                        href={item.href}
                         className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                         onClick={() => setMenuOpen(false)}
                       >
-                        Admin Panel
+                        <DashboardMenuIcon icon={item.icon} />
+                        {item.label}
                       </Link>
-                    ) : (
-                      <>
-                        <Link
-                          href="/user-dashboard"
-                          className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          My Account
-                        </Link>
-                        <Link
-                          href="/user-dashboard?tab=settings"
-                          className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          Account Setting
-                        </Link>
-                      </>
-                    )}
+                    ))}
                     <div className="my-1 border-t border-slate-100" />
                     <button
                       type="button"
@@ -563,19 +574,13 @@ function Header() {
                   </Link>
                 ) : (
                   <>
-                    {admin ? (
-                      <Link onClick={() => setOpen(false)} href="/admin">
+                    {dashboardMenuItems.map((item) => (
+                      <Link key={item.href} onClick={() => setOpen(false)} href={item.href}>
                         <button className="w-full rounded-full border border-slate-200 py-2.5 text-sm font-medium text-slate-700">
-                          Admin Panel
+                          {item.label}
                         </button>
                       </Link>
-                    ) : (
-                      <Link onClick={() => setOpen(false)} href="/user-dashboard?tab=settings">
-                        <button className="w-full rounded-full border border-slate-200 py-2.5 text-sm font-medium text-slate-700">
-                          Account Setting
-                        </button>
-                      </Link>
-                    )}
+                    ))}
                     <button
                       type="button"
                       onClick={handleLogout}

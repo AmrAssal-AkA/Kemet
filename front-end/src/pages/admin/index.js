@@ -117,6 +117,7 @@ function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
             <th className="sticky top-0 bg-white pb-3 pr-4">Booking ID</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Customer Email</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Trip title / destination</th>
+            <th className="sticky top-0 bg-white pb-3 pr-4">Trip Date</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Guests</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Total Price</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Payment Status</th>
@@ -127,14 +128,14 @@ function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
         <tbody>
           {isLoading && recentBookings.length === 0 && (
             <tr>
-              <td className="py-5 text-sm text-slate-500" colSpan={8}>
+              <td className="py-5 text-sm text-slate-500" colSpan={9}>
                 Loading recent bookings...
               </td>
             </tr>
           )}
           {!isLoading && error && (
             <tr>
-              <td className="py-5 text-sm text-red-600" colSpan={8}>
+              <td className="py-5 text-sm text-red-600" colSpan={9}>
                 {error}
               </td>
             </tr>
@@ -150,6 +151,7 @@ function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
                   {booking.customerEmail}
                 </td>
                 <td className="py-4 pr-4 text-slate-600">{booking.tripTitle}</td>
+                <td className="py-4 pr-4 text-slate-600">{booking.tripDate}</td>
                 <td className="py-4 pr-4 text-slate-600">{booking.guests}</td>
                 <td className="py-4 pr-4 font-semibold text-slate-700">
                   {booking.totalPrice}
@@ -167,7 +169,7 @@ function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
             ))}
           {!isLoading && !error && recentBookings.length === 0 && (
             <tr>
-              <td className="py-5 text-sm text-slate-500" colSpan={8}>
+              <td className="py-5 text-sm text-slate-500" colSpan={9}>
                 No bookings yet.
               </td>
             </tr>
@@ -281,6 +283,14 @@ function getBookingDate(booking) {
   return booking.createdAt || booking.created || booking.created_at || booking.date || "";
 }
 
+function getTripDate(booking) {
+  return getFirstValue([
+    booking.tripDate,
+    booking.trip_date,
+    booking.tripSchedule?.date,
+  ]);
+}
+
 function getCustomerEmail(booking) {
   const user = booking.user || {};
   const customer = booking.customer || {};
@@ -361,6 +371,7 @@ function mapBooking(booking, index) {
     id: getBookingId(booking),
     customerEmail: getCustomerEmail(booking),
     tripTitle: getTripTitle(booking),
+    tripDate: formatDate(getTripDate(booking)),
     guests: getGuestCount(booking),
     totalPrice: getTotalPrice(booking),
     paymentStatus: getPaymentStatus(booking),

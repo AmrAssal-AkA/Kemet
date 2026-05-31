@@ -96,6 +96,19 @@ function formatDate(value) {
   return date.toLocaleString();
 }
 
+function formatTripDate(value) {
+  if (!value) return "N/A";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function formatTotalPrice(amount, currency) {
   if (amount === null || amount === undefined || amount === "") return "N/A";
 
@@ -191,6 +204,14 @@ function getGuestCount(booking) {
   return "Not provided";
 }
 
+function getTripDate(booking) {
+  return getFirstValue([
+    booking.tripDate,
+    booking.trip_date,
+    booking.tripSchedule?.date,
+  ]);
+}
+
 function mapBooking(booking) {
   const customer = booking.user || booking.customer || booking.userId || {};
 
@@ -209,6 +230,7 @@ function mapBooking(booking) {
       customer?.email ||
       "",
     tripName: getTripTitle(booking),
+    tripDate: formatTripDate(getTripDate(booking)),
     guestCount: getGuestCount(booking),
     totalPrice: formatTotalPrice(
       booking.totalPrice ?? booking.price ?? booking.amount,
@@ -615,6 +637,14 @@ export default function AdminBookings({ admin }) {
         </div>
 
         <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+            <dt className="text-xs font-semibold uppercase text-slate-400">
+              Trip Date
+            </dt>
+            <dd className="mt-1 text-sm font-semibold text-slate-800">
+              {booking.tripDate}
+            </dd>
+          </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Guests

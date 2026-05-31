@@ -48,6 +48,37 @@ function buildTripSchedule(value) {
   };
 }
 
+function parseTripDate(value) {
+  if (value === undefined || value === null || value === "") {
+    return { error: "Trip Date is required" };
+  }
+
+  const textValue = String(value).trim();
+  const dateOnlyMatch = textValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const date = dateOnlyMatch
+    ? new Date(
+        Number(dateOnlyMatch[1]),
+        Number(dateOnlyMatch[2]) - 1,
+        Number(dateOnlyMatch[3]),
+      )
+    : new Date(textValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return { error: "Trip Date must be a valid date" };
+  }
+
+  const selectedDate = new Date(date);
+  const today = new Date();
+  selectedDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  if (selectedDate < today) {
+    return { error: "Trip Date cannot be in the past" };
+  }
+
+  return { date };
+}
+
 function parseBoolean(value) {
   if (typeof value === "boolean") return value;
   if (typeof value === "string") return value.toLowerCase() === "true";
@@ -71,8 +102,8 @@ const createBooking = async (req, res, nxt) => {
       hotel,
       trip,
       tripDetails,
-      flightDetails,
       tripSchedule,
+      tripDate,
       items,
       passportNumber,
       totalPrice,
@@ -85,7 +116,6 @@ const createBooking = async (req, res, nxt) => {
     hotel = parseJsonField(hotel);
     trip = parseJsonField(trip);
     tripDetails = parseJsonField(tripDetails);
-    flightDetails = parseJsonField(flightDetails);
     tripSchedule = parseJsonField(tripSchedule);
     items = parseJsonField(items);
     req.body.guests = guests;
@@ -97,6 +127,12 @@ const createBooking = async (req, res, nxt) => {
     if (!Array.isArray(items)) {
       return res.status(400).json({ message: "Items must be an array" });
     }
+
+    const parsedTripDate = parseTripDate(tripDate);
+    if (parsedTripDate.error) {
+      return res.status(400).json({ message: parsedTripDate.error });
+    }
+
     const normalizedGuests = guests.map((guest) => ({
       ...guest,
       name:
@@ -189,6 +225,8 @@ const createBooking = async (req, res, nxt) => {
     const hasTrip = Array.isArray(trip) ? trip.length > 0 : Boolean(trip);
     const hasFlight = Boolean(flight);
     const hasHotel = Boolean(hotel);
+    const normalizedTripSchedule = buildTripSchedule(tripSchedule);
+    const normalizedGuideIncluded = parseBoolean(guideIncluded);
 
     const bookingDetails = {
       bookingType: hasTrip
@@ -209,9 +247,10 @@ const createBooking = async (req, res, nxt) => {
       hotel,
       trip,
       tripDetails,
-      tripSchedule,
-      guideIncluded,
-      guideFee: Number.isFinite(guideFee) && guideFee > 0 ? guideFee : 0,
+      tripDate: parsedTripDate.date,
+      tripSchedule: normalizedTripSchedule,
+      guideIncluded: normalizedGuideIncluded,
+      guideFee: Number.isFinite(Number(guideFee)) && Number(guideFee) > 0 ? Number(guideFee) : 0,
       PassportNumber: passportNumber,
       totalPrice,
       currency,
@@ -241,6 +280,7 @@ const createBooking = async (req, res, nxt) => {
       message: "Booking created successfully",
       status: "success",
       bookingId: newBooking._id,
+      tripDate: newBooking.tripDate,
       checkoutUrl: session.url,
     });
   } catch (err) {

@@ -22,6 +22,18 @@ const airportOptions = [
   { label: "Marsa Matruh", value: "MUH" },
   { label: "Sphinx/Giza", value: "SPX" },
 ];
+const originAirportSuggestions = [
+  { label: "New York JFK", value: "JFK" },
+  { label: "London Heathrow", value: "LHR" },
+  { label: "Paris Charles de Gaulle", value: "CDG" },
+  { label: "Dubai", value: "DXB" },
+  { label: "Doha", value: "DOH" },
+  { label: "Istanbul", value: "IST" },
+  { label: "Frankfurt", value: "FRA" },
+  { label: "Amsterdam", value: "AMS" },
+  { label: "Riyadh", value: "RUH" },
+  { label: "Jeddah", value: "JED" },
+];
 const cityOptions = [
   { label: "Cairo", value: "CAI" },
   { label: "Alexandria", value: "ALY" },
@@ -206,6 +218,35 @@ function formatMoney(value, currency = "EGP") {
   return `${currency} ${Number(value || 0).toLocaleString()}`;
 }
 
+function getTodayDateInputValue() {
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  return today.toISOString().slice(0, 10);
+}
+
+function isPastDateInput(value) {
+  if (!value) return false;
+
+  const selectedDate = new Date(`${value}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selectedDate < today;
+}
+
+function formatTripDate(value) {
+  if (!value) return "";
+
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function hasPassportDetails(person) {
   return Boolean(
     person.nationality &&
@@ -241,6 +282,31 @@ function TextInput({ name, type = "text", value, onChange, placeholder, min, req
   );
 }
 
+function AirportCodeInput({ name, value, onChange, suggestions }) {
+  return (
+    <>
+      <input
+        name={name}
+        type="text"
+        value={value}
+        onChange={onChange}
+        list={`${name}-airport-suggestions`}
+        inputMode="text"
+        maxLength={3}
+        placeholder="LHR"
+        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm uppercase outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100"
+      />
+      <datalist id={`${name}-airport-suggestions`}>
+        {suggestions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </datalist>
+    </>
+  );
+}
+
 function SelectInput({ name, value, onChange, options }) {
   return (
     <select
@@ -256,6 +322,17 @@ function SelectInput({ name, value, onChange, options }) {
       ))}
     </select>
   );
+}
+
+function normalizeIataCode(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "")
+    .slice(0, 3);
+}
+
+function isValidIataCode(value) {
+  return /^[A-Z]{3}$/.test(value);
 }
 
 function Section({ eyebrow, title, children }) {
@@ -279,6 +356,7 @@ export default function BookTripPage() {
   const didLoadTrips = useRef(false);
   const [trips, setTrips] = useState([]);
   const [selectedTripId, setSelectedTripId] = useState("");
+  const [tripDate, setTripDate] = useState("");
   const [numberOfGuests, setNumberOfGuests] = useState(1);
   const [traveler, setTraveler] = useState(initialTraveler);
   const [extraGuests, setExtraGuests] = useState([]);
@@ -368,6 +446,8 @@ export default function BookTripPage() {
 
   const selectedFlight = selectedFlightIndex !== "" ? flightResults[Number(selectedFlightIndex)] : null;
   const selectedHotel = selectedHotelIndex !== "" ? hotelResults[Number(selectedHotelIndex)] : null;
+  const todayDateInputValue = useMemo(getTodayDateInputValue, []);
+  const tripDateSummary = tripDate ? formatTripDate(tripDate) : "";
 
   const totals = useMemo(() => {
     const tripPrice = getTripPrice(selectedTrip);
@@ -465,7 +545,10 @@ export default function BookTripPage() {
 
   function updateFlightSearch(event) {
     const { name, value } = event.target;
-    setFlightSearch((current) => ({ ...current, [name]: value }));
+    setFlightSearch((current) => ({
+      ...current,
+      [name]: name === "origin" ? normalizeIataCode(value) : value,
+    }));
   }
 
   function updateHotelSearch(event) {
@@ -477,11 +560,20 @@ export default function BookTripPage() {
     setError("");
     setNotice("");
     setSelectedFlightIndex("");
+
+    const origin = normalizeIataCode(flightSearch.origin);
+    if (!isValidIataCode(origin)) {
+      setFlightSearch((current) => ({ ...current, origin }));
+      setError("Origin must be a valid 3-letter IATA airport code.");
+      return;
+    }
+
     setLoadingFlights(true);
 
     try {
       const results = await searchFlights({
         ...flightSearch,
+        origin,
         adults: Number(flightSearch.adults),
         children: Number(flightSearch.children),
         infants: Number(flightSearch.infants),
@@ -528,6 +620,8 @@ export default function BookTripPage() {
     if (!hasPassportDetails(traveler)) return "Guest 1 passport details are required.";
     if (!passportImage) return "Passport image is required.";
     if (!selectedTrip) return "Please select a trip.";
+    if (!tripDate) return "Trip Date is required.";
+    if (isPastDateInput(tripDate)) return "Trip Date cannot be in the past.";
     if (Number(numberOfGuests) < 1) return "Number of guests must be at least 1.";
     if (Number(numberOfGuests) > 1) {
       const missingGuestIndex = extraGuests.findIndex(
@@ -558,6 +652,7 @@ export default function BookTripPage() {
 
     const payload = {
       tripId: getTripId(selectedTrip),
+      tripDate,
       numberOfGuests: Number(numberOfGuests),
       selectedFlightId: selectedFlight ? getFlightId(selectedFlight, selectedFlightIndex) : undefined,
       selectedHotelId: selectedHotel ? getHotelId(selectedHotel, selectedHotelIndex) : undefined,
@@ -581,6 +676,7 @@ export default function BookTripPage() {
       const bookingId = bookingData?.bookingId || bookingData?._id;
       if (bookingId && typeof window !== "undefined") {
         window.sessionStorage.setItem("kemet:lastBookingId", String(bookingId));
+        window.sessionStorage.setItem("kemet:lastTripDate", tripDate);
       }
       const checkout = bookingData?.checkoutUrl
         ? { url: bookingData.checkoutUrl }
@@ -743,6 +839,16 @@ export default function BookTripPage() {
 
             <Section eyebrow="Step 3" title="Guests & Add-ons">
               <div className="grid gap-4 sm:grid-cols-4">
+                <Field label="Trip Date">
+                  <TextInput
+                    name="tripDate"
+                    type="date"
+                    min={todayDateInputValue}
+                    value={tripDate}
+                    onChange={(event) => setTripDate(event.target.value)}
+                    required
+                  />
+                </Field>
                 <Field label="Number of guests">
                   <TextInput
                     name="numberOfGuests"
@@ -881,7 +987,12 @@ export default function BookTripPage() {
               <Section eyebrow="Optional" title="Flight Search">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <Field label="Origin">
-                    <SelectInput name="origin" value={flightSearch.origin} onChange={updateFlightSearch} options={airportOptions} />
+                    <AirportCodeInput
+                      name="origin"
+                      value={flightSearch.origin}
+                      onChange={updateFlightSearch}
+                      suggestions={originAirportSuggestions}
+                    />
                   </Field>
                   <Field label="Destination">
                     <SelectInput name="destination" value={flightSearch.destination} onChange={updateFlightSearch} options={airportOptions} />
@@ -1077,6 +1188,12 @@ export default function BookTripPage() {
                 <span className="text-slate-500">Number of guests</span>
                 <strong>{totals.guests || 0}</strong>
               </div>
+              {tripDateSummary && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Trip Date</span>
+                  <strong>{tripDateSummary}</strong>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-500">Trip subtotal</span>
                 <strong>{formatMoney(totals.tripTotal)}</strong>

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
 const LAST_BOOKING_ID_KEY = "kemet:lastBookingId";
+const LAST_TRIP_DATE_KEY = "kemet:lastTripDate";
 
 function normalizeValue(value) {
   return Array.isArray(value) ? value[0] : value;
@@ -31,6 +32,22 @@ function normalizeBookingStatus(status) {
   if (normalized === "cancelled" || normalized === "canceled") return "Cancelled";
 
   return "Pending";
+}
+
+function formatTripDate(value) {
+  if (!value) return "";
+
+  const textValue = String(value);
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(textValue)
+    ? new Date(`${textValue}T00:00:00`)
+    : new Date(textValue);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 async function copyTextToClipboard(text) {
@@ -99,6 +116,7 @@ function DetailIcon({ type }) {
     payment: "M4 7.5C4 6.12 5.12 5 6.5 5h11C18.88 5 20 6.12 20 7.5v9c0 1.38-1.12 2.5-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9ZM4.5 9h15M7 14h4",
     booking: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0a9 9 0 0 1 18 0Z",
     id: "M8 7h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2ZM9 7V5h6v2M10 12h.01M14 12h.01",
+    calendar: "M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z",
   };
 
   return (
@@ -143,11 +161,13 @@ function DetailCard({ type, label, value, tone = "navy", action = null }) {
 export default function BookingStatusPage() {
   const router = useRouter();
   const [storedBookingId, setStoredBookingId] = useState("");
+  const [storedTripDate, setStoredTripDate] = useState("");
   const [copied, setCopied] = useState(false);
 
   const sessionId = normalizeValue(router.query.session_id);
   const queryBookingId = normalizeValue(router.query.bookingId);
   const paymentStatusQuery = normalizeValue(router.query.paymentStatus);
+  const tripDateQuery = normalizeValue(router.query.tripDate);
   const bookingStatusQuery =
     normalizeValue(router.query.bookingStatus) || normalizeValue(router.query.status);
 
@@ -156,6 +176,7 @@ export default function BookingStatusPage() {
 
     const timer = window.setTimeout(() => {
       setStoredBookingId(window.sessionStorage.getItem(LAST_BOOKING_ID_KEY) || "");
+      setStoredTripDate(window.sessionStorage.getItem(LAST_TRIP_DATE_KEY) || "");
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -178,6 +199,8 @@ export default function BookingStatusPage() {
   );
 
   const bookingId = queryBookingId || storedBookingId || "Not available";
+  const tripDate = tripDateQuery || storedTripDate;
+  const formattedTripDate = formatTripDate(tripDate);
   const canCopyBookingId = bookingId && bookingId !== "Not available";
   const statusHeadline =
     bookingStatus === "Confirmed"
@@ -238,9 +261,12 @@ export default function BookingStatusPage() {
           </p>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <div className={`mt-6 grid gap-4 ${formattedTripDate ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
           <DetailCard type="payment" label="Payment Status" value={paymentStatus} tone="green" />
           <DetailCard type="booking" label="Booking Status" value={bookingStatus} tone="gold" />
+          {formattedTripDate && (
+            <DetailCard type="calendar" label="Trip Date" value={formattedTripDate} />
+          )}
           <DetailCard
             type="id"
             label="Booking ID"

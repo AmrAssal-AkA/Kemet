@@ -77,6 +77,19 @@ function formatMoney(value) {
   return `EGP ${numberValue.toLocaleString()}`;
 }
 
+function formatTripDate(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function findNumericField(data, fieldNames, allowDirectValue = true) {
   if (data === null || data === undefined) return null;
   if (allowDirectValue && typeof data === "number") return data;
@@ -164,9 +177,11 @@ function getGuestSummary(booking) {
 }
 
 function getBookingDetails(booking) {
+  const tripDate = firstValue(booking.tripDate, booking.date, booking.startDate, booking.bookingDate);
+
   return [
     ["Tourist", firstValue(booking.customerName, booking.userName, booking.user?.name, booking.customer?.name)],
-    ["Date", firstValue(booking.date, booking.tripDate, booking.startDate, booking.bookingDate)],
+    ["Trip Date", formatTripDate(tripDate)],
     ["Guests", getGuestSummary(booking)],
     ["Total", firstValue(booking.totalPrice, booking.price, booking.finalPrice)],
   ].filter(([, value]) => value !== undefined && value !== null && value !== "");

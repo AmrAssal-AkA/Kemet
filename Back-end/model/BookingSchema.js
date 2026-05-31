@@ -1,6 +1,19 @@
 const mongoose = require("mongoose");
 const guestSchema = require("./guestSchema");
 
+function isTodayOrFuture(value) {
+  if (!value) return false;
+
+  const selectedDate = new Date(value);
+  if (Number.isNaN(selectedDate.getTime())) return false;
+
+  const today = new Date();
+  selectedDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  return selectedDate >= today;
+}
+
 const bookingSchema = new mongoose.Schema(
   {
     userId: {
@@ -38,6 +51,16 @@ const bookingSchema = new mongoose.Schema(
         ref: "Trip",
       },
     ],
+    tripDate: {
+      type: Date,
+      required: function () {
+        return this.isNew;
+      },
+      validate: {
+        validator: isTodayOrFuture,
+        message: "Trip Date cannot be in the past",
+      },
+    },
     tripSchedule: {
       date: Date,
       startTime: String,
@@ -77,8 +100,6 @@ const bookingSchema = new mongoose.Schema(
       default: "Pending",
     },
     paymentDate: Date,
-    stripeSessionId: String,
-    stripePaymentIntentId: String,
     refundedAmount: {
       type: Number,
       default: 0,

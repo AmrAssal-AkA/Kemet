@@ -1,23 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import {
-  FaChartPie,
-  FaClipboardList,
-  FaRoute,
-  FaPenNib,
-  FaUsers,
-  FaMoneyBillWave,
-  FaSignOutAlt,
-} from "react-icons/fa";
-
-const menuItems = [
-  { label: "Overview", href: "/admin", icon: FaChartPie },
-  { label: "Bookings", href: "/admin/bookings", icon: FaClipboardList },
-  { label: "Trips", href: "/admin/trips", icon: FaRoute },
-  { label: "Editorial", href: "/admin/editorial", icon: FaPenNib },
-  { label: "Users", href: "/admin/users", icon: FaUsers },
-  { label: "Revenue", href: "/admin/revenue", icon: FaMoneyBillWave },
-];
+import { FaSignOutAlt } from "react-icons/fa";
+import { adminDashboardMenuItems } from "@/config/dashboardMenus";
 
 function SidebarItem({ item, isActive }) {
   const Icon = item.icon;
@@ -57,7 +41,7 @@ export default function Sidebar({ onLogout }) {
           Main Menu
         </p>
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {adminDashboardMenuItems.map((item) => {
             const isActive = router.pathname === item.href;
             return <SidebarItem key={item.label} item={item} isActive={isActive} />;
           })}

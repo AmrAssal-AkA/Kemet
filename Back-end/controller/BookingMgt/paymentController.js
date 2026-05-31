@@ -83,6 +83,7 @@ const success = async (req, res, nxt) => {
     const sessionId = req.query.session_id;
     let bookingStatus = "Pending";
     let paymentStatus = "Pending";
+    let tripDate = "";
 
     if (sessionId) {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -91,6 +92,9 @@ const success = async (req, res, nxt) => {
       if (paidBooking) {
         bookingStatus = paidBooking.status;
         paymentStatus = paidBooking.paymentStatus;
+        tripDate = paidBooking.tripDate
+          ? paidBooking.tripDate.toISOString()
+          : "";
       }
     }
 
@@ -101,6 +105,9 @@ const success = async (req, res, nxt) => {
 
     if (sessionId) {
       params.set("session_id", sessionId);
+    }
+    if (tripDate) {
+      params.set("tripDate", tripDate);
     }
 
     return res.redirect(`${frontendUrl}/booking-status?${params.toString()}`);

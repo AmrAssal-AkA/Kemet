@@ -440,8 +440,10 @@ const definition = {
             type: "string",
             minLength: 3,
             maxLength: 3,
-            example: "CAI",
-            description: "3-letter IATA origin airport or city code.",
+            pattern: "^[A-Z]{3}$",
+            example: "LHR",
+            description:
+              "3-letter uppercase IATA origin airport code. International origins are supported.",
           },
           destination: {
             type: "string",
@@ -681,6 +683,12 @@ const definition = {
             type: "array",
             items: { type: "string", description: "Reference to Trip" },
           },
+          tripDate: {
+            type: "string",
+            format: "date",
+            description:
+              "User-selected date for taking the trip. Required for new bookings and cannot be in the past.",
+          },
           tripSchedule: {
             type: "object",
             description:
@@ -830,7 +838,7 @@ const definition = {
       },
       BookingRequest: {
         type: "object",
-        required: ["guests", "PassportNumber", "totalPrice", "items"],
+        required: ["guests", "tripDate", "PassportNumber", "totalPrice", "items"],
         properties: {
           guests: {
             type: "array",
@@ -854,6 +862,13 @@ const definition = {
             items: { type: "string" },
             description:
               "Optional trip IDs. At least one of `flight`, `hotel`, or `trip` must be supplied.",
+          },
+          tripDate: {
+            type: "string",
+            format: "date",
+            example: "2026-06-15",
+            description:
+              "Required user-selected date for taking the trip. Must be today or a future date.",
           },
           tripSchedule: {
             type: "object",
@@ -1649,7 +1664,7 @@ const definition = {
         tags: ["Bookings"],
         summary: "Create a unified booking and initiate Stripe checkout",
         description:
-          "Creates a new booking for the authenticated user, persists the booking, and immediately creates a Stripe checkout session from the supplied `items`. Returns the new booking ID and Stripe checkout URL. Booking is created with `Pending` status until `/api/payments/success` is called by Stripe. Validation includes: at least one booking type (`flight`, `hotel`, or `trip`), valid guest fields, supported passport formats, no duplicate passport numbers in the same booking, passports not expired, passports valid for at least 6 months, and no more infants than adults.",
+          "Creates a new booking for the authenticated user, persists the booking, and immediately creates a Stripe checkout session from the supplied `items`. Returns the new booking ID, selected trip date, and Stripe checkout URL. Booking is created with `Pending` status until `/api/payments/success` is called by Stripe. Validation includes: required tripDate that is today or in the future, at least one booking type (`flight`, `hotel`, or `trip`), valid guest fields, supported passport formats, no duplicate passport numbers in the same booking, passports not expired, passports valid for at least 6 months, and no more infants than adults.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -1670,6 +1685,7 @@ const definition = {
                     message: { type: "string" },
                     status: { type: "string" },
                     bookingId: { type: "string" },
+                    tripDate: { type: "string", format: "date-time" },
                     checkoutUrl: { type: "string" },
                   },
                 },
@@ -1678,7 +1694,7 @@ const definition = {
           },
           400: {
             description:
-              "Booking validation failed. Possible errors include missing booking type, missing passport number, missing or invalid guest fields, invalid passport format, duplicate passport numbers, expired passport, passport not valid for 6+ months, missing checkout items, invalid total price, or more infants than adults.",
+              "Booking validation failed. Possible errors include missing or past tripDate, missing booking type, missing passport number, missing or invalid guest fields, invalid passport format, duplicate passport numbers, expired passport, passport not valid for 6+ months, missing checkout items, invalid total price, or more infants than adults.",
           },
           401: { description: "Unauthorized - User not authenticated" },
           403: { description: "Forbidden" },
