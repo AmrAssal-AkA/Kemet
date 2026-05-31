@@ -32,6 +32,15 @@ const formatTripDate = (tripDate) => {
 };
 
 const confirmedStatusQuery = /^confirmed$/i;
+const cancelledStatusQuery = /^cancell?ed$/i;
+
+const firstValue = (...values) =>
+    values.find((value) => value !== undefined && value !== null && value !== "");
+
+const getFirstTrip = (trip) => {
+    if (Array.isArray(trip)) return trip[0] || null;
+    return trip || null;
+};
 
 const setGuideSchedule = async (req, res) => {
     try {
@@ -74,22 +83,30 @@ const guideRequiredTrips = async (req, res, nxt) => {
             return res.json({ bookings: [], assignedBookings: [] });
         }
 
-        const bookings = await Booking.find({ assignedGuide: guide._id })
+        const bookings = await Booking.find({
+            assignedGuide: guide._id,
+            status: { $not: cancelledStatusQuery },
+        })
             .populate({
                 path: "trip",
                 model: "trips",
-                select: "name title city location price basePrice finalPrice",
+                select: "name title city location guidefees",
             })
             .populate("userId", "name email");
 
         const assignedBookings = bookings.map((booking) => {
             const bookingObject = booking.toObject();
+            const trip = getFirstTrip(bookingObject.trip);
             const tripDateText = formatTripDate(bookingObject.tripDate);
             const scheduleText = formatTripSchedule(bookingObject.tripSchedule);
             const displayDate = tripDateText || scheduleText || null;
+            const guideFee = firstValue(trip?.guidefees, bookingObject.guideFee);
+            const city = firstValue(trip?.city, bookingObject.city);
 
             return {
                 ...bookingObject,
+                city,
+                guideFee,
                 date: displayDate,
                 tripDate: displayDate,
             };

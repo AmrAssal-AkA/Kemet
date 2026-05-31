@@ -132,6 +132,10 @@ function getBookingStatus(booking) {
   return firstValue(booking.status, booking.bookingStatus, booking.tripStatus);
 }
 
+function isCancelledBooking(booking) {
+  return /^cancell?ed$/i.test(String(getBookingStatus(booking) || ""));
+}
+
 function getBookingTitle(booking) {
   return firstValue(
     booking.tripName,
@@ -147,11 +151,15 @@ function getBookingTitle(booking) {
 function getBookingLocation(booking) {
   return firstValue(
     booking.location,
-    booking.city,
     booking.trip?.location,
+    booking.city,
     booking.trip?.city,
     booking.booking?.location,
   );
+}
+
+function getBookingCity(booking) {
+  return firstValue(booking.city, booking.trip?.city, booking.booking?.city);
 }
 
 function getBookingKey(booking, index) {
@@ -192,10 +200,11 @@ function getBookingDetails(booking) {
 
   return [
     ["Tourist", firstValue(booking.customerName, booking.userName, booking.user?.name, booking.customer?.name)],
+    ["City", getBookingCity(booking)],
     ["Trip Date", tripDateDisplay],
     ["Duration", tripDuration],
     ["Guests", getGuestSummary(booking)],
-    ["Total", firstValue(booking.totalPrice, booking.price, booking.finalPrice)],
+    ["Guide Fee", formatMoney(firstValue(booking.guideFee, booking.trip?.guidefees))],
   ].filter(([, value]) => value !== undefined && value !== null && value !== "");
 }
 
@@ -366,6 +375,11 @@ export default function GuideDashboard() {
     loadDashboard();
   }, [sessionReady, router, user]);
 
+  const visibleBookings = useMemo(
+    () => bookings.filter((booking) => !isCancelledBooking(booking)),
+    [bookings],
+  );
+
   const stats = useMemo(() => {
     const cards = [];
 
@@ -509,9 +523,9 @@ export default function GuideDashboard() {
                   Trip delivery queue for your assigned tours.
                 </p>
               </div>
-              {getAssignedBookingsLabel(bookingsStatus, bookings.length) && (
+              {getAssignedBookingsLabel(bookingsStatus, visibleBookings.length) && (
                 <span className="inline-flex w-fit rounded-full bg-gray-50 px-3 py-1 text-xs font-bold text-gray-700">
-                  {getAssignedBookingsLabel(bookingsStatus, bookings.length)}
+                  {getAssignedBookingsLabel(bookingsStatus, visibleBookings.length)}
                 </span>
               )}
             </div>
@@ -526,12 +540,12 @@ export default function GuideDashboard() {
                   {bookingsError}
                 </div>
               )}
-              {bookingsStatus === "success" && bookings.length > 0 && (
-                bookings.map((booking, index) => (
+              {bookingsStatus === "success" && visibleBookings.length > 0 && (
+                visibleBookings.map((booking, index) => (
                   <BookingCard key={getBookingKey(booking, index)} booking={booking} />
                 ))
               )}
-              {bookingsStatus === "success" && bookings.length === 0 && (
+              {bookingsStatus === "success" && visibleBookings.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
                   No assigned bookings found.
                 </div>
