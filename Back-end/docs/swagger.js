@@ -1,14 +1,34 @@
 const swaggerJSDoc = require("swagger-jsdoc");
 
 const port = process.env.PORT || 8000;
+const deployedBackendUrl = "https://kemet-ochre.vercel.app";
+const localBackendUrl = `http://localhost:${port}`;
+
 const getServerUrl = () => {
   if (process.env.NODE_ENV === "production") {
     return process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
-      : "https://kemet-gold.vercel.app";
+      : deployedBackendUrl;
   }
-  return `http://localhost:${port}`;
+  return localBackendUrl;
 };
+
+const serverUrls = [
+  {
+    url: deployedBackendUrl,
+    description: "Current deployed backend",
+  },
+  {
+    url: getServerUrl(),
+    description:
+      process.env.NODE_ENV === "production"
+        ? "Runtime backend URL"
+        : "Local development server",
+  },
+].filter(
+  (server, index, servers) =>
+    servers.findIndex((item) => item.url === server.url) === index,
+);
 
 const definition = {
   openapi: "3.0.3",
@@ -18,15 +38,7 @@ const definition = {
     description:
       "Interactive API documentation for the Kemet backend services.",
   },
-  servers: [
-    {
-      url: getServerUrl(),
-      description:
-        process.env.NODE_ENV === "production"
-          ? "Production server"
-          : "Local development server",
-    },
-  ],
+  servers: serverUrls,
   tags: [
     { name: "Auth", description: "Authentication and session endpoints" },
     { name: "Trips", description: "Trip management endpoints" },
@@ -67,13 +79,6 @@ const definition = {
         in: "cookie",
         name: "x-refresh-token",
         description: "Refresh token cookie used by the auth refresh endpoint.",
-      },
-      userIdCookie: {
-        type: "apiKey",
-        in: "cookie",
-        name: "userId",
-        description:
-          "Legacy cookie used directly by user dashboard routes instead of the auth middleware.",
       },
     },
     schemas: {
@@ -1080,6 +1085,8 @@ const definition = {
       get: {
         tags: ["Auth"],
         summary: "Start Google OAuth flow",
+        description:
+          "Redirects the browser to Google OAuth. The Google app callback URL should be `https://kemet-ochre.vercel.app/api/auth/google/callback` in deployment.",
         responses: {
           302: { description: "Redirects to Google" },
         },
@@ -1089,8 +1096,13 @@ const definition = {
       get: {
         tags: ["Auth"],
         summary: "Google OAuth callback",
+        description:
+          "Handles Google's OAuth callback on the backend, creates auth tokens, and redirects to the frontend `/auth/auth` callback route. The frontend deployment should be `https://kemet-9qva.vercel.app`. Current redirect query includes `token` and `user`; after the backend Google session fix it should also include `refreshToken` so the frontend can set both auth cookies on its own domain.",
         responses: {
-          302: { description: "Redirects to frontend" },
+          302: {
+            description:
+              "Redirects to frontend `/auth/auth?token=...&user=...` and, after backend fix, `&refreshToken=...`.",
+          },
         },
       },
     },
@@ -1198,11 +1210,12 @@ const definition = {
         },
       },
     },
-    "/api/search": {
+    "/api/searchHandler/search": {
       get: {
         tags: ["Search"],
         summary: "Search trips by location, duration, travelers, and adventure type",
-        description: "Search for trips with optional filters. Location and duration are case-insensitive regex searches.",
+        description:
+          "Search for trips with optional filters. Location and duration are case-insensitive regex searches. Mounted by the backend at `/api/searchHandler/search`.",
         parameters: [
           {
             in: "query",
@@ -1804,10 +1817,11 @@ const definition = {
       },
     },
     "/api/payments/refund": {
-      post: {
+      get: {
         tags: ["Payments"],
         summary: "Refund a payment",
-        description: "Process a refund for a booking using Stripe",
+        description:
+          "Process a refund for a booking using Stripe. The current backend route is registered as GET, while the controller currently reads `bookingId` from the request body; align the route/controller separately before relying on this endpoint from clients.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -2041,11 +2055,12 @@ const definition = {
         tags: ["User Dashboard"],
         summary: "Get booked trips for the current cookie user",
         description:
-          "This endpoint reads the `userId` cookie directly and does not use the standard auth middleware.",
-        security: [{ userIdCookie: [] }],
+          "Requires the `x-auth-token` cookie. The route uses the standard auth middleware and requires the authenticated user role.",
+        security: [{ cookieAuth: [] }],
         responses: {
           200: { description: "Booked trips returned" },
           401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
           500: { description: "Error fetching booked trips" },
         },
       },
@@ -2055,11 +2070,12 @@ const definition = {
         tags: ["User Dashboard"],
         summary: "Get saved trips for the current cookie user",
         description:
-          "This endpoint reads the `userId` cookie directly and does not use the standard auth middleware.",
-        security: [{ userIdCookie: [] }],
+          "Requires the `x-auth-token` cookie. The route uses the standard auth middleware and requires the authenticated user role.",
+        security: [{ cookieAuth: [] }],
         responses: {
           200: { description: "Saved trips returned" },
           401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
           500: { description: "Error fetching saved trips" },
         },
       },
@@ -2069,8 +2085,8 @@ const definition = {
         tags: ["User Dashboard"],
         summary: "Save a trip for the current user",
         description:
-          "This endpoint reads the `userId` cookie directly and does not use the standard auth middleware.",
-        security: [{ userIdCookie: [] }],
+          "Requires the `x-auth-token` cookie. The route uses the standard auth middleware and requires the authenticated user role.",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
             in: "path",
@@ -2082,6 +2098,7 @@ const definition = {
         responses: {
           200: { description: "Trip saved" },
           401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
           500: { description: "Error saving trip" },
         },
       },
@@ -2090,6 +2107,8 @@ const definition = {
       patch: {
         tags: ["User Dashboard"],
         summary: "Update user profile picture",
+        description:
+          "Requires the `x-auth-token` cookie. The route uses the standard auth middleware and requires the authenticated user role.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -2107,6 +2126,7 @@ const definition = {
         responses: {
           200: { description: "Profile picture updated" },
           401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
           500: { description: "Server error" },
         },
       },
@@ -2116,8 +2136,8 @@ const definition = {
         tags: ["User Dashboard"],
         summary: "Remove a saved trip for the current user",
         description:
-          "This endpoint reads the `userId` cookie directly and does not use the standard auth middleware.",
-        security: [{ userIdCookie: [] }],
+          "Requires the `x-auth-token` cookie. The route uses the standard auth middleware and requires the authenticated user role.",
+        security: [{ cookieAuth: [] }],
         parameters: [
           {
             in: "path",
@@ -2129,6 +2149,7 @@ const definition = {
         responses: {
           200: { description: "Trip removed" },
           401: { description: "Unauthorized" },
+          403: { description: "Forbidden" },
           500: { description: "Error removing trip from saved trips" },
         },
       },
