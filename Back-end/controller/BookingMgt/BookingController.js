@@ -256,6 +256,8 @@ const cancelBooking = async (req, res, nxt) => {
       return res.status(404).json({ error: "Booking not found" });
     }
 
+
+    
     if (booking.status === "Cancelled") {
       return res.status(400).json({ error: "Booking is already cancelled" });
     }
