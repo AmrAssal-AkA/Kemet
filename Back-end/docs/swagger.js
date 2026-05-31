@@ -1097,11 +1097,11 @@ const definition = {
         tags: ["Auth"],
         summary: "Google OAuth callback",
         description:
-          "Handles Google's OAuth callback on the backend, creates auth tokens, and redirects to the frontend `/auth/auth` callback route. The frontend deployment should be `https://kemet-9qva.vercel.app`. Current redirect query includes `token` and `user`; after the backend Google session fix it should also include `refreshToken` so the frontend can set both auth cookies on its own domain.",
+          "Handles Google's OAuth callback on the backend, creates auth tokens, and redirects to the frontend `/auth/auth` callback route. The frontend deployment should be `https://kemet-9qva.vercel.app`. The redirect query includes `token`, `refreshToken`, and `user` so the frontend can set both auth cookies on its own domain.",
         responses: {
           302: {
             description:
-              "Redirects to frontend `/auth/auth?token=...&user=...` and, after backend fix, `&refreshToken=...`.",
+              "Redirects to frontend `/auth/auth?token=...&refreshToken=...&user=...`.",
           },
         },
       },
