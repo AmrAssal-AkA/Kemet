@@ -1,14 +1,130 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { buildApiUrl } from "@/utils/apiBaseUrl";
 
-import { ArrowRightIcon } from "@/components/ui/ArrowRightIcon";
-import { LocationIcon } from "@/components/ui/LocationIcon";
-import DistanceIcon from "@/components/ui/DistanceIcon";
-import { PeopleIcon } from "@/components/ui/PeopleIcon";
-import IconPlaceholder from "@/components/ui/IconPlaceholder";
-import SearchIcon from "@/components/ui/SearchIcon";
+const ArrowRightIcon = ({ className }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M5 12H19M19 12L13 6M19 12L13 18"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const LocationIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5 text-[#F87171] mr-3 shrink-0"
+  >
+    <path
+      d="M12 21C16 16.8 19 12.8 19 9C19 5.13401 15.866 2 12 2C8.13401 2 5 5.13401 5 9C5 12.8 8 16.8 12 21Z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle
+      cx="12"
+      cy="9"
+      r="3"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const DistanceIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5 text-[#F87171] mr-3 shrink-0"
+  >
+    <path
+      d="M9 12l2 2 4-4"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle
+      cx="12"
+      cy="12"
+      r="9"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const PeopleIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="w-5 h-5 text-[#F87171] mr-3 shrink-0"
+  >
+    <path
+      d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13M16 3.13C16.8581 3.35159 17.6184 3.85189 18.1614 4.55231C18.7044 5.25274 18.9993 6.1137 19 7C18.9993 7.8863 18.7044 8.74726 18.1614 9.44769C17.6184 10.1481 16.8581 10.6484 16 10.87M13 7C13 9.20914 11.2091 11 9 11C6.79086 11 5 9.20914 5 7C5 4.79086 6.79086 3 9 3C11.2091 3 13 4.79086 13 7Z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const SearchIcon = ({ className }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+  >
+    <path
+      d="M10.5 19a8.5 8.5 0 1 0 0-17 8.5 8.5 0 0 0 0 17ZM21 21l-5.2-5.2"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const IconPlaceholder = ({ className }) => (
+  <div
+    className={`rounded-full bg-[#FBBF24] p-3 w-12 h-12 flex items-center justify-center text-white ${className}`}
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-6 h-6"
+    >
+      <path
+        d="M12 2v20M2 12h20M17 5L5 17M7 5l12 12"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </div>
+);
 
 const testimonialsData = [
   {
@@ -34,23 +150,8 @@ const testimonialsData = [
   },
 ];
 
-const FEATURED_LAYOUT = [
-  { aspect: "aspect-[4/5]", titleSize: "text-5xl" },
-  { aspect: "aspect-square", titleSize: "text-5xl" },
-  { aspect: "aspect-[3/4]", titleSize: "text-5xl" },
-  { aspect: "aspect-[4/5]", titleSize: "text-5xl" },
-  { aspect: "aspect-square", titleSize: "text-5xl" },
-  { aspect: "aspect-[3/4]", titleSize: "text-5xl" },
-];
-
-const getGemTitle = (gem) =>
-  gem?.placeName || gem?.title || gem?.name || "Hidden gem";
-
-const getGemImage = (gem) =>
-  gem?.images?.[0]?.imageUrl || gem?.imageUrl || gem?.img || "";
-
-
 function HiddenGemsPage() {
+  const [hiddenGems, setHiddenGems] = useState([]);
   const [tours, setTours] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,11 +159,21 @@ function HiddenGemsPage() {
   useEffect(() => {
     const fetchHiddenGems = async () => {
       try {
-        const response = await fetch(buildApiUrl("/api/hiddenGem"));
-        if (response.ok) {
-          const data = await response.json();
-          setTours(data.allHiddenGem || data.tours || []);
-          setGallery(data.gallery || []);
+        const hiddenGemResponse = await fetch(
+          "http://localhost:8000/api/hiddenGem",
+        );
+        if (hiddenGemResponse.ok) {
+          const hiddenGemData = await hiddenGemResponse.json();
+          setHiddenGems(hiddenGemData);
+        }
+
+        const toursResponse = await fetch(
+          "http://localhost:8000/api/hidden-gems",
+        );
+        if (toursResponse.ok) {
+          const toursData = await toursResponse.json();
+          setTours(toursData.tours || []);
+          setGallery(toursData.gallery || []);
         }
         setIsLoading(false);
       } catch (error) {
@@ -74,31 +185,10 @@ function HiddenGemsPage() {
     fetchHiddenGems();
   }, []);
 
-  const featuredItems = tours.length
-    ? FEATURED_LAYOUT.map((layout, idx) => {
-        const gem = tours[idx];
-        if (!gem) {
-          return null;
-        }
-        const title = getGemTitle(gem);
-        const gemId = gem?._id || gem?.id;
-        if (!gemId) {
-          return null;
-        }
-        return {
-          key: gemId,
-          href: `/hidden-gems/${encodeURIComponent(gemId)}`,
-          title,
-          image: getGemImage(gem),
-          ...layout,
-        };
-      }).filter(Boolean)
-    : [];
-
   return (
     <>
       <Head>
-        <title>Explore Hidden Gems | KEMET</title>
+        <title>Explore Hidden Gems | KEMET Tourism</title>
       </Head>
 
       <div className="bg-white min-h-screen font-sans text-[#111827]">
@@ -121,21 +211,21 @@ function HiddenGemsPage() {
 
             <div className="relative h-150 flex items-center justify-center gap-x-6">
               <div className="absolute top-1/2 left-[18%] transform -translate-y-[45%] flex gap-x-6">
-                <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl relative">
+                <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl relative">
                   <img
                     src="/images/hidden-gems/Rectangle 178.png"
                     alt="Sunset boat"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl mt-12 relative">
+                <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl mt-12 relative">
                   <img
                     src="/images/hidden-gems/Rectangle 177.png"
                     alt="Temple Ruin"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="w-24 aspect-2/5 rounded-full overflow-hidden shadow-2xl relative">
+                <div className="w-24 aspect-[2/5] rounded-full overflow-hidden shadow-2xl relative">
                   <img
                     src="/images/hidden-gems/Rectangle 176.png"
                     alt="Pyramid View"
@@ -239,40 +329,116 @@ function HiddenGemsPage() {
               OUR FEATURED TOURS
             </h2>
             <div className="grid grid-cols-[1fr_1fr_1fr] gap-x-6 gap-y-6">
-              {[0, 1, 2].map((columnIndex) => {
-                const start = columnIndex * 2;
-                const columnItems = featuredItems.slice(start, start + 2);
-
-                return (
-                  <div
-                    key={`featured-column-${columnIndex}`}
-                    className={`flex flex-col gap-6${columnIndex === 1 ? " mt-8" : ""}`}
-                  >
-                    {columnItems.map((item) => (
-                      <Link
-                        key={item.key}
-                        href={item.href}
-                        className={`group relative block ${item.aspect} rounded-[15px] overflow-hidden shadow-sm`}
-                      >
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-black opacity-30"></div>
-                        <h4
-                          className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 ${item.titleSize} font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity`}
-                        >
-                          {item.title}
-                        </h4>
-                        <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
-                          Explore
-                        </div>
-                      </Link>
-                    ))}
+              <div className="flex flex-col gap-6">
+                <Link
+                  href="/hidden-gems/nuweiba"
+                  className="group relative block aspect-[4/5] rounded-[15px] overflow-hidden shadow-sm"
+                >
+                  <img
+                    src="/images/hidden-gems/Rectangle 181.png"
+                    alt="Nuweiba"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-30"></div>
+                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
+                    Nuweiba
+                  </h4>
+                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
+                    Explore
                   </div>
-                );
-              })}
+                </Link>
+                <Link
+                  href="/hidden-gems/cairo"
+                  className="group relative block aspect-square rounded-[15px] overflow-hidden shadow-sm"
+                >
+                  <img
+                    src="/images/hidden-gems/Rectangle 180.png"
+                    alt="Cairo"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-30"></div>
+                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
+                    cairo
+                  </h4>
+                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
+                    Explore
+                  </div>
+                </Link>
+              </div>
+
+              <div className="flex flex-col gap-6 mt-8">
+                <Link
+                  href="/hidden-gems/alexandria"
+                  className="group relative block aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm"
+                >
+                  <img
+                    src="/images/hidden-gems/Rectangle 179.png"
+                    alt="Alexandria"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-30"></div>
+                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
+                    Alex
+                  </h4>
+                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
+                    Explore
+                  </div>
+                </Link>
+                <Link
+                  href="/hidden-gems/sharm"
+                  className="group relative block aspect-[4/5] rounded-[15px] overflow-hidden shadow-sm"
+                >
+                  <img
+                    src="/images/hidden-gems/Rectangle 182.png"
+                    alt="Sharm"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-30"></div>
+                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
+                    sharm
+                  </h4>
+                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
+                    Explore
+                  </div>
+                </Link>
+              </div>
+
+              <div className="flex flex-col gap-6">
+                <Link
+                  href="/hidden-gems/siwa"
+                  className="group relative block aspect-square rounded-[15px] overflow-hidden shadow-sm"
+                >
+                  <img
+                    src="/images/hidden-gems/Rectangle 185.png"
+                    alt="Siwa"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-30"></div>
+                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
+                    siwa
+                  </h4>
+                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
+                    Explore
+                  </div>
+                </Link>
+                <Link
+                  href="/hidden-gems/aswan"
+                  className="group relative block aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm"
+                >
+                  <img
+                    src="/images/hidden-gems/Rectangle 184.png"
+                    alt="Aswan"
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black opacity-30"></div>
+                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
+                    aswan
+                  </h4>
+                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
+                    Explore
+                  </div>
+                </Link>
+              </div>
             </div>
           </section>
 
@@ -332,6 +498,12 @@ function HiddenGemsPage() {
                   className="w-full h-full object-cover"
                 />
               </div>
+              {/* <div className="absolute bottom-[20%] right-[15%] w-1/4 h-1/4 grid grid-cols-2 gap-x-2 gap-y-2 p-2 bg-white rounded-[15px] shadow-lg">
+                    <img src="/images/hidden-gems/Rectangle 188.png" className="w-full h-full aspect-square rounded-[8px] object-cover"/>
+                    <img src="/images/hidden-gems/Rectangle 189.png" className="w-full h-full aspect-square rounded-[8px] object-cover"/>
+                    <img src="/images/hidden-gems/Rectangle 191.png" className="w-full h-full aspect-square rounded-[8px] object-cover"/>
+                    <div className="w-full h-full aspect-square rounded-[8px] bg-gray-100 flex items-center justify-center text-xs font-black text-gray-500">12+ More</div>
+                 </div> */}
             </div>
           </section>
 
@@ -344,7 +516,7 @@ function HiddenGemsPage() {
             </h2>
             <div className="grid grid-cols-4 gap-4 w-full">
               <div className="flex flex-col gap-4">
-                <div className="relative aspect-3/4 rounded-[15px] overflow-hidden shadow-sm">
+                <div className="relative aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm">
                   <img
                     src="/images/hidden-gems/Rectangle 186.png"
                     alt="Gallery 1"
@@ -376,7 +548,7 @@ function HiddenGemsPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-4">
-                <div className="relative aspect-3/4 rounded-[15px] overflow-hidden shadow-sm">
+                <div className="relative aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm">
                   <img
                     src="/images/hidden-gems/Rectangle 187.png"
                     alt="Gallery 5"
@@ -459,7 +631,3 @@ function HiddenGemsPage() {
 }
 
 export default HiddenGemsPage;
-
-
-
-
