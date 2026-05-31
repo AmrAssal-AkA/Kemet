@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import LikeHeart from "@/components/ui/LikeHeart";
 import { addBlogComment, getBlogComments } from "@/services/contentServices";
@@ -94,29 +94,6 @@ function BlogDetailPage(props) {
   const [submitStatus, setSubmitStatus] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
 
-  useEffect(() => {
-    if (!blogId) return;
-
-    let active = true;
-    setCommentsLoading(true);
-    setCommentsError("");
-
-    getBlogComments(blogId)
-      .then((result) => {
-        if (active) setComments(normalizeComments(result));
-      })
-      .catch((error) => {
-        if (active) setCommentsError(error.message || "Comments could not be loaded.");
-      })
-      .finally(() => {
-        if (active) setCommentsLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [blogId]);
-
   async function handleCommentSubmit(event) {
     event.preventDefault();
     const cleanComment = commentText.trim();
@@ -129,6 +106,7 @@ function BlogDetailPage(props) {
     try {
       await addBlogComment(blogId, cleanComment);
       setCommentText("");
+      setCommentsLoading(true);
       const updatedComments = await getBlogComments(blogId);
       setComments(normalizeComments(updatedComments));
       setSubmitStatus("Comment added successfully.");
@@ -140,6 +118,7 @@ function BlogDetailPage(props) {
       setSubmitStatus(message);
     } finally {
       setSubmittingComment(false);
+      setCommentsLoading(false);
     }
   }
 
@@ -328,11 +307,24 @@ export async function getServerSideProps(context) {
       };
     }
 
+    const cookieHeader = context.req.headers.cookie || "";
+
+    if (!Array.isArray(blog.comments)) {
+      blog.comments = [];
+    }
+
     try {
+      if (!cookieHeader) {
+        blog.isLiked = false;
+        return {
+          props: {
+            blog,
+          },
+        };
+      }
+
       const likedRes = await fetch(buildApiUrl("/api/userdashboard/blogLikes"), {
-        headers: context.req.headers.cookie
-          ? { Cookie: context.req.headers.cookie }
-          : {},
+        headers: { Cookie: cookieHeader },
       });
 
       if (likedRes.ok) {

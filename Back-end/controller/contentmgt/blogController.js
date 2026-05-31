@@ -1,6 +1,7 @@
 const blog = require("../../model/blogSchema");
 const cloudinary = require("../../config/cloudinary");
 const PostLike = require("../../model/PostLike");
+const mongoose = require("mongoose");
 
 function getFileSource(file) {
   return file?.buffer || file?.path;
@@ -65,6 +66,11 @@ const getAllBlog = async (req, res) => {
 // Get Single Blog
 const getOneBlogById = async (req, res) => {
   const { blogId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(blogId)) {
+    return res.status(404).json({ message: "Blog not found." });
+  }
+
   try {
     const blogByOne = await blog
       .findById(blogId)
@@ -75,6 +81,7 @@ const getOneBlogById = async (req, res) => {
 
     const BlogLikes = await PostLike.countDocuments({ blogId });
     const blogData = blogByOne.toObject();
+    blogData.comments = Array.isArray(blogData.comments) ? blogData.comments : [];
     blogData.likes = BlogLikes;
 
     res.status(200).json(blogData);
