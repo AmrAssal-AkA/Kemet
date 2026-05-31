@@ -74,7 +74,13 @@ function normalizeCheckoutItems(items = []) {
   }));
 }
 
+function normalizeIntegerPrice(value) {
+  return Math.round(Number(value || 0));
+}
+
 function buildBookingRequest(payload) {
+  const safeTotalPrice = normalizeIntegerPrice(payload.totalPrice);
+
   if (
     payload.guests &&
     payload.PassportNumber &&
@@ -83,6 +89,7 @@ function buildBookingRequest(payload) {
   ) {
     return {
       ...payload,
+      totalPrice: safeTotalPrice,
       items: normalizeCheckoutItems(payload.items),
     };
   }
@@ -110,7 +117,7 @@ function buildBookingRequest(payload) {
     tripDate: payload.tripDate,
     tripDurationDays: payload.tripDurationDays,
     passportNumber: passportNumber,
-    totalPrice: Number(payload.totalPrice || 0),
+    totalPrice: safeTotalPrice,
     currency: payload.currency || "EGP",
     guideIncluded: Boolean(payload.guideIncluded),
     guideFee: payload.guideIncluded ? Number(payload.guideFee || 0) : 0,
@@ -122,7 +129,7 @@ function buildBookingRequest(payload) {
               name: payload.tripName || "KEMET booking",
               description: payload.notes || "KEMET travel booking",
               image: payload.image,
-              price: Number(payload.totalPrice || 0),
+              price: safeTotalPrice,
               quantity: 1,
             },
           ],

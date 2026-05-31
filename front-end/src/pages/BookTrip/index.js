@@ -712,6 +712,8 @@ export default function BookTripPage() {
       return;
     }
 
+    const safeTotalPrice = Math.round(Number(totals.totalPrice || 0));
+
     const payload = {
       tripId: getTripId(selectedTrip),
       tripDate,
@@ -728,7 +730,7 @@ export default function BookTripPage() {
       notes: notes.trim(),
       guideIncluded: includeGuide,
       guideFee: includeGuide ? totals.guideFee : 0,
-      totalPrice: totals.totalPrice,
+      totalPrice: safeTotalPrice,
       passportImage,
     };
 
@@ -749,7 +751,7 @@ export default function BookTripPage() {
         ? { url: bookingData.checkoutUrl }
         : await createPayment({
             bookingId,
-            amount: totals.totalPrice,
+            amount: safeTotalPrice,
             currency: "EGP",
             metadata: {
               tripId: getTripId(selectedTrip),
@@ -764,7 +766,7 @@ export default function BookTripPage() {
                 name: selectedTrip ? getTripTitle(selectedTrip) : "KEMET booking",
                 description: notes.trim() || "KEMET travel booking",
                 image: getTripImage(selectedTrip),
-                price: totals.totalPrice,
+                price: safeTotalPrice,
                 quantity: 1,
               },
             ],
