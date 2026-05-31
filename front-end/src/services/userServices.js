@@ -32,7 +32,9 @@ async function handleResponse(res, fallbackMessage, logLabel = "userServices") {
 }
 
 export async function getAllUsers(cookie = "") {
-  const endpoint = buildApiUrl("/api/adminDashboard/AllUsers");
+  const endpoint = cookie
+    ? buildApiUrl("/api/adminDashboard/AllUsers")
+    : "/api/admin/getusers";
   const res = await fetch(endpoint, {
     headers: cookie ? { Cookie: cookie } : {},
     credentials: "include",
@@ -51,7 +53,7 @@ export async function updateUserRole(userId, role) {
     throw new Error("Invalid role selected.");
   }
 
-  const endpoint = buildApiUrl(`/api/adminDashboard/upgradeUser/${userId}`);
+  const endpoint = `/api/admin/upgradeUser/${userId}`;
   const payload = { role };
   const res = await fetch(endpoint, {
     method: "PATCH",
@@ -79,7 +81,7 @@ function getArray(data) {
 }
 
 export async function getBookedTrips() {
-  const res = await fetch(buildApiUrl("/api/userdashboard/BookedTrips"), {
+  const res = await fetch("/api/userdashboard/BookedTrips", {
     credentials: "include",
   });
   const data = await handleResponse(res, "Booked trips could not be loaded.", "getBookedTrips");
@@ -87,7 +89,7 @@ export async function getBookedTrips() {
 }
 
 export async function getSavedTrips() {
-  const res = await fetch(buildApiUrl("/api/userdashboard/savedTrips"), {
+  const res = await fetch("/api/userdashboard/savedTrips", {
     credentials: "include",
   });
   const data = await handleResponse(res, "Saved trips could not be loaded.", "getSavedTrips");
@@ -95,7 +97,7 @@ export async function getSavedTrips() {
 }
 
 export async function getLikedBlogs() {
-  const res = await fetch(buildApiUrl("/api/userdashboard/blogLikes"), {
+  const res = await fetch("/api/userdashboard/blogLikes", {
     credentials: "include",
   });
   const data = await handleResponse(res, "Liked blogs could not be loaded.", "getLikedBlogs");
@@ -107,7 +109,7 @@ export async function saveTrip(tripId) {
     throw new Error("Trip ID is required.");
   }
 
-  const res = await fetch(buildApiUrl(`/api/userdashboard/saveTrips/${tripId}`), {
+  const res = await fetch(`/api/userdashboard/saveTrips/${tripId}`, {
     method: "POST",
     credentials: "include",
   });
@@ -120,7 +122,7 @@ export async function removeSavedTrip(tripId) {
     throw new Error("Trip ID is required.");
   }
 
-  const res = await fetch(buildApiUrl(`/api/userdashboard/removeSavedTrip/${tripId}`), {
+  const res = await fetch(`/api/userdashboard/removeSavedTrip/${tripId}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -136,7 +138,7 @@ export async function updateProfilePicture(file) {
   const formData = new FormData();
   formData.append("profilePicture", file);
 
-  const res = await fetch(buildApiUrl("/api/userdashboard/AddProfilePicture"), {
+  const res = await fetch("/api/userdashboard/AddProfilePicture", {
     method: "PATCH",
     credentials: "include",
     body: formData,

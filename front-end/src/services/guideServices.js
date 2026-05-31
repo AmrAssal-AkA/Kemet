@@ -1,5 +1,4 @@
 import { getCurrentUser } from "./authServices";
-import { buildApiUrl } from "@/utils/apiBaseUrl";
 
 async function handleResponse(res, fallbackMessage) {
   const data = await res.json().catch(() => null);
@@ -30,7 +29,7 @@ function getArray(data) {
 }
 
 export async function getGuideRequiredTrips() {
-  const res = await fetch(buildApiUrl("/api/guideDashboard/guideRequiredTrips"), {
+  const res = await fetch("/api/guide/guideRequiredTrips", {
     credentials: "include",
   });
 
@@ -39,7 +38,7 @@ export async function getGuideRequiredTrips() {
 }
 
 export async function getGuideFee() {
-  const res = await fetch(buildApiUrl("/api/guideDashboard/guideFee"), {
+  const res = await fetch("/api/guide/guideFee", {
     credentials: "include",
   });
 
@@ -51,7 +50,7 @@ function normalizeScheduleTime(value) {
 }
 
 export async function setGuideSchedule(payload) {
-  const res = await fetch(buildApiUrl("/api/guideDashboard/setGuideSchedule"), {
+  const res = await fetch("/api/guide/setGuideSchedule", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",

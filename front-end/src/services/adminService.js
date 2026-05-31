@@ -121,13 +121,10 @@ export async function confirmAdminBooking(bookingId) {
     throw new Error("Booking ID is required.");
   }
 
-  const res = await fetch(
-    buildApiUrl(`/api/adminDashboard/confirmBooking/${bookingId}`),
-    {
-      method: "PATCH",
-      credentials: "include",
-    },
-  );
+  const res = await fetch(`/api/admin/confirmBooking/${bookingId}`, {
+    method: "PATCH",
+    credentials: "include",
+  });
 
   return handleResponse(res, "Booking could not be confirmed.");
 }
@@ -137,7 +134,7 @@ export async function cancelAdminBooking(bookingId) {
     throw new Error("Booking ID is required.");
   }
 
-  const res = await fetch(buildApiUrl(`/api/booking/${bookingId}`), {
+  const res = await fetch(`/api/booking/${bookingId}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -151,7 +148,7 @@ export async function getAvailableGuidesForBooking(bookingId) {
   }
 
   const res = await fetch(
-    buildApiUrl(`/api/adminDashboard/bookings/${bookingId}/available-guides`),
+    `/api/admin/bookings/${bookingId}/available-guides`,
     {
       credentials: "include",
     },
@@ -170,7 +167,7 @@ export async function assignGuideToBooking(bookingId, guideId) {
   }
 
   const res = await fetch(
-    buildApiUrl(`/api/adminDashboard/bookings/${bookingId}/assign-guide`),
+    `/api/admin/bookings/${bookingId}/assign-guide`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -183,7 +180,10 @@ export async function assignGuideToBooking(bookingId, guideId) {
 }
 
 export async function getTripStats(cookie = "") {
-  const res = await fetch(buildApiUrl("/api/adminDashboard/stats/trips"), {
+  const endpoint = cookie
+    ? buildApiUrl("/api/adminDashboard/stats/trips")
+    : "/api/admin/stats/trips";
+  const res = await fetch(endpoint, {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -191,7 +191,10 @@ export async function getTripStats(cookie = "") {
 }
 
 export async function getBlogStats(cookie = "") {
-  const res = await fetch(buildApiUrl("/api/adminDashboard/stats/blogs"), {
+  const endpoint = cookie
+    ? buildApiUrl("/api/adminDashboard/stats/blogs")
+    : "/api/admin/stats/blogs";
+  const res = await fetch(endpoint, {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -199,7 +202,10 @@ export async function getBlogStats(cookie = "") {
 }
 
 export async function getRevenueStats(cookie = "") {
-  const res = await fetch(buildApiUrl("/api/adminDashboard/stats/revenue"), {
+  const endpoint = cookie
+    ? buildApiUrl("/api/adminDashboard/stats/revenue")
+    : "/api/admin/stats/revenue";
+  const res = await fetch(endpoint, {
     headers: getHeaders(cookie),
     credentials: "include",
   });
