@@ -64,7 +64,7 @@ export async function getBlogComments(blogId) {
 export async function addBlogComment(blogId, commentText) {
   if (!blogId) throw new Error("Blog ID is required.");
 
-  const res = await fetch(`/api/Blog/addComment/${blogId}`, {
+  const res = await fetch(`/api/blog/addComment/${blogId}`, {
     method: "POST",
     headers: getJsonHeaders(),
     credentials: "include",
