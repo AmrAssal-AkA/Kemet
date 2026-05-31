@@ -15,6 +15,7 @@ import {
   resetPassword,
   confirmResetPassword,
   getCurrentUser,
+  completeGoogleSession as completeGoogleSessionRequest,
   normalizeAuthUser,
   normalizeRole,
 } from "@/services/authServices";
@@ -90,7 +91,11 @@ export const AuthProvider = ({ children }) => {
       try {
         const backendUser = await getCurrentUser();
         if (isLoggingOut.current || restoreRequestId !== sessionRequestId.current) return;
-        applySessionUser(normalizeAuthUser(backendUser) || backendUser);
+        const restoredUser = normalizeAuthUser(backendUser) || backendUser;
+        if (!restoredUser) {
+          clearStoredAuth();
+        }
+        applySessionUser(restoredUser);
       } catch (error) {
         if (isLoggingOut.current || restoreRequestId !== sessionRequestId.current) return;
         applySessionUser(null);
@@ -123,6 +128,7 @@ export const AuthProvider = ({ children }) => {
           throw new Error("Login succeeded, but the user data was missing.");
         }
 
+        setSessionReady(true);
         await router.replace(getAuthRedirectPath(loggedInUser));
       } catch (error) {
         setError(error.message);
@@ -147,6 +153,7 @@ export const AuthProvider = ({ children }) => {
           );
         }
 
+        setSessionReady(true);
         await router.replace(getAuthRedirectPath(registeredUser));
       } catch (error) {
         setError(error.message);
@@ -176,6 +183,40 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, [applySessionUser, router]);
+
+  const completeGoogleSession = useCallback(
+    async ({ token, refreshToken, user: callbackUser }) => {
+      setLoading(true);
+      setSessionReady(false);
+      setError(null);
+
+      try {
+        const data = await completeGoogleSessionRequest({
+          token,
+          refreshToken,
+          user: callbackUser,
+        });
+        const googleUser =
+          applySessionUser(normalizeAuthUser(data) || normalizeAuthUser(callbackUser));
+
+        if (!googleUser) {
+          throw new Error("Google login succeeded, but the user data was missing.");
+        }
+
+        setSessionReady(true);
+        return googleUser;
+      } catch (error) {
+        clearStoredAuth();
+        applySessionUser(null);
+        setSessionReady(true);
+        setError(error.message);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [applySessionUser],
+  );
 
   const resetPasswordHandler = useCallback(
     async (email) => {
@@ -220,6 +261,7 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       logout: logouthundler,
+      completeGoogleSession,
       resetPassword: resetPasswordHandler,
       confirmResetPassword: confirmResetPasswordHandler,
     }),
@@ -233,6 +275,7 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       logouthundler,
+      completeGoogleSession,
       resetPasswordHandler,
       confirmResetPasswordHandler,
     ],

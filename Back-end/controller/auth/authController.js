@@ -234,6 +234,8 @@ const googleCallback = async (req, res, nxt) => {
     });
 
     const user = JSON.stringify({
+      _id: req.user._id,
+      userId: req.user.userId,
       name: req.user.name,
       email: req.user.email,
       role: req.user.role,
@@ -246,7 +248,12 @@ const googleCallback = async (req, res, nxt) => {
       html: emailResult,
     });
     const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
-    res.redirect(`${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`);
+    const callbackParams = new URLSearchParams({
+      token: accessToken,
+      refreshToken,
+      user,
+    });
+    res.redirect(`${frontendUrl}/auth/auth?${callbackParams.toString()}`);
   } catch (err) {
     nxt(err);
   }
@@ -331,7 +338,7 @@ const refresh = async (req, res, nxt) => {
           path: "/",
         });
 
-        res.cookie("x-refresh-token", refreshToken, {
+        res.cookie("x-refresh-token", newRefreshToken, {
           httpOnly: true,
           secure: true,
           sameSite: "none",

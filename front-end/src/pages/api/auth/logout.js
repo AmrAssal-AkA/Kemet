@@ -1,15 +1,8 @@
 import axios from "axios";
 import { getApiBaseUrl } from "../../../utils/apiBaseUrl";
+import { buildClearAuthCookies } from "../../../utils/authCookies";
 
 const API_BASE_URL = getApiBaseUrl();
-
-const clearAuthCookies = [
-  "x-auth-token=; Max-Age=0; Path=/; HttpOnly",
-  "x-refresh-token=; Max-Age=0; Path=/; HttpOnly",
-  "auth-token=; Max-Age=0; Path=/",
-  "token=; Max-Age=0; Path=/",
-  "accessToken=; Max-Age=0; Path=/",
-];
 
 async function hundler(req, res) {
   if (req.method !== "POST") {
@@ -25,10 +18,10 @@ async function hundler(req, res) {
         withCredentials: true,
       },
     );
-    res.setHeader("Set-Cookie", clearAuthCookies);
+    res.setHeader("Set-Cookie", buildClearAuthCookies(req));
     return res.status(response.status).json(response.data);
   } catch (error) {
-    res.setHeader("Set-Cookie", clearAuthCookies);
+    res.setHeader("Set-Cookie", buildClearAuthCookies(req));
     if (error.response) {
       return res.status(error.response.status).json(error.response.data);
     }

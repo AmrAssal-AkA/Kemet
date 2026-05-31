@@ -1,5 +1,10 @@
 import axios from "axios";
 import { getApiBaseUrl } from "../../../utils/apiBaseUrl";
+import {
+  getUserFromAuthCookies,
+  normalizeAuthCookies,
+  withTokenUser,
+} from "../../../utils/authCookies";
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -26,10 +31,12 @@ async function handler(req, res) {
 
     const cookies = response.headers["set-cookie"];
     if (cookies) {
-      res.setHeader("Set-Cookie", cookies);
+      res.setHeader("Set-Cookie", normalizeAuthCookies(cookies, req));
     }
 
-    return res.status(response.status).json(response.data);
+    return res
+      .status(response.status)
+      .json(withTokenUser(response.data, getUserFromAuthCookies(cookies)));
   } catch (error) {
     if (error.code === "ECONNREFUSED") {
       return res.status(503).json({ message: "Auth service unavailable" });
@@ -38,7 +45,7 @@ async function handler(req, res) {
     if (error.response) {
       const cookies = error.response.headers?.["set-cookie"];
       if (cookies) {
-        res.setHeader("Set-Cookie", cookies);
+        res.setHeader("Set-Cookie", normalizeAuthCookies(cookies, req));
       }
       return res.status(error.response.status).json(error.response.data);
     }

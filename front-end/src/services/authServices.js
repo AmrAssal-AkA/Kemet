@@ -90,15 +90,7 @@ export const getCurrentUser = async () => {
   try {
     const response = await ApiCall("/api/auth/refresh", { method: "POST" });
     return normalizeAuthUser(response.data);
-  } catch (error) {
-    if (error.response?.status === 401) {
-      try {
-        const refreshResponse = await refreshToken();
-        return normalizeAuthUser(refreshResponse);
-      } catch (refreshError) {
-        return null;
-      }
-    }
+  } catch {
     return null;
   }
 };
@@ -141,6 +133,19 @@ export const registerUser = async (formData) => {
 
 export const loginWithGoogle = async () => {
   window.location.href = buildApiUrl("/api/auth/continueWithGoogle");
+};
+
+export const completeGoogleSession = async ({ token, refreshToken, user }) => {
+  if (!token || !refreshToken) {
+    throw new Error("Google session tokens are missing");
+  }
+
+  const res = await ApiCall("/api/auth/google-session", {
+    method: "POST",
+    data: { token, refreshToken, user },
+  });
+
+  return normalizeAuthResponse(res.data);
 };
 
 export const logout = async () => {

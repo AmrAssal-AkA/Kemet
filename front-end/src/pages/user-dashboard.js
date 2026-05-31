@@ -5,6 +5,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
 import { getBookedTrips, getLikedBlogs } from "@/services/userServices";
+import { getUserRole } from "@/utils/authSession";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -332,6 +333,7 @@ export default function UserDashboard() {
   const [isLikedLoading, setIsLikedLoading] = useState(false);
   const [likedError, setLikedError] = useState("");
   const [likedFetched, setLikedFetched] = useState(false);
+  const userRole = user ? getUserRole(user) : null;
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -341,14 +343,25 @@ export default function UserDashboard() {
   }, [router.isReady, router.query.tab]);
 
   useEffect(() => {
-    if (!sessionReady) return;
+    if (!router.isReady || !sessionReady) return;
 
     if (!user) {
-      setBookedTrips([]);
-      setBookedError("Your session may have expired. Please sign in again to view your dashboard data.");
-      setIsDashboardLoading(false);
+      router.replace("/auth/auth");
       return;
     }
+
+    if (userRole === "admin") {
+      router.replace("/admin");
+      return;
+    }
+
+    if (userRole === "guide") {
+      router.replace("/guide/dashboard");
+    }
+  }, [router, router.isReady, sessionReady, user, userRole]);
+
+  useEffect(() => {
+    if (!sessionReady || !user || userRole !== "user") return;
 
     let isMounted = true;
 
@@ -376,10 +389,10 @@ export default function UserDashboard() {
     return () => {
       isMounted = false;
     };
-  }, [sessionReady, user]);
+  }, [sessionReady, user, userRole]);
 
   useEffect(() => {
-    if (activeTab !== "liked" || likedFetched || !user) return;
+    if (activeTab !== "liked" || likedFetched || !sessionReady || !user || userRole !== "user") return;
 
     let isMounted = true;
 
@@ -408,7 +421,7 @@ export default function UserDashboard() {
     return () => {
       isMounted = false;
     };
-  }, [activeTab, likedFetched, user]);
+  }, [activeTab, likedFetched, sessionReady, user, userRole]);
 
   const dashboardName = user?.name || "Explorer";
   const dashboardEmail = user?.email || "Not provided";
@@ -438,6 +451,19 @@ export default function UserDashboard() {
     ],
     [dashboardEmail, dashboardLocation, dashboardName, user?.phone, user?.phoneNumber],
   );
+  const canShowDashboard = sessionReady && user && userRole === "user";
+
+  if (!canShowDashboard) {
+    return (
+      <>
+        <Head>
+          <title>My Dashboard â€” Kemet Travel</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
+        <main className="font-sans bg-[#f9fafb] min-h-screen" />
+      </>
+    );
+  }
 
   return (
     <>
