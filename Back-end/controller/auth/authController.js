@@ -235,7 +235,7 @@ const googleCallback = async (req, res, nxt) => {
       path: "/",
     });
 
-    const userPayload = JSON.stringify({
+    const user = JSON.stringify({
       name: req.user.name,
       email: req.user.email,
       role: req.user.role,
@@ -243,7 +243,7 @@ const googleCallback = async (req, res, nxt) => {
 
     const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
     res.redirect(
-      `${frontendUrl}/auth/auth?token=${encodeURIComponent(accessToken)}&user=${encodeURIComponent(userPayload)}`,
+      `${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`,
     );
     const emailResult = await GoogleSignInTemplate(req.user.name);
     await sendEmail({
@@ -356,25 +356,5 @@ const refresh = async (req, res, nxt) => {
   }
 };
 
-const me = (req, res) => {
-  const token = req.cookies["x-auth-token"];
 
-  if (!token) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-
-  try {
-    const decoded = verifyToken(token);
-    return res.status(200).json({
-      user: {
-        name: decoded.name,
-        email: decoded.email,
-        role: decoded.role,
-      },
-    });
-  } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
-  }
-};
-
-module.exports = { register, login, googleCallback, verifyEmail, refresh, me };
+module.exports = { register, login, googleCallback, verifyEmail, refresh };
