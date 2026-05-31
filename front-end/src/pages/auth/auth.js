@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import AuthForm from "@/components/authForms/auth";
-import {refreshToken} from "@/services/authServices";
 
 function parseGoogleUser(userValue) {
   try {
@@ -33,26 +32,21 @@ export default function Auth() {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const isGoogleCallback = router.query.google === "true";
-    if (!isGoogleCallback) return;
+    const { token, user } = router.query;
+    const tokenValue = Array.isArray(token) ? token[0] : token;
+    const userValue = Array.isArray(user) ? user[0] : user;
 
-    const fetchUser = async () => {
-      try {
-        const data = await refreshToken();
-        const user = data?.user;
-        if (user) {
-          router.replace(getRedirectPath(user));
-        } else {
-          router.replace("/auth/auth");
-        }
-      } catch (error) {
-        console.error("Failed to get user after Google login:", error);
-        router.replace("/auth/auth");
-      }
-    };
+    if (!tokenValue || !userValue) return;
 
-    fetchUser();
-  }, [router.isReady, router.query.google]);
+
+    try {
+      const parsedUser = parseGoogleUser(userValue);
+      router.replace(getRedirectPath(parsedUser));
+    } catch (error) {
+      console.error("Invalid Google callback user payload:", error);
+      router.replace("/auth/auth");
+    }
+  }, [router, router.isReady, router.query.token, router.query.user]);
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 py-6 sm:px-6">

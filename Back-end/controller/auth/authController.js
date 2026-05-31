@@ -239,17 +239,14 @@ const googleCallback = async (req, res, nxt) => {
       role: req.user.role,
     });
 
-
     const emailResult = await GoogleSignInTemplate(req.user.name);
     await sendEmail({
       to: req.user.email,
       subject: "Kemet Travel - Google Sign-In Successful",
       html: emailResult,
     });
-
     const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
-    res.redirect(`${frontendUrl}/auth/auth?google=true`);
-
+    res.redirect(`${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`);
   } catch (err) {
     nxt(err);
   }
