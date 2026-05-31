@@ -157,6 +157,19 @@ export const AuthProvider = ({ children }) => {
     [applySessionUser, router],
   );
 
+  const completeGoogleSession = useCallback(
+    (sessionUser) => {
+      setError(null);
+      didRestoreSession.current = true;
+      sessionRequestId.current += 1;
+      const completedUser = applySessionUser(normalizeAuthUser(sessionUser));
+      setSessionReady(true);
+      setLoading(false);
+      return completedUser;
+    },
+    [applySessionUser],
+  );
+
   const logouthundler = useCallback(async () => {
     isLoggingOut.current = true;
     sessionRequestId.current += 1;
@@ -219,6 +232,7 @@ export const AuthProvider = ({ children }) => {
       error,
       login,
       register,
+      completeGoogleSession,
       logout: logouthundler,
       resetPassword: resetPasswordHandler,
       confirmResetPassword: confirmResetPasswordHandler,
@@ -232,6 +246,7 @@ export const AuthProvider = ({ children }) => {
       error,
       login,
       register,
+      completeGoogleSession,
       logouthundler,
       resetPasswordHandler,
       confirmResetPasswordHandler,

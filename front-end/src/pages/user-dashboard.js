@@ -225,6 +225,21 @@ function getDashboardErrorMessage(error) {
   return error.message || "Dashboard data could not be loaded.";
 }
 
+function getDashboardRole(user) {
+  if (!user) return null;
+  if (user?.isAdmin === true) return "admin";
+  if (user?.localGuide === true) return "guide";
+
+  const role = String(user?.role || user?.userRole || user?.type || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
+  if (role === "admin") return "admin";
+  if (role === "guide" || role === "localguide") return "guide";
+  return "user";
+}
+
 function StarRow({ count = 5, total = 5 }) {
   return (
     <div className="flex gap-0.5">
@@ -268,7 +283,7 @@ function SectionHeading({ eyebrow, title, subtitle, light = false }) {
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ activeTab, setActiveTab, onLogout }) {
+function Sidebar({ activeTab, setActiveTab, onLogout, showLogout = true }) {
   const nav = [
     { key: "overview", icon: "⬡", label: "Overview" },
     { key: "trips", icon: "🗺️", label: "My Trips" },
@@ -304,16 +319,21 @@ function Sidebar({ activeTab, setActiveTab, onLogout }) {
           </button>
         ))}
 
-        <div className="mx-2 my-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
+        {showLogout && (
+          <>
+            <div className="mx-2 my-3" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
 
-        <button
-          type="button"
-          onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
-          style={{ color: "rgba(255,255,255,0.4)" }}>
-          <span style={{ fontSize: 15 }}>↩</span>
-          Logout
-        </button>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+              style={{ color: "rgba(255,255,255,0.4)" }}
+            >
+              <span style={{ fontSize: 15 }}>↩</span>
+              Logout
+            </button>
+          </>
+        )}
       </div>
     </aside>
   );
@@ -328,6 +348,7 @@ export default function UserDashboard() {
   const [bookedTrips, setBookedTrips] = useState([]);
   const [isDashboardLoading, setIsDashboardLoading] = useState(true);
   const [bookedError, setBookedError] = useState("");
+  const dashboardRole = useMemo(() => getDashboardRole(user), [user]);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -340,11 +361,10 @@ export default function UserDashboard() {
     if (!sessionReady) return;
 
     if (!user) {
-      setBookedTrips([]);
-      setBookedError("Your session may have expired. Please sign in again to view your dashboard data.");
-      setIsDashboardLoading(false);
       return;
     }
+
+    if (dashboardRole !== "user") return;
 
     let isMounted = true;
 
@@ -372,7 +392,25 @@ export default function UserDashboard() {
     return () => {
       isMounted = false;
     };
-  }, [sessionReady, user]);
+  }, [dashboardRole, sessionReady, user]);
+
+  useEffect(() => {
+    if (!router.isReady || !sessionReady) return;
+
+    if (!user) {
+      router.replace("/");
+      return;
+    }
+
+    if (dashboardRole === "admin") {
+      router.replace("/admin");
+      return;
+    }
+
+    if (dashboardRole === "guide") {
+      router.replace("/guide/dashboard");
+    }
+  }, [dashboardRole, router, router.isReady, sessionReady, user]);
 
   const dashboardName = user?.name || "Explorer";
   const dashboardEmail = user?.email || "Not provided";
@@ -402,6 +440,18 @@ export default function UserDashboard() {
     ],
     [dashboardEmail, dashboardLocation, dashboardName, user?.phone, user?.phoneNumber],
   );
+
+  if (!router.isReady || !sessionReady || dashboardRole !== "user") {
+    return (
+      <>
+        <Head>
+          <title>My Dashboard â€” Kemet Travel</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
+        <main className="font-sans bg-[#f9fafb] min-h-screen" />
+      </>
+    );
+  }
 
   return (
     <>
@@ -540,7 +590,12 @@ export default function UserDashboard() {
         {/* ══════ BODY ══════ */}
         <div className="px-4 md:px-20 py-8 flex gap-8 items-start">
           {/* Sidebar */}
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onLogout={logout}
+            showLogout={Boolean(user)}
+          />
 
           {/* Main content */}
           <div className="flex-1 min-w-0">
