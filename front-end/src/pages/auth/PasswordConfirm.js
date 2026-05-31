@@ -98,7 +98,7 @@ function ResetPasswordConfirm({ token }) {
       </div>
       <button
         type="submit"
-        className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+        className="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition duration-200"
         disabled={isLoading}
       >
         {isLoading ? "confirming...." : "Confirm Reset Password"}

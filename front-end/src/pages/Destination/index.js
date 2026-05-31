@@ -204,7 +204,7 @@ function DestinationPage(props) {
                     </span>
                     <Link href={`/trips/${trip.id}`}>
                       <div className="ml-2 transform group-hover:translate-x-1 transition-transform text-yellow-500 group-hover:text-black w-6 h-6">
-                        View Details <ArrowRightIcon />
+                        <ArrowRightIcon />
                       </div>
                     </Link>
                   </div>
