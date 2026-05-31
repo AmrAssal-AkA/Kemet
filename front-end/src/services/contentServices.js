@@ -47,7 +47,7 @@ export async function getBlogs(cookie = "") {
 export async function updateBlog(blogId, payload) {
   if (!blogId) throw new Error("Blog ID is required.");
 
-  const res = await fetch(buildApiUrl(`/api/blog/updateBlog/${blogId}`), {
+  const res = await fetch(`/api/Blog/updateBlog/${blogId}`, {
     method: "PUT",
     credentials: "include",
     body: payload,
@@ -59,7 +59,7 @@ export async function updateBlog(blogId, payload) {
 export async function deleteBlog(blogId) {
   if (!blogId) throw new Error("Blog ID is required.");
 
-  const res = await fetch(buildApiUrl(`/api/blog/deleteBlog/${blogId}`), {
+  const res = await fetch(`/api/Blog/deleteBlog/${blogId}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -68,7 +68,10 @@ export async function deleteBlog(blogId) {
 }
 
 export async function getContacts(cookie = "") {
-  const res = await fetch(buildApiUrl("/api/contact/contacts"), {
+  const endpoint = cookie
+    ? buildApiUrl("/api/contact/contacts")
+    : "/api/contact/contacts";
+  const res = await fetch(endpoint, {
     headers: getHeaders(cookie),
     credentials: "include",
   });
@@ -88,7 +91,7 @@ export async function getHiddenGems(cookie = "") {
 export async function updateHiddenGem(id, payload) {
   if (!id) throw new Error("Hidden gem ID is required.");
 
-  const res = await fetch(buildApiUrl(`/api/hiddenGem/${id}`), {
+  const res = await fetch(`/api/hiddenGem/${id}`, {
     method: "PUT",
     headers: getJsonHeaders(),
     credentials: "include",
@@ -101,7 +104,7 @@ export async function updateHiddenGem(id, payload) {
 export async function deleteHiddenGem(id) {
   if (!id) throw new Error("Hidden gem ID is required.");
 
-  const res = await fetch(buildApiUrl(`/api/hiddenGem/${id}`), {
+  const res = await fetch(`/api/hiddenGem/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -123,7 +126,7 @@ export async function updateOffering(id, payload) {
   if (!id) throw new Error("Offering ID is required.");
   const isFormData = typeof FormData !== "undefined" && payload instanceof FormData;
 
-  const res = await fetch(buildApiUrl(`/api/offerings/${id}`), {
+  const res = await fetch(`/api/offerings/${id}`, {
     method: "PUT",
     headers: isFormData ? undefined : getJsonHeaders(),
     credentials: "include",
@@ -136,7 +139,7 @@ export async function updateOffering(id, payload) {
 export async function deleteOffering(id) {
   if (!id) throw new Error("Offering ID is required.");
 
-  const res = await fetch(buildApiUrl(`/api/offerings/${id}`), {
+  const res = await fetch(`/api/offerings/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -145,7 +148,7 @@ export async function deleteOffering(id) {
 }
 
 export async function createOffering(formData) {
-  const res = await fetch(buildApiUrl("/api/offerings"), {
+  const res = await fetch("/api/offerings", {
     method: "POST",
     credentials: "include",
     body: formData,
@@ -154,7 +157,7 @@ export async function createOffering(formData) {
 }
 
 export async function createHiddenGem(formData) {
-  const res = await fetch(buildApiUrl("/api/hiddenGem"), {
+  const res = await fetch("/api/hiddenGem", {
     method: "POST",
     credentials: "include",
     body: formData,

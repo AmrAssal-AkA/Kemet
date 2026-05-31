@@ -28,17 +28,6 @@ const nextConfig = {
       },
     ];
   },
-  async rewrites() {
-    const baseUrl = process.env.NEXT_PUBLIC_Backend_URL || "http://localhost:8000";
-    const apiBase = baseUrl.replace(/\/$/, "");
-
-    return [
-      {
-        source: "/api/booking/create",
-        destination: `${apiBase}/api/booking/create`,
-      },
-    ];
-  },
 };
 
 export default nextConfig;
