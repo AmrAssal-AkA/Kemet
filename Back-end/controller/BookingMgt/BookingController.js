@@ -118,6 +118,7 @@ const createBooking = async (req, res, nxt) => {
     tripDetails = parseJsonField(tripDetails);
     tripSchedule = parseJsonField(tripSchedule);
     items = parseJsonField(items);
+    
     req.body.guests = guests;
     req.body.items = items;
 

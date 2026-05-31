@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import {FaGreaterThan, FaLessThan} from 'react-icons/fa'
+import { FaGreaterThan, FaLessThan } from "react-icons/fa";
 import { ArrowRightIcon } from "@/components/ui/ArrowRightIcon";
 import { CheckIcon } from "@/components/ui/CheckIcon";
 import axios from "axios";
@@ -68,17 +68,18 @@ function getImageValue(image) {
 
 function getTripImage(trip) {
   if (trip?.imageUrl) return trip.imageUrl;
-  if (Array.isArray(trip?.image)) return getImageValue(trip.image[0]) || FALLBACK_TRIP_IMAGE;
+  if (Array.isArray(trip?.image))
+    return getImageValue(trip.image[0]) || FALLBACK_TRIP_IMAGE;
   if (trip?.image) return getImageValue(trip.image) || FALLBACK_TRIP_IMAGE;
-  if (Array.isArray(trip?.images)) return getImageValue(trip.images[0]) || FALLBACK_TRIP_IMAGE;
+  if (Array.isArray(trip?.images))
+    return getImageValue(trip.images[0]) || FALLBACK_TRIP_IMAGE;
   if (trip?.images) return getImageValue(trip.images) || FALLBACK_TRIP_IMAGE;
   return FALLBACK_TRIP_IMAGE;
 }
 
 function DestinationPage(props) {
   const [data, setData] = useState(defaultDestinationData);
-  const {trips} = props
-
+  const { trips } = props;
 
   return (
     <>
@@ -192,10 +193,20 @@ function DestinationPage(props) {
                     {trip.description}
                   </p>
                   <div className="mt-auto flex items-center justify-between font-bold text-lg transition-colors text-yellow-500">
-                    <span>{Number(trip.fullPrice || trip.finalPrice || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}  EGP</span>
+                    <span>
+                      {Number(
+                        trip.fullPrice || trip.finalPrice || 0,
+                      ).toLocaleString("en-US", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      })}{" "}
+                      EGP
+                    </span>
+                    <Link href={`/trips/${trip.id}`}>
                       <div className="ml-2 transform group-hover:translate-x-1 transition-transform text-yellow-500 group-hover:text-black w-6 h-6">
-                         <ArrowRightIcon />
+                        View Details <ArrowRightIcon />
                       </div>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -233,8 +244,8 @@ function DestinationPage(props) {
               </ul>
               <Link href="/BookTrip">
                 <button className="bg-yellow-400 text-[#1f2a44] px-8 py-4 rounded-full font-semibold tracking-wider">
-                   View Trip
-                 </button>
+                  View Trip
+                </button>
               </Link>
             </div>
           </div>
@@ -273,11 +284,11 @@ function DestinationPage(props) {
                 Join us to explore the hidden gems and timeless monuments of
                 Alexandria.
               </p>
-                <Link href="/BookTrip">
-              <button className="bg-[#FBBF24] text-[#111827] px-12 py-5 rounded-full font-black text-sm uppercase tracking-widest hover:bg-[#e5a913] hover:shadow-lg hover:shadow-[#FBBF24]/20 transition-all transform hover:-translate-y-1">
-                Book Your Trip 
-              </button>
-                 </Link>
+              <Link href="/BookTrip">
+                <button className="bg-[#FBBF24] text-[#111827] px-12 py-5 rounded-full font-black text-sm uppercase tracking-widest hover:bg-[#e5a913] hover:shadow-lg hover:shadow-[#FBBF24]/20 transition-all transform hover:-translate-y-1">
+                  Book Your Trip
+                </button>
+              </Link>
             </div>
           </div>
         </section>
@@ -288,26 +299,26 @@ function DestinationPage(props) {
 
 export default DestinationPage;
 
-
 export async function getStaticProps() {
-  
-  try{
-    const response = await axios.get("https://kemet-ochre.vercel.app/api/Trip/");
+  try {
+    const response = await axios.get(
+      "https://kemet-ochre.vercel.app/api/Trip/",
+    );
 
     return {
       props: {
-        trips: response.data
+        trips: response.data,
       },
-      revalidate: 60
-    }
-  }catch(error){
-    console.log("error while fetch the data")
-     
+      revalidate: 60,
+    };
+  } catch (error) {
+    console.log("error while fetch the data");
+
     return {
       props: {
-        trips: []
+        trips: [],
       },
-      revalidate: 10
-    }
+      revalidate: 10,
+    };
   }
-} 
+}

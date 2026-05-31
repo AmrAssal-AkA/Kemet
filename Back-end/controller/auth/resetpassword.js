@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
 const RESET_PASSWORD_SECRET = process.env.RESET_PASSWORD_SECRET;
+const frontendURL = process.env.DOMAIN || "http://localhost:3000";
 
 const generateResetToken = async (req, res, nxt) => {
   const { email } = req.body;
@@ -28,7 +29,7 @@ const generateResetToken = async (req, res, nxt) => {
     user.passwordResetToken = resetHashToken;
     user.passwordResetExpires = Date.now() + 3600000; //
     await user.save();
-    const resetLink = `http://localhost:3000/auth/PasswordConfirm/?token=${resetToken}`;
+    const resetLink = `${frontendURL}/auth/PasswordConfirm/?token=${resetToken}`;
     const emailContent = await resetPasswordTemplate(user.name, resetLink);
     await sendEmail({
       to: user.email,

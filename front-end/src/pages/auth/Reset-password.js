@@ -39,7 +39,7 @@ function ResetPassword() {
             <input
               type="email"
               id="email"
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
               placeholder="Enter your email"
               required
               onChange={(e) => setEmail(e.target.value)}
@@ -47,7 +47,7 @@ function ResetPassword() {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+            className="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition duration-200"
             disabled={isLoading}
           >
             {isLoading ? "Sending..." : "Send Reset Link"}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import toast from "react-hot-toast";
 
 import { confirmResetPassword } from "@/services/authServices";
 
@@ -35,12 +36,16 @@ function ResetPasswordConfirm({ token }) {
         token,
         newPassword: formData.newPassword,
       });
+
       setSuccessMessage(res.message || "Password reset successful!");
+      toast.success(res.message || "Password reset successful!");
+      
       setTimeout(() => {
         router.push("/auth/auth");
       }, 1500);
     } catch (error) {
       setError(error.message);
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
