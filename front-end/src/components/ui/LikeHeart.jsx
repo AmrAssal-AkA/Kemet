@@ -1,12 +1,17 @@
 "use client";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/router";
 
 import { FaHeart } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import { likeBlog } from "@/services/contentServices";
 
-export default function LikeHeart({ blogId, initialLiked = false, initialCount = 0 }) {
+export default function LikeHeart({
+  blogId,
+  initialLiked = false,
+  initialCount = 0,
+  onChange,
+}) {
   const { user } = useAuth();
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(initialLiked);
@@ -25,33 +30,44 @@ export default function LikeHeart({ blogId, initialLiked = false, initialCount =
     isPending.current = true;
     setLoading(true);
 
-    // Optimistic update
     const wasLiked = isLiked;
     setIsLiked(!wasLiked);
     setLikesCount((prev) => (wasLiked ? Math.max(0, prev - 1) : prev + 1));
 
     try {
       const data = await likeBlog(blogId);
-
-      // Sync with backend count if returned
       const backendCount =
-        data?.likesCount ?? data?.likes ?? data?.data?.likesCount ?? data?.data?.likes;
-      if (typeof backendCount === "number") {
-        setLikesCount(backendCount);
-      }
+        data?.likeCount ??
+        data?.likesCount ??
+        data?.likes ??
+        data?.data?.likeCount ??
+        data?.data?.likesCount ??
+        data?.data?.likes;
+      const backendLiked =
+        data?.liked ??
+        data?.isLiked ??
+        data?.data?.liked ??
+        data?.data?.isLiked ??
+        (data?.status ? data.status === "liked" : undefined);
+      const nextLiked =
+        typeof backendLiked === "boolean" ? backendLiked : !wasLiked;
+      const nextCount =
+        typeof backendCount === "number"
+          ? backendCount
+          : wasLiked
+            ? Math.max(0, likesCount - 1)
+            : likesCount + 1;
 
-      // Determine final liked state from response status context:
-      // 201 → liked, 200 → unliked (already toggled optimistically — keep it)
+      setIsLiked(nextLiked);
+      setLikesCount(nextCount);
+      onChange?.({ isLiked: nextLiked, likesCount: nextCount, response: data });
     } catch (error) {
+      setIsLiked(wasLiked);
+      setLikesCount((prev) => (wasLiked ? prev + 1 : Math.max(0, prev - 1)));
+
       if (error.message === "UNAUTHORIZED") {
-        // Revert optimistic update and redirect
-        setIsLiked(wasLiked);
-        setLikesCount((prev) => (wasLiked ? prev + 1 : Math.max(0, prev - 1)));
         router.push("/auth/auth");
       } else {
-        // Revert on any other error
-        setIsLiked(wasLiked);
-        setLikesCount((prev) => (wasLiked ? prev + 1 : Math.max(0, prev - 1)));
         console.error("[LikeHeart] Like request failed:", error.message);
       }
     } finally {
@@ -62,14 +78,21 @@ export default function LikeHeart({ blogId, initialLiked = false, initialCount =
 
   return (
     <button
-      className={`flex items-center gap-2 py-2 px-4 rounded-lg cursor-pointer ${isLiked ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"} hover:${isLiked ? "bg-red-600" : "bg-gray-300"} disabled:opacity-60 disabled:cursor-not-allowed`}
+      className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+        isLiked
+          ? "bg-red-500 text-white hover:bg-red-600"
+          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+      }`}
       onClick={toggleLike}
       disabled={loading}
       aria-label={isLiked ? "Unlike this blog" : "Like this blog"}
       aria-pressed={isLiked}
     >
       <FaHeart />
-      <span>{isLiked ? "Liked" : "Like"}{likesCount > 0 ? ` (${likesCount})` : ""}</span>
+      <span>
+        {isLiked ? "Liked" : "Like"}
+        {likesCount > 0 ? ` (${likesCount})` : ""}
+      </span>
     </button>
   );
 }

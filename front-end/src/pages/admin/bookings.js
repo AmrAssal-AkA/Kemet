@@ -538,7 +538,7 @@ export default function AdminBookings({ admin }) {
         className="rounded-2xl border border-slate-200 p-4 transition hover:border-gray-300 hover:shadow-sm"
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
+          <div className="min-w-0 break-words">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               Booking ID: {booking.id || "N/A"}
             </p>
@@ -550,7 +550,7 @@ export default function AdminBookings({ admin }) {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {canConfirm && (
               <button
                 type="button"
@@ -558,7 +558,7 @@ export default function AdminBookings({ admin }) {
                 disabled={
                   !booking.id || confirmAction.loading || assignAction.loading
                 }
-                className="rounded-xl bg-[#0b1d3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="w-full rounded-xl bg-[#0b1d3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
               >
                 {confirmAction.loading ? "Confirming..." : "Confirm Booking"}
               </button>
@@ -568,7 +568,7 @@ export default function AdminBookings({ admin }) {
                 type="button"
                 onClick={() => handleCancelBooking(booking.id)}
                 disabled={!booking.id || cancelAction.loading}
-                className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {cancelAction.loading ? "Cancelling..." : "Cancel Booking"}
               </button>
@@ -635,7 +635,7 @@ export default function AdminBookings({ admin }) {
                   guideOptions.loading ||
                   assignAction.loading
                 }
-                className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="w-full rounded-xl bg-amber-400 px-4 py-2 text-sm font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300 lg:w-auto"
               >
                 {assignAction.loading ? "Assigning..." : "Assign Guide"}
               </button>
@@ -652,16 +652,16 @@ export default function AdminBookings({ admin }) {
             )}
         </div>
 
-        <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+        <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="min-w-0 rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Trip Date
             </dt>
-            <dd className="mt-1 text-sm font-semibold text-slate-800">
+            <dd className="mt-1 break-words text-sm font-semibold text-slate-800">
               {booking.tripDate}
             </dd>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+          <div className="min-w-0 rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Duration
             </dt>
@@ -669,7 +669,7 @@ export default function AdminBookings({ admin }) {
               {booking.tripDuration}
             </dd>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+          <div className="min-w-0 rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Guests
             </dt>
@@ -677,15 +677,15 @@ export default function AdminBookings({ admin }) {
               {booking.guestCount}
             </dd>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+          <div className="min-w-0 rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Total price
             </dt>
-            <dd className="mt-1 text-sm font-semibold text-slate-800">
+            <dd className="mt-1 break-words text-sm font-semibold text-slate-800">
               {booking.totalPrice}
             </dd>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+          <div className="min-w-0 rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Payment
             </dt>
@@ -693,7 +693,7 @@ export default function AdminBookings({ admin }) {
               {booking.paymentStatus}
             </dd>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+          <div className="min-w-0 rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Status
             </dt>
@@ -709,7 +709,7 @@ export default function AdminBookings({ admin }) {
               {booking.status}
             </dd>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+          <div className="min-w-0 rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Created
             </dt>
@@ -717,7 +717,7 @@ export default function AdminBookings({ admin }) {
               {booking.createdDate}
             </dd>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+          <div className="min-w-0 rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Guide requested
             </dt>
@@ -738,7 +738,7 @@ export default function AdminBookings({ admin }) {
 
   return (
     <AdminLayout adminName={user?.name || admin?.name} onLogout={logout}>
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Bookings</h1>
@@ -747,7 +747,7 @@ export default function AdminBookings({ admin }) {
               endpoint.
             </p>
           </div>
-          <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
+          <span className="w-fit rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
             {pendingBookings.length} pending / {confirmedBookings.length}{" "}
             confirmed / {cancelledBookings.length} cancelled
           </span>

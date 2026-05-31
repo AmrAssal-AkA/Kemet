@@ -14,13 +14,13 @@ import {
 
 function StatCard({ card }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between">
-        <div>
+    <article className="min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
             {card.title}
           </p>
-          <p className="mt-2 text-4xl font-bold text-slate-900">{card.value}</p>
+          <p className="mt-2 break-words text-3xl font-bold text-slate-900 sm:text-4xl">{card.value}</p>
         </div>
         <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
           {card.growth}
@@ -110,7 +110,7 @@ function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
   }, []);
 
   return (
-    <div className="max-h-[34rem] overflow-auto">
+    <div className="max-h-[34rem] w-full overflow-auto">
       <table className="w-full min-w-[1024px]">
         <thead>
           <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-[0.14em] text-slate-400">
@@ -187,26 +187,26 @@ export default function AdminDashboard({ admin, contacts, loadError, recentBooki
 
   return (
     <AdminLayout adminName={admin?.name} onLogout={logout}>
-      <section className="rounded-3xl bg-[#0b1d3a] p-8 text-white shadow-sm">
-        <h1 className="text-4xl font-bold">Welcome back, {admin?.name}</h1>
+      <section className="rounded-3xl bg-[#0b1d3a] p-5 text-white shadow-sm sm:p-8">
+        <h1 className="break-words text-3xl font-bold sm:text-4xl">Welcome back, {admin?.name}</h1>
         <p className="mt-3 max-w-2xl text-slate-200">
           Live KEMET admin overview from your current trips, users, bookings,
           and revenue APIs.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
-          <div className="rounded-2xl bg-white/10 px-5 py-3">
+          <div className="min-w-0 flex-1 rounded-2xl bg-white/10 px-5 py-3 sm:flex-none">
             <p className="text-xs uppercase tracking-[0.14em] text-slate-300">Users and guides</p>
             <p className="mt-1 text-3xl font-bold">{admin.metrics.users.toLocaleString()}</p>
           </div>
-          <div className="rounded-2xl bg-white/10 px-5 py-3">
+          <div className="min-w-0 flex-1 rounded-2xl bg-white/10 px-5 py-3 sm:flex-none">
             <p className="text-xs uppercase tracking-[0.14em] text-slate-300">Pending inquiries</p>
             <p className="mt-1 text-3xl font-bold">{contacts.length.toLocaleString()}</p>
           </div>
         </div>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {admin.statCards.map((card) => (
           <StatCard key={card.title} card={card} />
         ))}
@@ -218,8 +218,8 @@ export default function AdminDashboard({ admin, contacts, loadError, recentBooki
         </p>
       )}
 
-      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
+      <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">Engagement Trends</h2>
             <p className="text-sm text-slate-500">Real activity based on recent bookings</p>
@@ -245,7 +245,7 @@ export default function AdminDashboard({ admin, contacts, loadError, recentBooki
       </section>
 
       <section className="mt-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-xl font-bold text-slate-900">Recent Bookings</h3>
             <p className="text-sm text-slate-500">Newest bookings from the admin API</p>

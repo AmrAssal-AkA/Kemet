@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { FaBell, FaCog, FaPlus } from "react-icons/fa";
 
 import AddContent from "./AddContent";
 import { VscChromeClose } from "react-icons/vsc";
+import { adminDashboardMenuItems } from "@/config/dashboardMenus";
 
 export default function AdminNavBar() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   function toggleAddContent() {
     setIsOpen(true);
@@ -17,8 +20,8 @@ export default function AdminNavBar() {
   }
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
-      <div className="w-full max-w-xl">
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-4 sm:px-6">
+      <div className="order-2 w-full lg:order-1 lg:max-w-xl">
         <input
           type="text"
           placeholder="Search destinations, bookings, or articles..."
@@ -26,7 +29,7 @@ export default function AdminNavBar() {
         />
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="order-1 flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end lg:order-2 lg:ml-auto">
         <button
           type="button"
           className="grid h-10 w-10 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
@@ -42,20 +45,41 @@ export default function AdminNavBar() {
           <FaCog />
         </button>
         <button
-          className="ml-2 inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-300"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-300 sm:flex-none"
           onClick={toggleAddContent}
         >
           <FaPlus className="text-xs" />
-          Add New Content
+          <span>Add New Content</span>
         </button>
         <Link
           href="/blogs?addArticle=1"
-          className="inline-flex items-center gap-2 rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-50"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-amber-300 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-amber-50 sm:flex-none"
         >
           <FaPlus className="text-xs" />
           Create Post
         </Link>
       </div>
+
+      <nav className="order-3 flex w-full gap-2 overflow-x-auto pb-1 lg:hidden">
+        {adminDashboardMenuItems.map((item) => {
+          const isActive = router.pathname === item.href;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${
+                isActive
+                  ? "bg-amber-50 text-amber-700"
+                  : "bg-slate-100 text-slate-600"
+              }`}
+            >
+              <Icon className="text-xs" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
 
       {/* Modal for adding content */}
       {isOpen && (

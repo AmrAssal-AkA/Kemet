@@ -30,8 +30,35 @@ router.get("/blogLikes", authenticate, authorize("user"),async (req, res, nxt) =
             return res.status(401).json({ message: "Unauthorized: User ID not found" });
         }
 
-        const userLikedBlogs = await PostLike.find({ userId });
-        res.status(200).json({ likes: userLikedBlogs });
+        const userLikedBlogs = await PostLike.find({ userId })
+            .sort({ createdAt: -1 })
+            .populate({
+                path: "blogId",
+                model: "blog",
+                select: "title content images category author createdAt",
+                populate: {
+                    path: "author",
+                    model: "User",
+                    select: "name email",
+                },
+            });
+        const likedBlogs = (await Promise.all(userLikedBlogs
+            .map(async (like) => {
+                const blog = like.blogId?.toObject ? like.blogId.toObject() : like.blogId;
+                if (!blog || typeof blog !== "object") return null;
+                const likeCount = await PostLike.countDocuments({ blogId: blog._id });
+                return {
+                    ...blog,
+                    likedAt: like.createdAt,
+                    likeId: like._id,
+                    isLiked: true,
+                    likes: likeCount,
+                    likesCount: likeCount,
+                };
+            })))
+            .filter(Boolean);
+
+        res.status(200).json({ likes: userLikedBlogs, likedBlogs });
     }catch (err) {
         nxt(err)
     }

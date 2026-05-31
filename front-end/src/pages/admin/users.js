@@ -65,22 +65,22 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
 
   return (
     <AdminLayout adminName={admin?.name} onLogout={logout}>
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold text-slate-900">Users</h1>
             <p className="mt-1 text-sm text-slate-500">
               Normal users and guide accounts from the admin account endpoint.
             </p>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+          <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
             {users.length} accounts
           </span>
           <button
             type="button"
             onClick={handleRefresh}
             disabled={isLoading}
-            className="rounded-xl bg-[#0b1d3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="w-full rounded-xl bg-[#0b1d3a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#132b52] disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
           >
             {isLoading ? "Loading..." : "Refresh"}
           </button>
@@ -105,18 +105,18 @@ export default function AdminUsers({ admin, AllUser, initialError = "" }) {
                 return (
                   <li
                     key={user._id}
-                    className="flex flex-col gap-4 rounded-lg border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between"
+                    className="flex min-w-0 flex-col gap-4 rounded-lg border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-900">{user.name}</p>
-                      <p className="text-sm text-slate-500">{user.email}</p>
+                      <p className="break-words text-sm text-slate-500">{user.email}</p>
                       {user.phone && <p className="text-sm text-slate-500">{user.phone}</p>}
-                      <p className="mt-1 max-w-72 truncate text-xs text-slate-400">
+                      <p className="mt-1 max-w-full break-words text-xs text-slate-400 sm:max-w-72">
                         ID: {user._id || user.userId || "N/A"}
                       </p>
                     </div>
 
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
                           getRole(user) === "guide"

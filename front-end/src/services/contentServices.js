@@ -50,6 +50,34 @@ export async function likeBlog(blogId) {
   return handleResponse(res, "Failed to update like status.");
 }
 
+export async function getBlogComments(blogId) {
+  if (!blogId) throw new Error("Blog ID is required.");
+
+  const res = await fetch(`/api/Blog/${blogId}`, {
+    credentials: "include",
+  });
+  const data = await handleResponse(res, "Comments could not be loaded.");
+  const blog = data?.blog || data?.data?.blog || data?.data || data || {};
+  return getArray(blog.comments || data?.comments || [], "comments");
+}
+
+export async function addBlogComment(blogId, commentText) {
+  if (!blogId) throw new Error("Blog ID is required.");
+
+  const res = await fetch(`/api/Blog/addComment/${blogId}`, {
+    method: "POST",
+    headers: getJsonHeaders(),
+    credentials: "include",
+    body: JSON.stringify({ comment: commentText }),
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return handleResponse(res, "Comment could not be added.");
+}
+
 export async function getBlogs(cookie = "") {
   const res = await fetch(buildApiUrl("/api/blog"), {
     headers: getHeaders(cookie),

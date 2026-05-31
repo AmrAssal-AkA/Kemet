@@ -4,6 +4,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import LikeHeart from "@/components/ui/LikeHeart";
 import { userDashboardMenuItems } from "@/config/dashboardMenus";
 import { getBookedTrips, getLikedBlogs } from "@/services/userServices";
 import { getUserRole } from "@/utils/authSession";
@@ -1033,7 +1034,24 @@ export default function UserDashboard() {
                             >
                               {category}
                             </span>
-                            <span className="absolute bottom-3 right-3 text-white text-base" title="Liked">
+                            <div className="absolute bottom-3 right-3">
+                              <LikeHeart
+                                blogId={blogId}
+                                initialLiked
+                                initialCount={Number(blog.likesCount ?? blog.likes ?? 0)}
+                                onChange={({ isLiked }) => {
+                                  if (!isLiked) {
+                                    setLikedBlogs((current) =>
+                                      current.filter(
+                                        (item) =>
+                                          (item?._id || item?.id || item?.blogId) !== blogId,
+                                      ),
+                                    );
+                                  }
+                                }}
+                              />
+                            </div>
+                            <span className="absolute bottom-3 right-3 hidden text-white text-base" title="Liked">
                               ♥
                             </span>
                           </div>
