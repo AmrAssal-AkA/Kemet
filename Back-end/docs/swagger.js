@@ -6,8 +6,8 @@ const localBackendUrl = `http://localhost:${port}`;
 
 const getServerUrl = () => {
   if (process.env.NODE_ENV === "production") {
-    return process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
+    return process.env.BACKEND_URL
+      ? `https://${process.env.BACKEND_URL}`
       : deployedBackendUrl;
   }
   return localBackendUrl;
@@ -64,7 +64,10 @@ const definition = {
       name: "Newsletter",
       description: "Newsletter subscription and delivery endpoints",
     },
-    
+    {
+      name: "Passport",
+      description: "Passport image validation endpoints",
+    },
   ],
   components: {
     securitySchemes: {
@@ -131,10 +134,24 @@ const definition = {
         type: "object",
         required: ["location", "duration"],
         properties: {
-          location: { type: "string", description: "Trip location (case-insensitive)" },
-          duration: { type: "string", description: "Trip duration (case-insensitive)" },
-          travelers: { type: "integer", minimum: 1, default: 1, description: "Minimum number of travelers" },
-          AdvantureType: { type: "string", description: "Optional adventure type filter" },
+          location: {
+            type: "string",
+            description: "Trip location (case-insensitive)",
+          },
+          duration: {
+            type: "string",
+            description: "Trip duration (case-insensitive)",
+          },
+          travelers: {
+            type: "integer",
+            minimum: 1,
+            default: 1,
+            description: "Minimum number of travelers",
+          },
+          AdvantureType: {
+            type: "string",
+            description: "Optional adventure type filter",
+          },
         },
       },
       Trip: {
@@ -229,7 +246,8 @@ const definition = {
           image: {
             type: "string",
             format: "binary",
-            description: "Optional replacement image. Omit to keep the existing trip image.",
+            description:
+              "Optional replacement image. Omit to keep the existing trip image.",
           },
           guideAvailable: { type: "boolean", default: false },
           guidefees: { type: "number", default: 0 },
@@ -629,7 +647,10 @@ const definition = {
         type: "object",
         required: ["bookingId"],
         properties: {
-          bookingId: { type: "string", description: "MongoDB ObjectId of the booking to refund" },
+          bookingId: {
+            type: "string",
+            description: "MongoDB ObjectId of the booking to refund",
+          },
         },
       },
       Booking: {
@@ -690,7 +711,8 @@ const definition = {
           guideFee: {
             type: "number",
             default: 0,
-            description: "Guide fee included in totalPrice when guideIncluded is true.",
+            description:
+              "Guide fee included in totalPrice when guideIncluded is true.",
           },
           PassportNumber: {
             type: "string",
@@ -1213,7 +1235,8 @@ const definition = {
     "/api/searchHandler/search": {
       get: {
         tags: ["Search"],
-        summary: "Search trips by location, duration, travelers, and adventure type",
+        summary:
+          "Search trips by location, duration, travelers, and adventure type",
         description:
           "Search for trips with optional filters. Location and duration are case-insensitive regex searches. Mounted by the backend at `/api/searchHandler/search`.",
         parameters: [
@@ -1600,6 +1623,27 @@ const definition = {
         },
       },
     },
+    "/api/blog/like/{blogId}": {
+      post: {
+        tags: ["Blogs"],
+        summary: "Like or unlike a blog post",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "blogId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Blog unliked successfully" },
+          201: { description: "Blog liked successfully" },
+          401: { description: "Unauthorized" },
+          500: { description: "Server error" },
+        },
+      },
+    },
     "/api/booking/create": {
       post: {
         tags: ["Bookings"],
@@ -1679,6 +1723,27 @@ const definition = {
           401: { description: "Unauthorized" },
           404: { description: "Booking not found" },
           500: { description: "Failed to cancel booking or process refund" },
+        },
+      },
+    },
+    "/api/booking/refund/{bookingId}": {
+      get: {
+        tags: ["Bookings"],
+        summary: "Cancel a booking and process refund",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            in: "path",
+            name: "bookingId",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          200: { description: "Booking cancelled and refunded successfully" },
+          401: { description: "Unauthorized" },
+          404: { description: "Booking not found" },
+          500: { description: "Server error" },
         },
       },
     },
@@ -2131,6 +2196,18 @@ const definition = {
         },
       },
     },
+    "/api/userdashboard/blogLikes": {
+      get: {
+        tags: ["User Dashboard"],
+        summary: "Get user's liked blogs",
+        security: [{ cookieAuth: [] }],
+        responses: {
+          200: { description: "User liked blogs returned" },
+          401: { description: "Unauthorized" },
+          500: { description: "Server error" },
+        },
+      },
+    },
     "/api/userdashboard/removeSavedTrip/{tripId}": {
       delete: {
         tags: ["User Dashboard"],
@@ -2515,6 +2592,41 @@ const definition = {
           403: { description: "Forbidden" },
           404: { description: "Email not found in subscription list" },
           500: { description: "Server error" },
+        },
+      },
+    },
+    "/api/passport/health": {
+      get: {
+        tags: ["Passport"],
+        summary: "Health check for passport validation service",
+        responses: {
+          200: { description: "Passport Validator service is ok" },
+        },
+      },
+    },
+    "/api/passport/validate": {
+      post: {
+        tags: ["Passport"],
+        summary: "Validate passport image",
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  passport: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Passport validated" },
+          400: { description: "Validation failed or file too large" },
         },
       },
     },

@@ -115,6 +115,12 @@ app.get("/api-docs/swagger-ui.css", (req, res) =>
   ),
 );
 
+app.use("/api-docs", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
 app.use(
   "/api-docs",
   swaggerUi.serve,

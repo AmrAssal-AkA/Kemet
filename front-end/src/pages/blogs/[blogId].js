@@ -90,7 +90,11 @@ function BlogDetailPage(props) {
 
 
                   <div className="shrink-0">
-                    <LikeHeart />
+                    <LikeHeart
+                      blogId={blog._id || blog.id || blog.blogId}
+                      initialLiked={Boolean(blog.isLiked)}
+                      initialCount={Number(blog.likesCount ?? blog.likes ?? 0)}
+                    />
                   </div>
                 </div>
               </div>

@@ -35,6 +35,21 @@ function getArray(data, key) {
   return [];
 }
 
+export async function likeBlog(blogId) {
+  if (!blogId) throw new Error("Blog ID is required.");
+
+  const res = await fetch(`/api/blog-like/${blogId}`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (res.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return handleResponse(res, "Failed to update like status.");
+}
+
 export async function getBlogs(cookie = "") {
   const res = await fetch(buildApiUrl("/api/blog"), {
     headers: getHeaders(cookie),

@@ -1,5 +1,6 @@
 const blog = require("../../model/blogSchema");
 const cloudinary = require("../../config/cloudinary");
+const PostLike = require("../../model/PostLike");
 
 function getFileSource(file) {
   return file?.buffer || file?.path;
@@ -71,7 +72,12 @@ const getOneBlogById = async (req, res) => {
     if (!blogByOne) {
       return res.status(404).json({ message: "blog not found." });
     }
-    res.status(200).json(blogByOne);
+
+    const BlogLikes = await PostLike.countDocuments({ blogId });
+    const blogData = blogByOne.toObject();
+    blogData.likes = BlogLikes;
+
+    res.status(200).json(blogData);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }

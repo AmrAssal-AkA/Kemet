@@ -4,7 +4,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
-import { getBookedTrips } from "@/services/userServices";
+import { getBookedTrips, getLikedBlogs } from "@/services/userServices";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -328,6 +328,10 @@ export default function UserDashboard() {
   const [bookedTrips, setBookedTrips] = useState([]);
   const [isDashboardLoading, setIsDashboardLoading] = useState(true);
   const [bookedError, setBookedError] = useState("");
+  const [likedBlogs, setLikedBlogs] = useState([]);
+  const [isLikedLoading, setIsLikedLoading] = useState(false);
+  const [likedError, setLikedError] = useState("");
+  const [likedFetched, setLikedFetched] = useState(false);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -374,6 +378,38 @@ export default function UserDashboard() {
     };
   }, [sessionReady, user]);
 
+  useEffect(() => {
+    if (activeTab !== "liked" || likedFetched || !user) return;
+
+    let isMounted = true;
+
+    async function loadLikedBlogs() {
+      setIsLikedLoading(true);
+      setLikedError("");
+
+      try {
+        const result = await getLikedBlogs();
+        if (!isMounted) return;
+        setLikedBlogs(Array.isArray(result) ? result : []);
+      } catch (error) {
+        if (!isMounted) return;
+        setLikedBlogs([]);
+        setLikedError(getDashboardErrorMessage(error));
+      } finally {
+        if (isMounted) {
+          setIsLikedLoading(false);
+          setLikedFetched(true);
+        }
+      }
+    }
+
+    loadLikedBlogs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, likedFetched, user]);
+
   const dashboardName = user?.name || "Explorer";
   const dashboardEmail = user?.email || "Not provided";
   const dashboardLocation = user?.Nationality || user?.nationality || "Egypt";
@@ -388,10 +424,10 @@ export default function UserDashboard() {
         label: "Trips Taken",
       },
       { value: String(upcomingTripCards.length), label: "Upcoming" },
-      { value: "0", label: "Liked Articles" },
+      { value: String(likedBlogs.length), label: "Liked Articles" },
       { value: String(STORIES_SHARED_COUNT), label: "Stories Shared" },
     ],
-    [bookedTrips, upcomingTripCards.length],
+    [bookedTrips, upcomingTripCards.length, likedBlogs.length],
   );
   const settingsFields = useMemo(
     () => [
@@ -870,11 +906,117 @@ export default function UserDashboard() {
                   title="Liked Articles"
                   subtitle="Blog articles you've liked will appear here."
                 />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                {/* Loading */}
+                {isLikedLoading && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-pulse"
+                      >
+                        <div className="h-44 bg-gray-100" />
+                        <div className="p-4 flex flex-col gap-2">
+                          <div className="h-3 bg-gray-100 rounded-full w-3/4" />
+                          <div className="h-3 bg-gray-100 rounded-full w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Error */}
+                {!isLikedLoading && likedError && (
+                  <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
+                    {likedError}
+                  </p>
+                )}
+
+                {/* Empty */}
+                {!isLikedLoading && !likedError && likedBlogs.length === 0 && (
                   <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
                     No liked articles yet.
                   </p>
-                </div>
+                )}
+
+                {/* Data */}
+                {!isLikedLoading && !likedError && likedBlogs.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                    {likedBlogs.map((blog, i) => {
+                      const blogId = blog?._id || blog?.id || blog?.blogId;
+                      const title = blog?.title || "Untitled Article";
+                      const rawImage =
+                        (Array.isArray(blog?.images) ? blog.images[0] : null);
+                      const image =
+                        typeof rawImage === "string"
+                          ? rawImage
+                          : rawImage?.imageUrl || rawImage?.url || "/hero.png";
+                      const category =
+                        typeof blog?.category === "string"
+                          ? blog.category
+                          : blog?.category?.name || "Travel";
+                      const snippet = blog?.content
+                        ? `${String(blog.content).slice(0, 90)}…`
+                        : "";
+
+                      return (
+                        <motion.div
+                          key={blogId || i}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.07, duration: 0.4 }}
+                          className="trip-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col"
+                        >
+                          <div className="overflow-hidden h-44 relative shrink-0">
+                            <img
+                              src={image}
+                              alt={title}
+                              className="trip-img w-full h-full object-cover"
+                            />
+                            <div
+                              className="absolute inset-0"
+                              style={{
+                                background:
+                                  "linear-gradient(to top,rgba(0,0,0,.5) 0%,transparent 55%)",
+                              }}
+                            />
+                            <span
+                              className="absolute top-3 left-3 text-[10px] font-bold px-2.5 py-1 rounded-full"
+                              style={{
+                                background: "rgba(255,206,42,0.2)",
+                                color: "#FFCE2A",
+                                border: "1px solid rgba(255,206,42,0.4)",
+                              }}
+                            >
+                              {category}
+                            </span>
+                            <span className="absolute bottom-3 right-3 text-white text-base" title="Liked">
+                              ♥
+                            </span>
+                          </div>
+                          <div className="p-4 flex flex-col flex-1">
+                            <h4 className="font-bold text-sm text-gray-900 mb-1 leading-snug line-clamp-2">
+                              {title}
+                            </h4>
+                            {snippet && (
+                              <p className="text-xs text-gray-400 leading-relaxed line-clamp-2 mb-3">
+                                {snippet}
+                              </p>
+                            )}
+                            <div className="mt-auto">
+                              <Link href={`/blogs/${blogId}`}>
+                                <button className="btn-gold rounded-full px-5 py-2 font-semibold text-black text-xs w-full">
+                                  Read Article →
+                                </button>
+                              </Link>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <div className="text-center mt-8">
                   <Link href="/blogs">
                     <button className="btn-gold rounded-full px-9 py-3.5 font-semibold text-black text-sm">

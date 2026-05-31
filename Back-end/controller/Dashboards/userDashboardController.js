@@ -1,6 +1,7 @@
 const User = require("../../model/userSchema");
 const Booking = require("../../model/BookingSchema");
 const cloudinary = require("../../config/cloudinary");
+const PostLike = require("../../model/PostLike");
 
 const getAuthenticatedUserId = (req) => req.user?.id || req.user?._id || req.user?.userId;
 
@@ -100,6 +101,10 @@ const getBookedTrips = async (req, res, nxt) => {
   };
   getBookedTrips();
 };
+
+const likeBlog = async (req, res, nxt) => {
+
+}
 
 module.exports = {
   updateProfilePicture,

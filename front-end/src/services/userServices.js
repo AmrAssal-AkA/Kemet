@@ -68,10 +68,13 @@ function getArray(data) {
   if (Array.isArray(data?.trips)) return data.trips;
   if (Array.isArray(data?.bookings)) return data.bookings;
   if (Array.isArray(data?.savedTrips)) return data.savedTrips;
+  if (Array.isArray(data?.blogs)) return data.blogs;
+  if (Array.isArray(data?.likedBlogs)) return data.likedBlogs;
   if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data?.data?.trips)) return data.data.trips;
   if (Array.isArray(data?.data?.bookings)) return data.data.bookings;
   if (Array.isArray(data?.data?.savedTrips)) return data.data.savedTrips;
+  if (Array.isArray(data?.data?.blogs)) return data.data.blogs;
   return [];
 }
 
@@ -88,6 +91,14 @@ export async function getSavedTrips() {
     credentials: "include",
   });
   const data = await handleResponse(res, "Saved trips could not be loaded.", "getSavedTrips");
+  return getArray(data);
+}
+
+export async function getLikedBlogs() {
+  const res = await fetch(buildApiUrl("/api/userdashboard/blogLikes"), {
+    credentials: "include",
+  });
+  const data = await handleResponse(res, "Liked blogs could not be loaded.", "getLikedBlogs");
   return getArray(data);
 }
 
