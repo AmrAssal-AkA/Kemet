@@ -238,20 +238,20 @@ export default function CityPage({
         )}
 
         {/* ══════ HIDDEN GEMS ══════ */}
-        {gems.length > 0 && (
-          <section className="px-4 sm:px-8 md:px-20 pb-16 sm:pb-20">
-            <div className="mb-8 sm:mb-10">
-              <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
-                Off the Beaten Path
-              </span>
-              <h2
-                className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                {city} Hidden Gems
-              </h2>
-            </div>
+        <section className="px-4 sm:px-8 md:px-20 pb-16 sm:pb-20">
+          <div className="mb-8 sm:mb-10">
+            <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
+              Off the Beaten Path
+            </span>
+            <h2
+              className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              {city} Hidden Gems
+            </h2>
+          </div>
 
+          {gems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {gems.map((gem, i) => (
                 <motion.div
@@ -281,8 +281,12 @@ export default function CityPage({
                 </motion.div>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="rounded-2xl bg-white p-5 text-sm font-semibold text-gray-500 shadow-sm border border-gray-100">
+              No hidden gems added for this city yet.
+            </p>
+          )}
+        </section>
 
         {/* ══════ CTA ══════ */}
         <section className="px-4 sm:px-8 md:px-20 pb-16 sm:pb-20">

@@ -212,6 +212,21 @@ function getTripDate(booking) {
   ]);
 }
 
+function formatDurationDays(value) {
+  const days = Number(value);
+  if (!Number.isInteger(days) || days < 1) return "Not provided";
+
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
+
+function getTripDurationDays(booking) {
+  return getFirstValue([
+    booking.tripDurationDays,
+    booking.trip_duration_days,
+    booking.durationDays,
+  ]);
+}
+
 function mapBooking(booking) {
   const customer = booking.user || booking.customer || booking.userId || {};
 
@@ -231,6 +246,7 @@ function mapBooking(booking) {
       "",
     tripName: getTripTitle(booking),
     tripDate: formatTripDate(getTripDate(booking)),
+    tripDuration: formatDurationDays(getTripDurationDays(booking)),
     guestCount: getGuestCount(booking),
     totalPrice: formatTotalPrice(
       booking.totalPrice ?? booking.price ?? booking.amount,
@@ -636,13 +652,21 @@ export default function AdminBookings({ admin }) {
             )}
         </div>
 
-        <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <dl className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-2xl bg-slate-50 px-4 py-3">
             <dt className="text-xs font-semibold uppercase text-slate-400">
               Trip Date
             </dt>
             <dd className="mt-1 text-sm font-semibold text-slate-800">
               {booking.tripDate}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+            <dt className="text-xs font-semibold uppercase text-slate-400">
+              Duration
+            </dt>
+            <dd className="mt-1 text-sm font-semibold text-slate-800">
+              {booking.tripDuration}
             </dd>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-3">

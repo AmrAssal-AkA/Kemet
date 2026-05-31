@@ -365,6 +365,11 @@ const definition = {
         properties: {
           _id: { type: "string" },
           placeName: { type: "string" },
+          city: {
+            type: "string",
+            description:
+              "Optional city value for future city-based hidden gem filtering.",
+          },
           description: { type: "string" },
           images: {
             type: "array",
@@ -391,6 +396,11 @@ const definition = {
             description:
               "Hidden gem description as currently read by the controller.",
           },
+          city: {
+            type: "string",
+            description:
+              "Optional city value for future city-based hidden gem filtering.",
+          },
           image: {
             type: "array",
             description: "Up to 5 uploaded images.",
@@ -409,6 +419,11 @@ const definition = {
             type: "string",
             description:
               "Hidden gem description as currently read by the controller.",
+          },
+          city: {
+            type: "string",
+            description:
+              "Optional city value for future city-based hidden gem filtering.",
           },
         },
       },
@@ -689,6 +704,12 @@ const definition = {
             description:
               "User-selected date for taking the trip. Required for new bookings and cannot be in the past.",
           },
+          tripDurationDays: {
+            type: "integer",
+            minimum: 1,
+            description:
+              "User-selected trip duration in days. Required when `trip` is supplied and cannot exceed the selected trip duration.",
+          },
           tripSchedule: {
             type: "object",
             description:
@@ -869,6 +890,13 @@ const definition = {
             example: "2026-06-15",
             description:
               "Required user-selected date for taking the trip. Must be today or a future date.",
+          },
+          tripDurationDays: {
+            type: "integer",
+            minimum: 1,
+            example: 2,
+            description:
+              "Required when booking a trip. Must be between 1 and the selected trip's duration.",
           },
           tripSchedule: {
             type: "object",
@@ -1686,6 +1714,7 @@ const definition = {
                     status: { type: "string" },
                     bookingId: { type: "string" },
                     tripDate: { type: "string", format: "date-time" },
+                    tripDurationDays: { type: "integer", minimum: 1 },
                     checkoutUrl: { type: "string" },
                   },
                 },
@@ -2252,7 +2281,7 @@ const definition = {
         tags: ["Hidden Gems"],
         summary: "Create a hidden gem",
         description:
-          "Admin-only endpoint that accepts multipart form data with `PlaceName`, `Description`, and up to 5 files under the `image` field.",
+          "Admin-only endpoint that accepts multipart form data with `PlaceName`, `Description`, optional `city`, and up to 5 files under the `image` field.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,

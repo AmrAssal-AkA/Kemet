@@ -247,6 +247,34 @@ function formatTripDate(value) {
   });
 }
 
+function parseDurationDays(value) {
+  if (value === undefined || value === null || value === "") return 0;
+
+  const match = String(value).match(/\d+/);
+  const days = match ? Number(match[0]) : Number(value);
+
+  if (!Number.isInteger(days) || days < 1) return 0;
+  return days;
+}
+
+function formatDurationDays(value) {
+  const days = parseDurationDays(value);
+  if (!days) return "";
+
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
+
+function getDurationOptions(maxDurationDays) {
+  if (!maxDurationDays) {
+    return [{ label: "Select a trip first", value: "" }];
+  }
+
+  return Array.from({ length: maxDurationDays }, (_, index) => {
+    const days = index + 1;
+    return { label: formatDurationDays(days), value: String(days) };
+  });
+}
+
 function hasPassportDetails(person) {
   return Boolean(
     person.nationality &&
@@ -307,13 +335,14 @@ function AirportCodeInput({ name, value, onChange, suggestions }) {
   );
 }
 
-function SelectInput({ name, value, onChange, options }) {
+function SelectInput({ name, value, onChange, options, disabled = false }) {
   return (
     <select
       name={name}
       value={value}
       onChange={onChange}
-      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100"
+      disabled={disabled}
+      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500"
     >
       {options.map((option) => (
         <option key={option.value || option} value={option.value || option}>
@@ -357,6 +386,7 @@ export default function BookTripPage() {
   const [trips, setTrips] = useState([]);
   const [selectedTripId, setSelectedTripId] = useState("");
   const [tripDate, setTripDate] = useState("");
+  const [tripDurationDays, setTripDurationDays] = useState("");
   const [numberOfGuests, setNumberOfGuests] = useState(1);
   const [traveler, setTraveler] = useState(initialTraveler);
   const [extraGuests, setExtraGuests] = useState([]);
@@ -443,11 +473,36 @@ export default function BookTripPage() {
     () => trips.find((trip) => getTripId(trip) === selectedTripId),
     [selectedTripId, trips],
   );
+  const maxDurationDays = useMemo(
+    () => parseDurationDays(selectedTrip?.duration),
+    [selectedTrip],
+  );
+  const durationOptions = useMemo(
+    () => getDurationOptions(maxDurationDays),
+    [maxDurationDays],
+  );
+
+  useEffect(() => {
+    if (!selectedTrip || !maxDurationDays) {
+      setTripDurationDays("");
+      return;
+    }
+
+    setTripDurationDays((current) => {
+      const currentDays = parseDurationDays(current);
+      if (currentDays >= 1 && currentDays <= maxDurationDays) {
+        return String(currentDays);
+      }
+
+      return "1";
+    });
+  }, [maxDurationDays, selectedTrip]);
 
   const selectedFlight = selectedFlightIndex !== "" ? flightResults[Number(selectedFlightIndex)] : null;
   const selectedHotel = selectedHotelIndex !== "" ? hotelResults[Number(selectedHotelIndex)] : null;
   const todayDateInputValue = useMemo(getTodayDateInputValue, []);
   const tripDateSummary = tripDate ? formatTripDate(tripDate) : "";
+  const tripDurationSummary = formatDurationDays(tripDurationDays);
 
   const totals = useMemo(() => {
     const tripPrice = getTripPrice(selectedTrip);
@@ -622,6 +677,13 @@ export default function BookTripPage() {
     if (!selectedTrip) return "Please select a trip.";
     if (!tripDate) return "Trip Date is required.";
     if (isPastDateInput(tripDate)) return "Trip Date cannot be in the past.";
+    if (!maxDurationDays) return "Selected trip duration is unavailable.";
+    const selectedDurationDays = parseDurationDays(tripDurationDays);
+    if (!selectedDurationDays) return "Trip Duration is required.";
+    if (selectedDurationDays < 1) return "Trip Duration must be at least 1 day.";
+    if (selectedDurationDays > maxDurationDays) {
+      return `Trip Duration cannot exceed ${formatDurationDays(maxDurationDays)}.`;
+    }
     if (Number(numberOfGuests) < 1) return "Number of guests must be at least 1.";
     if (Number(numberOfGuests) > 1) {
       const missingGuestIndex = extraGuests.findIndex(
@@ -653,6 +715,7 @@ export default function BookTripPage() {
     const payload = {
       tripId: getTripId(selectedTrip),
       tripDate,
+      tripDurationDays: parseDurationDays(tripDurationDays),
       numberOfGuests: Number(numberOfGuests),
       selectedFlightId: selectedFlight ? getFlightId(selectedFlight, selectedFlightIndex) : undefined,
       selectedHotelId: selectedHotel ? getHotelId(selectedHotel, selectedHotelIndex) : undefined,
@@ -677,6 +740,10 @@ export default function BookTripPage() {
       if (bookingId && typeof window !== "undefined") {
         window.sessionStorage.setItem("kemet:lastBookingId", String(bookingId));
         window.sessionStorage.setItem("kemet:lastTripDate", tripDate);
+        window.sessionStorage.setItem(
+          "kemet:lastTripDurationDays",
+          String(parseDurationDays(tripDurationDays)),
+        );
       }
       const checkout = bookingData?.checkoutUrl
         ? { url: bookingData.checkoutUrl }
@@ -813,6 +880,25 @@ export default function BookTripPage() {
                 <Field label="Phone number">
                   <TextInput name="phone" value={traveler.phone} onChange={updateTraveler} required />
                 </Field>
+                <Field label="Trip Date">
+                  <TextInput
+                    name="tripDate"
+                    type="date"
+                    min={todayDateInputValue}
+                    value={tripDate}
+                    onChange={(event) => setTripDate(event.target.value)}
+                    required
+                  />
+                </Field>
+                <Field label="Trip Duration">
+                  <SelectInput
+                    name="tripDurationDays"
+                    value={tripDurationDays}
+                    onChange={(event) => setTripDurationDays(event.target.value)}
+                    options={durationOptions}
+                    disabled={!selectedTrip || maxDurationDays <= 1}
+                  />
+                </Field>
                 <Field label="Nationality">
                   <SelectInput name="nationality" value={traveler.nationality} onChange={updateTraveler} options={nationalityOptions} />
                 </Field>
@@ -839,16 +925,6 @@ export default function BookTripPage() {
 
             <Section eyebrow="Step 3" title="Guests & Add-ons">
               <div className="grid gap-4 sm:grid-cols-4">
-                <Field label="Trip Date">
-                  <TextInput
-                    name="tripDate"
-                    type="date"
-                    min={todayDateInputValue}
-                    value={tripDate}
-                    onChange={(event) => setTripDate(event.target.value)}
-                    required
-                  />
-                </Field>
                 <Field label="Number of guests">
                   <TextInput
                     name="numberOfGuests"
@@ -1192,6 +1268,12 @@ export default function BookTripPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-500">Trip Date</span>
                   <strong>{tripDateSummary}</strong>
+                </div>
+              )}
+              {tripDurationSummary && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Trip Duration</span>
+                  <strong>{tripDurationSummary}</strong>
                 </div>
               )}
               <div className="flex justify-between">

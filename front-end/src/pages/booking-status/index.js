@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const LAST_BOOKING_ID_KEY = "kemet:lastBookingId";
 const LAST_TRIP_DATE_KEY = "kemet:lastTripDate";
+const LAST_TRIP_DURATION_DAYS_KEY = "kemet:lastTripDurationDays";
 
 function normalizeValue(value) {
   return Array.isArray(value) ? value[0] : value;
@@ -48,6 +49,15 @@ function formatTripDate(value) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatDurationDays(value) {
+  if (!value) return "";
+
+  const days = Number(value);
+  if (!Number.isInteger(days) || days < 1) return "";
+
+  return `${days} ${days === 1 ? "day" : "days"}`;
 }
 
 async function copyTextToClipboard(text) {
@@ -162,12 +172,14 @@ export default function BookingStatusPage() {
   const router = useRouter();
   const [storedBookingId, setStoredBookingId] = useState("");
   const [storedTripDate, setStoredTripDate] = useState("");
+  const [storedTripDurationDays, setStoredTripDurationDays] = useState("");
   const [copied, setCopied] = useState(false);
 
   const sessionId = normalizeValue(router.query.session_id);
   const queryBookingId = normalizeValue(router.query.bookingId);
   const paymentStatusQuery = normalizeValue(router.query.paymentStatus);
   const tripDateQuery = normalizeValue(router.query.tripDate);
+  const tripDurationDaysQuery = normalizeValue(router.query.tripDurationDays);
   const bookingStatusQuery =
     normalizeValue(router.query.bookingStatus) || normalizeValue(router.query.status);
 
@@ -177,6 +189,9 @@ export default function BookingStatusPage() {
     const timer = window.setTimeout(() => {
       setStoredBookingId(window.sessionStorage.getItem(LAST_BOOKING_ID_KEY) || "");
       setStoredTripDate(window.sessionStorage.getItem(LAST_TRIP_DATE_KEY) || "");
+      setStoredTripDurationDays(
+        window.sessionStorage.getItem(LAST_TRIP_DURATION_DAYS_KEY) || "",
+      );
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -201,6 +216,9 @@ export default function BookingStatusPage() {
   const bookingId = queryBookingId || storedBookingId || "Not available";
   const tripDate = tripDateQuery || storedTripDate;
   const formattedTripDate = formatTripDate(tripDate);
+  const formattedTripDuration = formatDurationDays(
+    tripDurationDaysQuery || storedTripDurationDays,
+  );
   const canCopyBookingId = bookingId && bookingId !== "Not available";
   const statusHeadline =
     bookingStatus === "Confirmed"
@@ -261,11 +279,14 @@ export default function BookingStatusPage() {
           </p>
         </div>
 
-        <div className={`mt-6 grid gap-4 ${formattedTripDate ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
+        <div className={`mt-6 grid gap-4 ${formattedTripDate || formattedTripDuration ? "md:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
           <DetailCard type="payment" label="Payment Status" value={paymentStatus} tone="green" />
           <DetailCard type="booking" label="Booking Status" value={bookingStatus} tone="gold" />
           {formattedTripDate && (
             <DetailCard type="calendar" label="Trip Date" value={formattedTripDate} />
+          )}
+          {formattedTripDuration && (
+            <DetailCard type="calendar" label="Trip Duration" value={formattedTripDuration} />
           )}
           <DetailCard
             type="id"

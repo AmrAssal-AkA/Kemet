@@ -84,6 +84,7 @@ const success = async (req, res, nxt) => {
     let bookingStatus = "Pending";
     let paymentStatus = "Pending";
     let tripDate = "";
+    let tripDurationDays = "";
 
     if (sessionId) {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -94,6 +95,9 @@ const success = async (req, res, nxt) => {
         paymentStatus = paidBooking.paymentStatus;
         tripDate = paidBooking.tripDate
           ? paidBooking.tripDate.toISOString()
+          : "";
+        tripDurationDays = paidBooking.tripDurationDays
+          ? String(paidBooking.tripDurationDays)
           : "";
       }
     }
@@ -108,6 +112,9 @@ const success = async (req, res, nxt) => {
     }
     if (tripDate) {
       params.set("tripDate", tripDate);
+    }
+    if (tripDurationDays) {
+      params.set("tripDurationDays", tripDurationDays);
     }
 
     return res.redirect(`${frontendUrl}/booking-status?${params.toString()}`);

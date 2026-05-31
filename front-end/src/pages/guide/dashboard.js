@@ -90,6 +90,13 @@ function formatTripDate(value) {
   });
 }
 
+function formatDurationDays(value) {
+  const days = Number(value);
+  if (!Number.isInteger(days) || days < 1) return "";
+
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
+
 function findNumericField(data, fieldNames, allowDirectValue = true) {
   if (data === null || data === undefined) return null;
   if (allowDirectValue && typeof data === "number") return data;
@@ -178,10 +185,14 @@ function getGuestSummary(booking) {
 
 function getBookingDetails(booking) {
   const tripDate = firstValue(booking.tripDate, booking.date, booking.startDate, booking.bookingDate);
+  const tripDuration = formatDurationDays(
+    firstValue(booking.tripDurationDays, booking.trip_duration_days, booking.durationDays),
+  );
 
   return [
     ["Tourist", firstValue(booking.customerName, booking.userName, booking.user?.name, booking.customer?.name)],
     ["Trip Date", formatTripDate(tripDate)],
+    ["Duration", tripDuration],
     ["Guests", getGuestSummary(booking)],
     ["Total", firstValue(booking.totalPrice, booking.price, booking.finalPrice)],
   ].filter(([, value]) => value !== undefined && value !== null && value !== "");

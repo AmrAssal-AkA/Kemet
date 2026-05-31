@@ -1,4 +1,5 @@
 const Booking = require("../../model/BookingSchema");
+const Trip = require("../../model/tripSchema");
 const {
   stripeCheckout,
   refundPaymentByBookingId,
@@ -79,6 +80,71 @@ function parseTripDate(value) {
   return { date };
 }
 
+function parseDurationDays(value) {
+  if (value === undefined || value === null || value === "") return null;
+
+  const match = String(value).trim().match(/^\d+/);
+  const days = match ? Number(match[0]) : Number(value);
+
+  if (!Number.isInteger(days)) return null;
+  return days;
+}
+
+function getTripReferenceId(trip) {
+  const tripValue = Array.isArray(trip) ? trip[0] : trip;
+
+  if (!tripValue) return "";
+  if (typeof tripValue === "string") return tripValue;
+  if (typeof tripValue === "object") {
+    return String(tripValue._id || tripValue.id || tripValue.tripId || "");
+  }
+
+  return String(tripValue);
+}
+
+async function findSelectedTrip(trip) {
+  const tripId = getTripReferenceId(trip);
+  if (!tripId) return null;
+
+  if (/^[a-f\d]{24}$/i.test(tripId)) {
+    const tripByObjectId = await Trip.findById(tripId);
+    if (tripByObjectId) return tripByObjectId;
+  }
+
+  return Trip.findOne({ tripId });
+}
+
+async function validateTripDurationDays({ hasTrip, trip, tripDurationDays }) {
+  if (!hasTrip) return { value: undefined };
+
+  const selectedDurationDays = parseDurationDays(tripDurationDays);
+  if (selectedDurationDays === null) {
+    return { error: "Trip Duration is required" };
+  }
+
+  if (selectedDurationDays < 1) {
+    return { error: "Trip Duration must be at least 1 day" };
+  }
+
+  const selectedTrip = await findSelectedTrip(trip);
+  if (!selectedTrip) {
+    return { error: "Selected trip could not be found" };
+  }
+
+  const maxDurationDays = parseDurationDays(selectedTrip.duration);
+  if (!maxDurationDays) {
+    return { error: "Selected trip duration is unavailable" };
+  }
+
+  if (selectedDurationDays > maxDurationDays) {
+    return {
+      error: `Trip Duration cannot exceed ${maxDurationDays} ${maxDurationDays === 1 ? "day" : "days"}`,
+    };
+  }
+
+  return { value: selectedDurationDays };
+}
+
 function parseBoolean(value) {
   if (typeof value === "boolean") return value;
   if (typeof value === "string") return value.toLowerCase() === "true";
@@ -104,6 +170,7 @@ const createBooking = async (req, res, nxt) => {
       tripDetails,
       tripSchedule,
       tripDate,
+      tripDurationDays,
       items,
       passportNumber,
       totalPrice,
@@ -227,6 +294,15 @@ const createBooking = async (req, res, nxt) => {
     const hasHotel = Boolean(hotel);
     const normalizedTripSchedule = buildTripSchedule(tripSchedule);
     const normalizedGuideIncluded = parseBoolean(guideIncluded);
+    const normalizedTripDuration = await validateTripDurationDays({
+      hasTrip,
+      trip,
+      tripDurationDays,
+    });
+
+    if (normalizedTripDuration.error) {
+      return res.status(400).json({ message: normalizedTripDuration.error });
+    }
 
     const bookingDetails = {
       bookingType: hasTrip
@@ -248,6 +324,7 @@ const createBooking = async (req, res, nxt) => {
       trip,
       tripDetails,
       tripDate: parsedTripDate.date,
+      tripDurationDays: normalizedTripDuration.value,
       tripSchedule: normalizedTripSchedule,
       guideIncluded: normalizedGuideIncluded,
       guideFee: Number.isFinite(Number(guideFee)) && Number(guideFee) > 0 ? Number(guideFee) : 0,
@@ -281,6 +358,7 @@ const createBooking = async (req, res, nxt) => {
       status: "success",
       bookingId: newBooking._id,
       tripDate: newBooking.tripDate,
+      tripDurationDays: newBooking.tripDurationDays,
       checkoutUrl: session.url,
     });
   } catch (err) {

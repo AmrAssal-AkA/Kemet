@@ -21,6 +21,15 @@ const EDITORIAL_TABS = [
   { key: "offerings", label: "Offerings" },
 ];
 
+const HIDDEN_GEM_CITY_OPTIONS = [
+  "Cairo",
+  "Alexandria",
+  "Luxor",
+  "Aswan",
+  "Siwa",
+  "Sharm El Sheikh",
+];
+
 function getItemId(item) {
   return item?._id || item?.id || item?.blogId || item?.hiddenGemId || item?.offeringId || "";
 }
@@ -59,6 +68,7 @@ function buildInitialForm(type, item) {
   if (type === "hiddenGems") {
     return {
       PlaceName: item?.PlaceName || item?.placeName || "",
+      city: item?.city || "",
       Description: item?.Description || item?.description || "",
     };
   }
@@ -87,6 +97,7 @@ function mergeUpdatedItem(type, item, form) {
       ...item,
       PlaceName: form.PlaceName,
       placeName: form.PlaceName,
+      city: form.city || "",
       Description: form.Description,
       description: form.Description,
     };
@@ -169,6 +180,7 @@ export default function AdminEditorial({
         await updateHiddenGem(id, {
           PlaceName: form.PlaceName || "",
           Description: form.Description || "",
+          city: form.city || "",
         });
       } else {
         const formData = new FormData();
@@ -430,6 +442,12 @@ function EditForm({ type, form, setForm, onCancel, onSave, saving }) {
             value={form.PlaceName}
             onChange={(value) => updateField("PlaceName", value)}
           />
+          <SelectField
+            label="City (optional)"
+            value={form.city}
+            options={HIDDEN_GEM_CITY_OPTIONS}
+            onChange={(value) => updateField("city", value)}
+          />
           <TextArea
             label="Description"
             value={form.Description}
@@ -516,6 +534,26 @@ function TextArea({ label, value, onChange }) {
         rows={4}
         className="resize-y rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
       />
+    </label>
+  );
+}
+
+function SelectField({ label, value, options, onChange }) {
+  return (
+    <label className="grid gap-1 text-sm font-semibold text-slate-700">
+      {label}
+      <select
+        value={value ?? ""}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+      >
+        <option value="">No city selected</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
     </label>
   );
 }

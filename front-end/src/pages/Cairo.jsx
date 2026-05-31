@@ -1,4 +1,5 @@
 import CityPage from "@/components/CityPage";
+import { getCityPageHiddenGems, getCityPagePackages } from "@/utils/cityPageData";
 
 const data = {
   city:        "Cairo",
@@ -47,6 +48,18 @@ const data = {
   ],
 };
 
-export default function Cairo() {
-  return <CityPage {...data} />;
+export default function Cairo({ packages = data.packages, gems = [] }) {
+  return <CityPage {...data} packages={packages} gems={gems} />;
+}
+
+export async function getStaticProps() {
+  const [packages, gems] = await Promise.all([
+    getCityPagePackages(data.city, data.packages),
+    getCityPageHiddenGems(data.city),
+  ]);
+
+  return {
+    props: { packages, gems },
+    revalidate: 300,
+  };
 }

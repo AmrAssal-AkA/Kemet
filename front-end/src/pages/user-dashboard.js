@@ -125,6 +125,13 @@ function formatDateText(value) {
   });
 }
 
+function formatDurationDays(value) {
+  const days = Number(value);
+  if (!Number.isInteger(days) || days < 1) return "";
+
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
+
 function getBookingDateValue(booking) {
   return firstValue([
     booking?.tripSchedule?.date,
@@ -205,6 +212,9 @@ function mapBookingToTrip(booking, index) {
     status,
     statusColor: getStatusColor(status),
     paymentStatus,
+    duration: formatDurationDays(
+      firstValue([booking?.tripDurationDays, booking?.trip_duration_days, booking?.durationDays]),
+    ),
     price: formatMoney(
       firstValue([booking?.totalPrice, booking?.price, booking?.amount, trip?.finalPrice, trip?.basePrice]),
       booking?.currency,
@@ -670,6 +680,9 @@ export default function UserDashboard() {
                           {trip.location && (
                             <p className="text-xs text-gray-400">{trip.location}</p>
                           )}
+                          {trip.duration && (
+                            <p className="text-xs text-gray-400">Duration: {trip.duration}</p>
+                          )}
                           {trip.paymentStatus && (
                             <p className="text-xs text-gray-400">Payment: {trip.paymentStatus}</p>
                           )}
@@ -864,6 +877,9 @@ export default function UserDashboard() {
                           <h4 className="font-bold text-sm text-gray-900 mb-3 leading-snug">{trip.title}</h4>
                           {trip.location && (
                             <p className="text-xs text-gray-400">{trip.location}</p>
+                          )}
+                          {trip.duration && (
+                            <p className="text-xs text-gray-400">Duration: {trip.duration}</p>
                           )}
                           {trip.paymentStatus && (
                             <p className="text-xs text-gray-400">Payment: {trip.paymentStatus}</p>

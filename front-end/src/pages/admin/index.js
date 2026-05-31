@@ -118,6 +118,7 @@ function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
             <th className="sticky top-0 bg-white pb-3 pr-4">Customer Email</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Trip title / destination</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Trip Date</th>
+            <th className="sticky top-0 bg-white pb-3 pr-4">Duration</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Guests</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Total Price</th>
             <th className="sticky top-0 bg-white pb-3 pr-4">Payment Status</th>
@@ -128,14 +129,14 @@ function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
         <tbody>
           {isLoading && recentBookings.length === 0 && (
             <tr>
-              <td className="py-5 text-sm text-slate-500" colSpan={9}>
+              <td className="py-5 text-sm text-slate-500" colSpan={10}>
                 Loading recent bookings...
               </td>
             </tr>
           )}
           {!isLoading && error && (
             <tr>
-              <td className="py-5 text-sm text-red-600" colSpan={9}>
+              <td className="py-5 text-sm text-red-600" colSpan={10}>
                 {error}
               </td>
             </tr>
@@ -152,6 +153,7 @@ function RecentBookingsTable({ initialBookings = [], initialError = "" }) {
                 </td>
                 <td className="py-4 pr-4 text-slate-600">{booking.tripTitle}</td>
                 <td className="py-4 pr-4 text-slate-600">{booking.tripDate}</td>
+                <td className="py-4 pr-4 text-slate-600">{booking.tripDuration}</td>
                 <td className="py-4 pr-4 text-slate-600">{booking.guests}</td>
                 <td className="py-4 pr-4 font-semibold text-slate-700">
                   {booking.totalPrice}
@@ -291,6 +293,21 @@ function getTripDate(booking) {
   ]);
 }
 
+function formatDurationDays(value) {
+  const days = Number(value);
+  if (!Number.isInteger(days) || days < 1) return "Not provided";
+
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
+
+function getTripDurationDays(booking) {
+  return getFirstValue([
+    booking.tripDurationDays,
+    booking.trip_duration_days,
+    booking.durationDays,
+  ]);
+}
+
 function getCustomerEmail(booking) {
   const user = booking.user || {};
   const customer = booking.customer || {};
@@ -372,6 +389,7 @@ function mapBooking(booking, index) {
     customerEmail: getCustomerEmail(booking),
     tripTitle: getTripTitle(booking),
     tripDate: formatDate(getTripDate(booking)),
+    tripDuration: formatDurationDays(getTripDurationDays(booking)),
     guests: getGuestCount(booking),
     totalPrice: getTotalPrice(booking),
     paymentStatus: getPaymentStatus(booking),

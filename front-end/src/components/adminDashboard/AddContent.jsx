@@ -27,6 +27,7 @@ const initialOfferingForm = {
 
 const initialHiddenGemForm = {
   PlaceName: "",
+  city: "",
   Description: "",
   image: null,
 };
@@ -35,6 +36,15 @@ const tabs = [
   { id: "trip", label: "Trip" },
   { id: "offerings", label: "Offerings" },
   { id: "hiddenGems", label: "Hidden Gems" },
+];
+
+const hiddenGemCityOptions = [
+  "Cairo",
+  "Alexandria",
+  "Luxor",
+  "Aswan",
+  "Siwa",
+  "Sharm El Sheikh",
 ];
 
 function buildFormData(values, fields) {
@@ -151,6 +161,9 @@ export default function AddContent() {
         "Description",
         "image",
       ]);
+      if (hiddenGemForm.city.trim()) {
+        formData.append("city", hiddenGemForm.city.trim());
+      }
 
       await createHiddenGem(formData);
       setHiddenGemForm(initialHiddenGemForm);
@@ -275,6 +288,16 @@ export default function AddContent() {
         <form onSubmit={handleHiddenGemSubmit} className="mt-6 grid gap-4">
           <FormField label="Place Name">
             <input name="PlaceName" value={hiddenGemForm.PlaceName} onChange={updateForm(setHiddenGemForm)} required className={inputClass} />
+          </FormField>
+          <FormField label="City (optional)">
+            <select name="city" value={hiddenGemForm.city} onChange={updateForm(setHiddenGemForm)} className={inputClass}>
+              <option value="">No city selected</option>
+              {hiddenGemCityOptions.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
           </FormField>
           <FormField label="Description">
             <textarea name="Description" rows={5} value={hiddenGemForm.Description} onChange={updateForm(setHiddenGemForm)} required className={inputClass} />

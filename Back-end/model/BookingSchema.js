@@ -61,6 +61,13 @@ const bookingSchema = new mongoose.Schema(
         message: "Trip Date cannot be in the past",
       },
     },
+    tripDurationDays: {
+      type: Number,
+      min: 1,
+      required: function () {
+        return this.isNew && Array.isArray(this.trip) && this.trip.length > 0;
+      },
+    },
     tripSchedule: {
       date: Date,
       startTime: String,

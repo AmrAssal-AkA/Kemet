@@ -15,6 +15,10 @@ const hiddenGemSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    city: {
+        type: String,
+        trim: true
+    },
     description: {
         type: String,
         required: true

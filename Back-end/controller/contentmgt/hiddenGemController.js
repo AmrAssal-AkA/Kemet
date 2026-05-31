@@ -10,10 +10,17 @@ function getFileSource(file) {
     return file?.buffer || file?.path;
 }
 
+function getOptionalCity(body) {
+    const city = body.city ?? body.City;
+    if (city === undefined) return undefined;
+    return String(city).trim();
+}
+
 // Create Hidden Gem Post
 const createHiddenGem = async (req, res) => {
     const placeName = req.body.placeName || req.body.PlaceName;
     const description = req.body.description || req.body.Description;
+    const city = getOptionalCity(req.body);
     const files = getUploadedFiles(req);
 
     if (!placeName || !description) {
@@ -26,6 +33,7 @@ const createHiddenGem = async (req, res) => {
     const imageResult = await Promise.all(files.map((file) => cloudinary.uploadImage(getFileSource(file), "hiddenGem_images")));
     const hidden = new hiddenG({
         placeName,
+        ...(city ? {city} : {}),
         description,
       images: imageResult.map((result) => ({
         imageUrl: result.secure_url,
@@ -66,11 +74,13 @@ const getOneHiddenGemById = async (req, res) => {
 // Update Hidden Gem Post
 const updateHiddenGemById = async (req, res) => {
     const {PlaceName, Description} = req.body;
+    const city = getOptionalCity(req.body);
     try {
         const updateData = {};
 
         if (PlaceName !== undefined) updateData.placeName = PlaceName;
         if (Description !== undefined) updateData.description = Description;
+        if (city !== undefined) updateData.city = city;
 
         const hiddenGemUpdate = await hiddenG.findByIdAndUpdate(
         req.params.id,

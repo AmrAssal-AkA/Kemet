@@ -108,6 +108,7 @@ function buildBookingRequest(payload) {
   const request = {
     guests,
     tripDate: payload.tripDate,
+    tripDurationDays: payload.tripDurationDays,
     passportNumber: passportNumber,
     totalPrice: Number(payload.totalPrice || 0),
     currency: payload.currency || "EGP",
