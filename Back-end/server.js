@@ -46,7 +46,23 @@ const port = process.env.PORT || 8000;
 connectDB();
 
 // Middleware
-app.use(cors({ origin: "https://kemet-9qva.vercel.app", credentials: true }));
+const allowedOrigins = [
+  "https://kemet-9qva.vercel.app",
+  "http://localhost:3000",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use("/api/payments", paymentRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
