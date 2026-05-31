@@ -386,7 +386,7 @@ function HiddenGemsPage() {
                 </Link>
                 <Link
                   href="/hidden-gems/sharm"
-                  className="group relative block aspect-[4/5] rounded-[15px] overflow-hidden shadow-sm"
+                  className="group relative block aspect-4/5 rounded-[15px] overflow-hidden shadow-sm"
                 >
                   <img
                     src="/images/hidden-gems/Rectangle 182.png"
@@ -423,7 +423,7 @@ function HiddenGemsPage() {
                 </Link>
                 <Link
                   href="/hidden-gems/aswan"
-                  className="group relative block aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm"
+                  className="group relative block aspect-3/4 rounded-[15px] overflow-hidden shadow-sm"
                 >
                   <img
                     src="/images/hidden-gems/Rectangle 184.png"
@@ -516,7 +516,7 @@ function HiddenGemsPage() {
             </h2>
             <div className="grid grid-cols-4 gap-4 w-full">
               <div className="flex flex-col gap-4">
-                <div className="relative aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm">
+                <div className="relative aspect-3/4 rounded-[15px] overflow-hidden shadow-sm">
                   <img
                     src="/images/hidden-gems/Rectangle 186.png"
                     alt="Gallery 1"
