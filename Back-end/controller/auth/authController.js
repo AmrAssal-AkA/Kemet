@@ -88,12 +88,10 @@ const register = async (req, res, nxt) => {
     }
     const customPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if (!customPasswordRegex.test(password)) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Password must contain at least one uppercase letter, one digit, and be at least 8 characters long.",
-        });
+      return res.status(400).json({
+        message:
+          "Password must contain at least one uppercase letter, one digit, and be at least 8 characters long.",
+      });
     }
 
     const Newuser = await User.create({
@@ -110,20 +108,20 @@ const register = async (req, res, nxt) => {
       token: refreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
-    // Set tokens in HTTP-only cookies
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
       path: "/",
     });
-    // Set refresh token in HTTP-only cookie
+
     res.cookie("x-refresh-token", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
     const verifyToken = crypto.randomBytes(32).toString("hex");
@@ -183,16 +181,16 @@ const login = async (req, res, nxt) => {
 
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
       path: "/",
     });
 
     res.cookie("x-refresh-token", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -221,16 +219,16 @@ const googleCallback = async (req, res, nxt) => {
 
     res.cookie("x-auth-token", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
       path: "/",
     });
 
     res.cookie("x-refresh-token", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -241,16 +239,16 @@ const googleCallback = async (req, res, nxt) => {
       role: req.user.role,
     });
 
-    const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
-    res.redirect(
-      `${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`,
-    );
+
     const emailResult = await GoogleSignInTemplate(req.user.name);
     await sendEmail({
       to: req.user.email,
       subject: "Kemet Travel - Google Sign-In Successful",
       html: emailResult,
     });
+
+    const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
+    res.redirect(`${frontendUrl}/auth/auth`);
 
   } catch (err) {
     nxt(err);
@@ -330,15 +328,18 @@ const refresh = async (req, res, nxt) => {
 
         res.cookie("x-auth-token", accessToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          secure: true,
+          sameSite: "none",
           maxAge: 15 * 60 * 1000,
+          path: "/",
         });
-        res.cookie("x-refresh-token", newRefreshToken, {
+
+        res.cookie("x-refresh-token", refreshToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          secure: true,
+          sameSite: "none",
           maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: "/",
         });
 
         res.status(200).json({
@@ -355,6 +356,5 @@ const refresh = async (req, res, nxt) => {
     nxt(err);
   }
 };
-
 
 module.exports = { register, login, googleCallback, verifyEmail, refresh };
