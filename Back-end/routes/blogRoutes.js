@@ -27,12 +27,12 @@ router.post("/like/:blogId", authenticate,authorize("user"), async (req, res, nx
     if (existingLike) {
       await PostLike.deleteOne({_id: existingLike._id });
       const likeCount = await PostLike.countDocuments({ blogId });
-      return res.status(200).json({ message: "Blog unliked successfully", likeCount });
+      return res.status(200).json({ status: "disliked", message: "like removed", likeCount });
     }
 
     await PostLike.create({ blogId, userId });
     const likeCount = await PostLike.countDocuments({ blogId });
-    res.status(201).json({ message: "Blog liked successfully", likeCount });
+    res.status(201).json({ status: "liked" , message: "liked successfully" , likeCount});
 
   }catch (err) {
     nxt(err);

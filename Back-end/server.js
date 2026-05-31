@@ -4,11 +4,13 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const session = require("express-session");
 const swaggerUi = require("swagger-ui-express");
 const app = express();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const passport = require("passport");
+
+
+app.set("trust proxy", 1);
 
 // Importing routes
 const connectDB = require("./config/db");
@@ -40,27 +42,16 @@ const port = process.env.PORT || 8000;
 
 
 
-// Connect to databas
+// Connect to database
 connectDB();
+
 // Middleware
-app.use(cors({ origin: process.env.DOMAIN, credentials: true }));
+app.use(cors({ origin: "https://kemet-9qva.vercel.app", credentials: true }));
 app.use("/api/payments", paymentRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morganMiddleware);
-app.use(
-  session({
-    secret: "SessionSecretKey",
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      httpOnly: true,
-     },
-  }),
-);
 app.use(
   helmet({
     contentSecurityPolicy: {

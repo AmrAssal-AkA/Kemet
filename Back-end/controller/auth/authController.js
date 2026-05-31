@@ -12,7 +12,7 @@ const {
   GoogleSignInTemplate,
 } = require("../../services/miling");
 const { generateToken } = require("../../services/generateToken");
-const { verifyToken } = require("../../services/verifyToken");
+const verifyToken = require("../../services/verifyToken");
 const RefreshToken = require("../../model/refreshTokenSchema");
 
 passport.serializeUser((user, done) => {
@@ -235,7 +235,7 @@ const googleCallback = async (req, res, nxt) => {
       path: "/",
     });
 
-    const user = JSON.stringify({
+    const userPayload = JSON.stringify({
       name: req.user.name,
       email: req.user.email,
       role: req.user.role,
@@ -243,7 +243,7 @@ const googleCallback = async (req, res, nxt) => {
 
     const frontendUrl = process.env.DOMAIN || "http://localhost:3000";
     res.redirect(
-      `${frontendUrl}/auth/auth?token=${accessToken}&user=${user}`,
+      `${frontendUrl}/auth/auth?token=${encodeURIComponent(accessToken)}&user=${encodeURIComponent(userPayload)}`,
     );
     const emailResult = await GoogleSignInTemplate(req.user.name);
     await sendEmail({
@@ -356,4 +356,25 @@ const refresh = async (req, res, nxt) => {
   }
 };
 
-module.exports = { register, login, googleCallback, verifyEmail, refresh };
+const me = (req, res) => {
+  const token = req.cookies["x-auth-token"];
+
+  if (!token) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  try {
+    const decoded = verifyToken(token);
+    return res.status(200).json({
+      user: {
+        name: decoded.name,
+        email: decoded.email,
+        role: decoded.role,
+      },
+    });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+};
+
+module.exports = { register, login, googleCallback, verifyEmail, refresh, me };

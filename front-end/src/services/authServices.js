@@ -88,7 +88,8 @@ export const apiRequest = async (path, options = {}) => {
 
 export const getCurrentUser = async () => {
   try {
-    const response = await ApiCall("/api/auth/refresh", { method: "POST" });
+
+    const response = await ApiCall(buildApiUrl("/api/auth/me"), { method: "GET" });
     return normalizeAuthUser(response.data);
   } catch (error) {
     return null;
