@@ -1,5 +1,6 @@
 import { resetPassword } from "@/services/authServices";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 function ResetPassword() {
   const [email, setEmail] = useState("");
@@ -11,9 +12,10 @@ function ResetPassword() {
     setIsLoading(true);
     try {
       const res = await resetPassword(email);
-      alert(res.message);
+      toast.success(res.message);
     } catch (error) {
       setError(error.message);
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
