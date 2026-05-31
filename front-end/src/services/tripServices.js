@@ -97,7 +97,7 @@ function buildTripFormData(payload, { includeImage = true } = {}) {
 export async function createTrip(payload) {
   const formData = buildTripFormData(payload);
 
-  const res = await fetch(buildApiUrl("/api/Trip/addTrip"), {
+  const res = await fetch("/api/Trip/addTrip", {
     method: "POST",
     credentials: "include",
     body: formData,
@@ -162,7 +162,7 @@ export async function getTripById(id) {
 export async function updateTrip(id, payload) {
   const formData = buildTripFormData(payload, { includeImage: Boolean(payload?.image) });
 
-  const res = await fetch(buildApiUrl(`/api/Trip/updateTrip/${id}`), {
+  const res = await fetch(`/api/Trip/updateTrip/${id}`, {
     method: "PUT",
     credentials: "include",
     body: formData,
@@ -174,7 +174,7 @@ export async function updateTrip(id, payload) {
 }
 
 export async function deleteTrip(id) {
-  const res = await fetch(buildApiUrl(`/api/Trip/deleteTrip/${id}`), {
+  const res = await fetch(`/api/Trip/deleteTrip/${id}`, {
     method: "DELETE",
     credentials: "include",
   });

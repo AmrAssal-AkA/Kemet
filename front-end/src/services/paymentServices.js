@@ -1,5 +1,3 @@
-import { buildApiUrl } from "@/utils/apiBaseUrl";
-
 export class PaymentApiError extends Error {
   constructor(message, status, data) {
     super(message);
@@ -29,7 +27,7 @@ async function handleResponse(res, errorMessage) {
 }
 
 export async function createStripeCheckout(payload) {
-  const res = await fetch(buildApiUrl("/api/payments/stripe-checkout"), {
+  const res = await fetch("/api/payments/stripe-checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
