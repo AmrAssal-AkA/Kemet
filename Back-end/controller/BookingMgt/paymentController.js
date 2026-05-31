@@ -199,12 +199,14 @@ const webhook = async (req, res) => {
   res.status(200).json({ received: true });
 };
 
-const refundPayment = async (req, res, nxt) => {
-  const { bookingId } = req.body;
+const refundPaymentByBookingId = async (bookingId) => {
   try {
     const booking = await Booking.findById(bookingId);
     if (!booking || !booking.stripePaymentIntentId) {
-      throw new Error("Booking not found or missing payment intent ID");
+      return {
+        success: false,
+        error: "Booking not found or missing payment intent ID",
+      };
     }
 
     const refund = await stripe.refunds.create({
@@ -216,12 +218,37 @@ const refundPayment = async (req, res, nxt) => {
       await booking.save();
       return { success: true, message: "Payment refunded successfully" };
     } else {
-      return { success: false, message: "Failed to process refund" };
+      return { success: false, error: "Failed to process refund" };
     }
   } catch (error) {
-    nxt(error);
-    return { success: false, message: error.message };
+    return { success: false, error: error.message };
   }
 };
 
-module.exports = { stripeCheckout, success, webhook, refundPayment };
+const refundPayment = async (req, res, nxt) => {
+  try {
+    const bookingId = req.body?.bookingId || req.query?.bookingId;
+    if (!bookingId) {
+      return res.status(400).json({ message: "Booking ID is required" });
+    }
+
+    const refund = await refundPaymentByBookingId(bookingId);
+    if (!refund.success) {
+      return res
+        .status(500)
+        .json({ message: refund.error || "Failed to process refund" });
+    }
+
+    return res.status(200).json(refund);
+  } catch (error) {
+    return nxt(error);
+  }
+};
+
+module.exports = {
+  stripeCheckout,
+  success,
+  webhook,
+  refundPayment,
+  refundPaymentByBookingId,
+};

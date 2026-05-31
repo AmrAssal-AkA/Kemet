@@ -1,5 +1,8 @@
 const Booking = require("../../model/BookingSchema");
-const { stripeCheckout, refundPayment } = require("./paymentController");
+const {
+  stripeCheckout,
+  refundPaymentByBookingId,
+} = require("./paymentController");
 const { PassportValidation } = require("../../services/passportService");
 const cloudinary = require("../../config/cloudinary");
 
@@ -257,7 +260,7 @@ const cancelBooking = async (req, res, nxt) => {
       return res.status(400).json({ error: "Booking is already cancelled" });
     }
     if (booking.paymentStatus === "Paid" && booking.stripePaymentIntentId) {
-      const refund = await refundPayment(bookingId);
+      const refund = await refundPaymentByBookingId(bookingId);
       if (refund.success) {
         booking.status = "Cancelled";
         booking.paymentStatus = "Refunded";
@@ -266,7 +269,9 @@ const cancelBooking = async (req, res, nxt) => {
           message: "Booking cancelled and payment refunded successfully",
         });
       } else {
-        return res.status(500).json({ error: "Failed to process refund" });
+        return res
+          .status(500)
+          .json({ error: refund.error || "Failed to process refund" });
       }
     }
     await Booking.findByIdAndUpdate(bookingId, {
