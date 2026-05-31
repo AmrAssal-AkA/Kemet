@@ -250,12 +250,14 @@ function Offerings(props) {
                       <div className="flex items-end justify-between">
                         <div className="flex flex-col">
                           <span className="font-bold text-lg text-yellow-500">
-                            {offer.price}
+                            {offer.price} EGP
                           </span>
                         </div>
-                        <button className="text-yellow-500 hover:text-black transition-colors p-2 -mr-2">
-                          <ArrowRightIcon className="w-5 h-5" />
-                        </button>
+                        <Link href="/BookTrip">
+                          <button className="text-yellow-500 hover:text-black transition-colors p-2 -mr-2">
+                            <ArrowRightIcon className="w-5 h-5" />
+                          </button>
+                        </Link>
                       </div>
                     </div>
                   </div>
