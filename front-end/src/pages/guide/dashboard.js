@@ -83,9 +83,9 @@ function formatTripDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
 
-  return date.toLocaleDateString("en-US", {
-    month: "short",
+  return date.toLocaleDateString("en-GB", {
     day: "numeric",
+    month: "short",
     year: "numeric",
   });
 }
@@ -185,13 +185,14 @@ function getGuestSummary(booking) {
 
 function getBookingDetails(booking) {
   const tripDate = firstValue(booking.tripDate, booking.date, booking.startDate, booking.bookingDate);
+  const tripDateDisplay = tripDate ? formatTripDate(tripDate) : "";
   const tripDuration = formatDurationDays(
     firstValue(booking.tripDurationDays, booking.trip_duration_days, booking.durationDays),
   );
 
   return [
     ["Tourist", firstValue(booking.customerName, booking.userName, booking.user?.name, booking.customer?.name)],
-    ["Trip Date", formatTripDate(tripDate)],
+    ["Trip Date", tripDateDisplay],
     ["Duration", tripDuration],
     ["Guests", getGuestSummary(booking)],
     ["Total", firstValue(booking.totalPrice, booking.price, booking.finalPrice)],
@@ -199,15 +200,24 @@ function getBookingDetails(booking) {
 }
 
 function getGuideFeeCards(guideFee) {
+  const confirmedBookings = findNumericField(guideFee, [
+    "confirmedBookings",
+    "confirmedBookingsCount",
+  ]);
   const fee = findNumericField(guideFee, [
+    "guideRevenue",
     "totalGuideProfit",
   ]);
 
   return [
     {
+      label: "Confirmed Bookings",
+      value: Number(confirmedBookings ?? 0).toLocaleString(),
+    },
+    {
       label: "Guide Profit",
       value: formatMoney(fee ?? 0),
-      note: `${Number(guideFee?.confirmedBookingsCount || 0)} confirmed bookings`,
+      note: `${Number(confirmedBookings ?? 0)} confirmed bookings`,
     },
   ];
 }

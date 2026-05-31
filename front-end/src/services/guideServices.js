@@ -18,11 +18,13 @@ function getArray(data) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.data?.trips)) return data.data.trips;
   if (Array.isArray(data?.data?.bookings)) return data.data.bookings;
+  if (Array.isArray(data?.data?.assignedBookings)) return data.data.assignedBookings;
   if (Array.isArray(data?.data?.results)) return data.data.results;
   if (Array.isArray(data?.data?.result)) return data.data.result;
   if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data?.trips)) return data.trips;
   if (Array.isArray(data?.bookings)) return data.bookings;
+  if (Array.isArray(data?.assignedBookings)) return data.assignedBookings;
   if (Array.isArray(data?.results)) return data.results;
   if (Array.isArray(data?.result)) return data.result;
   return [];

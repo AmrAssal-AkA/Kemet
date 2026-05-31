@@ -31,6 +31,8 @@ const formatTripDate = (tripDate) => {
     return Number.isNaN(date.getTime()) ? undefined : date.toISOString().slice(0, 10);
 };
 
+const confirmedStatusQuery = /^confirmed$/i;
+
 const setGuideSchedule = async (req, res) => {
     try {
         const {dayofweek, startTime, endTime} = req.body;
@@ -69,7 +71,7 @@ const guideRequiredTrips = async (req, res, nxt) => {
 
         const guide = await Guide.findOne({ userId: user._id });
         if (!guide) {
-            return res.json({ bookings: [] });
+            return res.json({ bookings: [], assignedBookings: [] });
         }
 
         const bookings = await Booking.find({ assignedGuide: guide._id })
@@ -80,18 +82,22 @@ const guideRequiredTrips = async (req, res, nxt) => {
             })
             .populate("userId", "name email");
 
-        res.json({
-            bookings: bookings.map((booking) => {
-                const bookingObject = booking.toObject();
-                const tripDateText = formatTripDate(bookingObject.tripDate);
-                const scheduleText = formatTripSchedule(bookingObject.tripSchedule);
-                const displayDate = tripDateText || scheduleText;
+        const assignedBookings = bookings.map((booking) => {
+            const bookingObject = booking.toObject();
+            const tripDateText = formatTripDate(bookingObject.tripDate);
+            const scheduleText = formatTripSchedule(bookingObject.tripSchedule);
+            const displayDate = tripDateText || scheduleText || null;
 
-                return {
-                    ...bookingObject,
-                    ...(displayDate ? { date: displayDate, tripDate: displayDate } : {}),
-                };
-            }),
+            return {
+                ...bookingObject,
+                date: displayDate,
+                tripDate: displayDate,
+            };
+        });
+
+        res.json({
+            bookings: assignedBookings,
+            assignedBookings,
         });
     } catch (err) {
         nxt(err);
@@ -110,15 +116,16 @@ const guideFee = async (req, res, nxt) => {
         if (!guide) {
             return res.json({
                 confirmedBookingsCount: 0,
+                confirmedBookings: 0,
                 totalGuideProfit: 0,
+                guideRevenue: 0,
                 currency: "EGP",
             });
         }
 
         const confirmedBookings = await Booking.find({
             assignedGuide: guide._id,
-            status: "Confirmed",
-            guideIncluded: true,
+            status: confirmedStatusQuery,
         }).select("guideFee");
 
         const totalGuideProfit = confirmedBookings.reduce(
@@ -128,7 +135,9 @@ const guideFee = async (req, res, nxt) => {
 
         res.json({
             confirmedBookingsCount: confirmedBookings.length,
+            confirmedBookings: confirmedBookings.length,
             totalGuideProfit,
+            guideRevenue: totalGuideProfit,
             currency: "EGP",
         });
     }catch (err) {
