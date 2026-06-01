@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import Head from "next/head";
 
 function ContactUs() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -55,7 +57,7 @@ function ContactUs() {
 
       setSubmitState({
         isSubmitting: false,
-        success: "Your message has been sent successfully.",
+        success: t("contact.success"),
         error: "",
       });
 
@@ -73,7 +75,7 @@ function ContactUs() {
       setSubmitState({
         isSubmitting: false,
         success: "",
-        error: "Something went wrong. Please try again.",
+        error: t("contact.error"),
       });
     }
   };
@@ -81,7 +83,7 @@ function ContactUs() {
   return (
     <>
     <Head>
-      <title>Contact Us - Kemet Travel</title>
+      <title>{t("contact.title")}</title>
       <meta name="description" content="Get in touch with Kemet Travel for personalized travel recommendations and support." />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
     </Head>
@@ -90,18 +92,18 @@ function ContactUs() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-sm sm:p-8 lg:col-span-2">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-500">
-              Contact Us
+              {t("contact.eyebrow")}
             </p>
             <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-              Let’s build your next Egypt journey.
+              {t("contact.heroTitle")}
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-slate-600 sm:text-base">
-              Share your inquiry and our team will guide you with personalized recommendations.
+              {t("contact.heroSubtitle")}
             </p>
 
             <div className="mt-7 space-y-4">
               <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800">
-                <span>Direct Email</span>
+                <span>{t("contact.directEmail")}</span>
                 <span className="text-slate-500">{contactEmail}</span>
               </div>
 
@@ -111,8 +113,8 @@ function ContactUs() {
                 rel="noopener noreferrer"
                 className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 transition-all duration-200 hover:border-amber-300 hover:bg-amber-50"
               >
-                <span>Gmail DM</span>
-                <span className="text-slate-500">Open Gmail</span>
+                <span>{t("contact.gmailDm")}</span>
+                <span className="text-slate-500">{t("contact.openGmail")}</span>
               </a>
 
               <a
@@ -121,23 +123,23 @@ function ContactUs() {
                 rel="noopener noreferrer"
                 className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 transition-all duration-200 hover:border-amber-300 hover:bg-amber-50"
               >
-                <span>Facebook Page</span>
-                <span className="text-slate-500">Send a message</span>
+                <span>{t("contact.facebookPage")}</span>
+                <span className="text-slate-500">{t("contact.sendMessage")}</span>
               </a>
             </div>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:col-span-3">
-            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Send us a message</h2>
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{t("contact.formTitle")}</h2>
             <p className="mt-2 text-sm text-slate-600 sm:text-base">
-              Fill in the form and submit. We will respond as soon as possible.
+              {t("contact.formSubtitle")}
             </p>
 
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700">
-                    Full Name
+                    {t("contact.fullName")}
                   </label>
                   <input
                     id="name"
@@ -147,13 +149,13 @@ function ContactUs() {
                     onChange={handleChange}
                     required
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
-                    placeholder="Enter your full name"
+                    placeholder={t("contact.namePlaceholder")}
                   />
                 </div>
 
                 <div>
                   <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
-                    Email Address
+                    {t("contact.emailAddress")}
                   </label>
                   <input
                     id="email"
@@ -164,7 +166,7 @@ function ContactUs() {
                     onChange={handleChange}
                     required
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
-                    placeholder="Enter your email address"
+                    placeholder={t("contact.emailPlaceholder")}
                   />
                 </div>
               </div>
@@ -174,7 +176,7 @@ function ContactUs() {
                   htmlFor="subject"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
-                  Subject
+                  {t("contact.subject")}
                 </label>
                 <input
                   id="subject"
@@ -184,7 +186,7 @@ function ContactUs() {
                   onChange={handleChange}
                   required
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
-                  placeholder="What is this about?"
+                  placeholder={t("contact.subjectPlaceholder")}
                 />
               </div>
 
@@ -193,7 +195,7 @@ function ContactUs() {
                   htmlFor="message"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
-                  Message
+                  {t("contact.message")}
                 </label>
                 <textarea
                   id="message"
@@ -203,7 +205,7 @@ function ContactUs() {
                   onChange={handleChange}
                   required
                   className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
-                  placeholder="Write your message..."
+                  placeholder={t("contact.messagePlaceholder")}
                 />
               </div>
 
@@ -224,7 +226,7 @@ function ContactUs() {
                 disabled={submitState.isSubmitting}
                 className="inline-flex w-full items-center justify-center rounded-xl bg-[#0f172a] px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
               >
-                {submitState.isSubmitting ? "Submitting..." : "Submit Message"}
+                {submitState.isSubmitting ? t("contact.submitting") : t("contact.submit")}
               </button>
             </form>
           </div>

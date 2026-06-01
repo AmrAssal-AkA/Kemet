@@ -4,6 +4,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { loginWithGoogle } from "@/services/authServices";
 import { FaGoogle } from "react-icons/fa";
 
@@ -14,6 +15,7 @@ export default function LoginForm() {
     password: "",
   });
   const { loading, error, login  } = useAuth();
+  const { t, isArabic } = useLanguage();
 
 
   const handleChange = (e) => {
@@ -27,18 +29,18 @@ export default function LoginForm() {
     e.preventDefault();
     try{
       await login(formData);
-      toast.success("login successfull")
+      toast.success(t("auth.loginSuccess"))
     }catch(error){
-      toast.error("Login failed")
+      toast.error(t("auth.loginFailed"))
     }
   };
 
   const handleGoogleLogin = () => {
     try{
       loginWithGoogle();
-      toast.success("login with google successful");
+      toast.success(t("auth.googleLoginSuccess"));
     }catch(error){
-      toast.error("Login with google failed")
+      toast.error(t("auth.googleLoginFailed"))
     }
     
   };
@@ -51,12 +53,12 @@ export default function LoginForm() {
           htmlFor="email"
           className="block text-gray-700 text-sm sm:text-md font-bold mb-1"
         >
-          Email
+          {t("auth.email")}
         </label>
         <input
           type="email"
           name="email"
-          placeholder="Enter your email"
+          placeholder={t("auth.emailPlaceholder")}
           value={formData.email}
           onChange={handleChange}
           required
@@ -68,12 +70,12 @@ export default function LoginForm() {
           htmlFor="password"
           className="block text-gray-700 text-sm sm:text-md font-bold mb-1"
         >
-          Password
+          {t("auth.password")}
         </label>
         <input
           type="password"
           name="password"
-          placeholder="Enter your password"
+          placeholder={t("auth.passwordPlaceholder")}
           value={formData.password}
           onChange={handleChange}
           required
@@ -81,12 +83,12 @@ export default function LoginForm() {
         />
       </div>
       <p className="text-gray-600 text-sm sm:text-md">
-        Don&apos;t remember Your Password?
+        {t("auth.forgot")}
         <Link
           href="/auth/Reset-password"
-          className="text-amber-500 hover:underline ml-1"
+          className={`text-amber-500 hover:underline ${isArabic ? "mr-1" : "ml-1"}`}
         >
-          Reset it
+          {t("auth.resetIt")}
         </Link>
       </p>
       <button
@@ -95,17 +97,17 @@ export default function LoginForm() {
         className="w-full text-black py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer mt-4 text-sm sm:text-base font-semibold shadow-[0_2px_10px_rgba(255,206,42,0.28)] disabled:cursor-not-allowed disabled:opacity-70"
         style={{ background: "linear-gradient(135deg, #FFCE2A 0%, #f5b800 100%)" }}
       >
-        {loading ? "Logging in..." : "Login"}
+        {loading ? t("auth.loggingIn") : t("auth.login")}
       </button>
-      <p className="text-gray-600 text-base sm:text-lg mt-4 text-center">or</p>
+      <p className="text-gray-600 text-base sm:text-lg mt-4 text-center">{t("auth.or")}</p>
       <button
         type="button"
         onClick={handleGoogleLogin}
         disabled={loading}
         className="w-full bg-gray-200 text-gray-800 py-2.5 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer mt-4 flex items-center justify-center text-sm sm:text-base"
       >
-        <FaGoogle className="mr-2" />
-        Continue with Google
+        <FaGoogle className={isArabic ? "ml-2" : "mr-2"} />
+        {t("auth.continueGoogle")}
       </button>
 
       {error && (

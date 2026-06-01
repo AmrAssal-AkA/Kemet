@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { createBooking, searchFlights, searchHotels } from "@/services/bookServices";
 import { createPayment } from "@/services/paymentServices";
 import { getTrips } from "@/services/tripServices";
@@ -378,6 +379,7 @@ function Section({ eyebrow, title, children }) {
 
 export default function BookTripPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const requestedTripId = Array.isArray(router.query.tripId)
     ? router.query.tripId[0]
     : router.query.tripId;
@@ -439,7 +441,7 @@ export default function BookTripPage() {
       try {
         setTrips(await getTrips());
       } catch (error) {
-        setError(error.message || "Trips could not be loaded.");
+        setError(error.message || t("book.tripLoadError"));
       } finally {
         setLoadingTrips(false);
       }
@@ -527,7 +529,7 @@ export default function BookTripPage() {
     return (
       <main className="grid min-h-screen place-items-center bg-slate-50 px-4 text-slate-900">
         <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
-          <p className="text-sm font-bold text-[#162766]">Checking your session...</p>
+          <p className="text-sm font-bold text-[#162766]">{t("book.checkingSession")}</p>
         </div>
       </main>
     );
@@ -619,7 +621,7 @@ export default function BookTripPage() {
     const origin = normalizeIataCode(flightSearch.origin);
     if (!isValidIataCode(origin)) {
       setFlightSearch((current) => ({ ...current, origin }));
-      setError("Origin must be a valid 3-letter IATA airport code.");
+      setError(t("book.originInvalid"));
       return;
     }
 
@@ -635,9 +637,9 @@ export default function BookTripPage() {
         max: Number(flightSearch.max),
       });
       setFlightResults(results);
-      if (!results.length) setNotice("No flight offers found for this search.");
+      if (!results.length) setNotice(t("book.noFlights"));
     } catch (error) {
-      setError(error.message || "Flight search failed.");
+      setError(error.message || t("book.flightFailed"));
     } finally {
       setLoadingFlights(false);
     }
@@ -658,10 +660,10 @@ export default function BookTripPage() {
       const results = Array.isArray(result?.offers) ? result.offers : [];
       setHotelResults(results);
       if (!results.length) {
-        setNotice("No hotel offers found for this search.");
+        setNotice(t("book.noHotels"));
       }
     } catch (error) {
-      setError(error.message || "Hotel search failed.");
+      setError(error.message || t("book.hotelFailed"));
     } finally {
       setLoadingHotels(false);
     }
@@ -697,7 +699,7 @@ export default function BookTripPage() {
     if (!payment.method) return "Payment method is required.";
     if (includeFlight && !selectedFlight) return "Select a flight before submitting.";
     if (includeHotel && !selectedHotel) return "Select a hotel before submitting.";
-    if (!policyAgreed) return "Please agree to the booking policy.";
+    if (!policyAgreed) return t("book.policyError");
     return "";
   }
 
@@ -773,7 +775,7 @@ export default function BookTripPage() {
           });
 
       if (checkout?.url) {
-        setSuccess("Booking created. Redirecting to secure Stripe checkout...");
+        setSuccess(t("book.success"));
         window.location.href = checkout.url;
         return;
       }
@@ -793,21 +795,20 @@ export default function BookTripPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 rounded-2xl bg-[#0b1d3a] p-6 text-white shadow-sm sm:p-8">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">
-            KEMET Booking
+            KEMET
           </p>
-          <h1 className="mt-3 text-4xl font-extrabold">Book Your Trip</h1>
+          <h1 className="mt-3 text-4xl font-extrabold">{t("book.title")}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">
-            Complete the form below to reserve your personalized travel experience
-            across Egypt&apos;s most remarkable destinations.
+            {t("book.subtitle")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-6">
-            <Section eyebrow="Step 1" title="Select Trip">
+            <Section eyebrow={t("book.stepTrip")} title={t("book.tripSection")}>
               {loadingTrips ? (
                 <p className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm font-semibold text-slate-500">
-                  Loading trips...
+                  {t("common.loading")}
                 </p>
               ) : trips.length === 0 ? (
                 <p className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-semibold text-amber-700">
@@ -868,21 +869,21 @@ export default function BookTripPage() {
               )}
             </Section>
 
-            <Section eyebrow="Step 2" title="Traveler Details / Guest 1">
+            <Section eyebrow="Step 2" title={t("book.travelerInfo")}>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="First name">
+                <Field label={t("book.firstName")}>
                   <TextInput name="firstName" value={traveler.firstName} onChange={updateTraveler} required />
                 </Field>
-                <Field label="Last name">
+                <Field label={t("book.lastName")}>
                   <TextInput name="lastName" value={traveler.lastName} onChange={updateTraveler} required />
                 </Field>
-                <Field label="Email">
+                <Field label={t("auth.email")}>
                   <TextInput name="email" type="email" value={traveler.email} onChange={updateTraveler} required />
                 </Field>
-                <Field label="Phone number">
+                <Field label={t("book.phone")}>
                   <TextInput name="phone" value={traveler.phone} onChange={updateTraveler} required />
                 </Field>
-                <Field label="Trip Date">
+                <Field label={t("book.tripDate")}>
                   <TextInput
                     name="tripDate"
                     type="date"
@@ -892,7 +893,7 @@ export default function BookTripPage() {
                     required
                   />
                 </Field>
-                <Field label="Trip Duration">
+                <Field label={t("book.tripDuration")}>
                   <SelectInput
                     name="tripDurationDays"
                     value={tripDurationDays}
@@ -901,19 +902,19 @@ export default function BookTripPage() {
                     disabled={!selectedTrip || maxDurationDays <= 1}
                   />
                 </Field>
-                <Field label="Nationality">
+                <Field label={t("auth.nationality")}>
                   <SelectInput name="nationality" value={traveler.nationality} onChange={updateTraveler} options={nationalityOptions} />
                 </Field>
-                <Field label="Passport number">
+                <Field label={t("book.passportNumber")}>
                   <TextInput name="passportNumber" value={traveler.passportNumber} onChange={updateTraveler} required />
                 </Field>
-                <Field label="Date of birth">
+                <Field label={t("book.dateOfBirth")}>
                   <TextInput name="dateOfBirth" type="date" value={traveler.dateOfBirth} onChange={updateTraveler} required />
                 </Field>
-                <Field label="Passport expiry">
+                <Field label={t("book.passportExpiry")}>
                   <TextInput name="expiryDate" type="date" value={traveler.expiryDate} onChange={updateTraveler} required />
                 </Field>
-                <Field label="Passport image">
+                <Field label={t("book.passportImage")}>
                   <input
                     type="file"
                     accept="image/*"
@@ -925,9 +926,9 @@ export default function BookTripPage() {
               </div>
             </Section>
 
-            <Section eyebrow="Step 3" title="Guests & Add-ons">
+            <Section eyebrow="Step 3" title={t("book.optionalServices")}>
               <div className="grid gap-4 sm:grid-cols-4">
-                <Field label="Number of guests">
+                <Field label={t("book.numberOfGuests")}>
                   <TextInput
                     name="numberOfGuests"
                     type="number"
@@ -947,7 +948,7 @@ export default function BookTripPage() {
                     }}
                     className="h-4 w-4 accent-amber-500"
                   />
-                  Include Flight
+                  {t("book.includeFlight")}
                 </label>
                 <label className="mt-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold">
                   <input
@@ -959,7 +960,7 @@ export default function BookTripPage() {
                     }}
                     className="h-4 w-4 accent-amber-500"
                   />
-                  Include Hotel
+                  {t("book.includeHotel")}
                 </label>
                 <label className="mt-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold">
                   <input
@@ -968,16 +969,15 @@ export default function BookTripPage() {
                     onChange={(event) => setIncludeGuide(event.target.checked)}
                     className="h-4 w-4 accent-amber-500"
                   />
-                  Include guide
+                  {t("book.includeGuide")}
                 </label>
               </div>
             </Section>
 
             {Number(numberOfGuests) > 1 && (
-              <Section eyebrow="Step 3A" title="Extra Guest Details">
+              <Section eyebrow="Step 3A" title={t("book.extraGuestDetails")}>
                 <p className="mb-5 text-sm text-slate-500">
-                  Guest 1 uses the main traveler information above. Add details for
-                  the remaining guests.
+                  {t("book.extraGuestHelp")}
                 </p>
                 <div className="space-y-4">
                   {extraGuests.map((guest, index) => (
@@ -986,10 +986,10 @@ export default function BookTripPage() {
                       className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                     >
                       <h3 className="text-lg font-extrabold text-slate-900">
-                        Guest {index + 2}
+                        {t("book.guest")} {index + 2}
                       </h3>
                       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        <Field label="First name">
+                        <Field label={t("book.firstName")}>
                           <TextInput
                             name="firstName"
                             value={guest.firstName}
@@ -997,7 +997,7 @@ export default function BookTripPage() {
                             required
                           />
                         </Field>
-                        <Field label="Last name">
+                        <Field label={t("book.lastName")}>
                           <TextInput
                             name="lastName"
                             value={guest.lastName}
@@ -1005,7 +1005,7 @@ export default function BookTripPage() {
                             required
                           />
                         </Field>
-                        <Field label="Email optional">
+                        <Field label={t("book.emailOptional")}>
                           <TextInput
                             name="email"
                             type="email"
@@ -1013,14 +1013,14 @@ export default function BookTripPage() {
                             onChange={(event) => updateExtraGuest(index, event)}
                           />
                         </Field>
-                        <Field label="Phone optional">
+                        <Field label={t("book.phoneOptional")}>
                           <TextInput
                             name="phone"
                             value={guest.phone}
                             onChange={(event) => updateExtraGuest(index, event)}
                           />
                         </Field>
-                        <Field label="Nationality">
+                        <Field label={t("auth.nationality")}>
                           <SelectInput
                             name="nationality"
                             value={guest.nationality}
@@ -1028,7 +1028,7 @@ export default function BookTripPage() {
                             options={nationalityOptions}
                           />
                         </Field>
-                        <Field label="Passport number">
+                        <Field label={t("book.passportNumber")}>
                           <TextInput
                             name="passportNumber"
                             value={guest.passportNumber}
@@ -1036,7 +1036,7 @@ export default function BookTripPage() {
                             required
                           />
                         </Field>
-                        <Field label="Date of birth">
+                        <Field label={t("book.dateOfBirth")}>
                           <TextInput
                             name="dateOfBirth"
                             type="date"
@@ -1045,7 +1045,7 @@ export default function BookTripPage() {
                             required
                           />
                         </Field>
-                        <Field label="Passport expiry">
+                        <Field label={t("book.passportExpiry")}>
                           <TextInput
                             name="expiryDate"
                             type="date"
@@ -1062,9 +1062,9 @@ export default function BookTripPage() {
             )}
 
             {includeFlight && (
-              <Section eyebrow="Optional" title="Flight Search">
+              <Section eyebrow="Optional" title={t("book.flightSearch")}>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <Field label="Origin">
+                  <Field label={t("book.origin")}>
                     <AirportCodeInput
                       name="origin"
                       value={flightSearch.origin}
@@ -1072,19 +1072,19 @@ export default function BookTripPage() {
                       suggestions={originAirportSuggestions}
                     />
                   </Field>
-                  <Field label="Destination">
+                  <Field label={t("book.destination")}>
                     <SelectInput name="destination" value={flightSearch.destination} onChange={updateFlightSearch} options={airportOptions} />
                   </Field>
-                  <Field label="Departure">
+                  <Field label={t("book.departure")}>
                     <TextInput name="departureDate" type="date" value={flightSearch.departureDate} onChange={updateFlightSearch} />
                   </Field>
-                  <Field label="Return">
+                  <Field label={t("book.return")}>
                     <TextInput name="returnDate" type="date" value={flightSearch.returnDate} onChange={updateFlightSearch} />
                   </Field>
-                  <Field label="Adults">
+                  <Field label={t("book.adults")}>
                     <TextInput name="adults" type="number" min="1" value={flightSearch.adults} onChange={updateFlightSearch} />
                   </Field>
-                  <Field label="Class">
+                  <Field label={t("book.class")}>
                     <SelectInput
                       name="travelClass"
                       value={flightSearch.travelClass}
@@ -1099,7 +1099,7 @@ export default function BookTripPage() {
                   disabled={loadingFlights || !flightSearch.departureDate}
                   className="mt-5 rounded-full bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 shadow-sm hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
-                  {loadingFlights ? "Searching..." : "Search Flights"}
+                  {loadingFlights ? t("nav.searching") : t("book.searchFlights")}
                 </button>
                 <div className="mt-5 grid gap-3 md:grid-cols-2">
                   {flightResults.map((flight, index) => (
@@ -1119,19 +1119,19 @@ export default function BookTripPage() {
                       </p>
                       <dl className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
                         <div>
-                          <dt className="font-bold uppercase tracking-wide text-slate-400">Airline</dt>
+                          <dt className="font-bold uppercase tracking-wide text-slate-400">{t("book.airline")}</dt>
                           <dd className="mt-0.5">{formatFlightValue(getFlightAirlineName(flight))}</dd>
                         </div>
                         <div>
-                          <dt className="font-bold uppercase tracking-wide text-slate-400">Class</dt>
+                          <dt className="font-bold uppercase tracking-wide text-slate-400">{t("book.class")}</dt>
                           <dd className="mt-0.5">{formatFlightValue(getFlightCabinClass(flight))}</dd>
                         </div>
                         <div>
-                          <dt className="font-bold uppercase tracking-wide text-slate-400">Origin</dt>
+                          <dt className="font-bold uppercase tracking-wide text-slate-400">{t("book.origin")}</dt>
                           <dd className="mt-0.5">{formatFlightValue(getFlightOrigin(flight))}</dd>
                         </div>
                         <div>
-                          <dt className="font-bold uppercase tracking-wide text-slate-400">Destination</dt>
+                          <dt className="font-bold uppercase tracking-wide text-slate-400">{t("book.destination")}</dt>
                           <dd className="mt-0.5">{formatFlightValue(getFlightDestination(flight))}</dd>
                         </div>
                       </dl>
@@ -1145,21 +1145,21 @@ export default function BookTripPage() {
             )}
 
             {includeHotel && (
-              <Section eyebrow="Optional" title="Hotel Search">
+              <Section eyebrow="Optional" title={t("book.hotelSearch")}>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <Field label="City">
+                  <Field label={t("book.city")}>
                     <SelectInput name="cityCode" value={hotelSearch.cityCode} onChange={updateHotelSearch} options={cityOptions} />
                   </Field>
-                  <Field label="Guests">
+                  <Field label={t("book.guests")}>
                     <TextInput name="NumberOfGuests" type="number" min="1" value={hotelSearch.NumberOfGuests} onChange={updateHotelSearch} />
                   </Field>
-                  <Field label="Check in">
+                  <Field label={t("book.checkIn")}>
                     <TextInput name="checkInDate" type="date" value={hotelSearch.checkInDate} onChange={updateHotelSearch} />
                   </Field>
-                  <Field label="Check out">
+                  <Field label={t("book.checkOut")}>
                     <TextInput name="checkOutDate" type="date" value={hotelSearch.checkOutDate} onChange={updateHotelSearch} />
                   </Field>
-                  <Field label="Rooms">
+                  <Field label={t("book.rooms")}>
                     <TextInput name="NumberOfrooms" type="number" min="1" value={hotelSearch.NumberOfrooms} onChange={updateHotelSearch} />
                   </Field>
                 </div>
@@ -1169,7 +1169,7 @@ export default function BookTripPage() {
                   disabled={loadingHotels || !hotelSearch.checkInDate || !hotelSearch.checkOutDate}
                   className="mt-5 rounded-full bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 shadow-sm hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
-                  {loadingHotels ? "Searching..." : "Search Hotels"}
+                  {loadingHotels ? t("nav.searching") : t("book.searchHotels")}
                 </button>
                 <div className="mt-5 grid gap-3 md:grid-cols-2">
                   {hotelResults.map((hotel, index) => (
@@ -1196,29 +1196,28 @@ export default function BookTripPage() {
               </Section>
             )}
 
-            <Section eyebrow="Step 4" title="Payment & Notes">
+            <Section eyebrow="Step 4" title={t("book.paymentNotes")}>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                  Payment method
+                  {t("book.paymentMethod")}
                 </p>
                 <p className="mt-2 text-lg font-extrabold text-slate-900">
-                  Card via Stripe
+                  {t("book.cardStripe")}
                 </p>
                 <p className="mt-1 text-sm text-slate-500">
-                  You will enter card details on Stripe&apos;s secure checkout page
-                  after the booking is created.
+                  {t("book.stripeHelp")}
                 </p>
               </div>
               <label className="mt-4 block">
                 <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                  Special request notes
+                  {t("book.specialNotes")}
                 </span>
                 <textarea
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
                   rows={4}
                   className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-100"
-                  placeholder="Optional notes for your booking"
+                  placeholder={t("book.notesPlaceholder")}
                 />
               </label>
               <label className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700">
@@ -1228,17 +1227,16 @@ export default function BookTripPage() {
                   onChange={(event) => setPolicyAgreed(event.target.checked)}
                   className="mt-1 h-4 w-4 accent-amber-500"
                 />
-                I agree to the booking policy and understand that flight and hotel
-                availability is confirmed by the backend provider.
+                {t("book.policy")}
               </label>
             </Section>
           </div>
 
           <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-6">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-600">
-              Summary
+              {t("book.summary")}
             </p>
-            <h2 className="mt-1 text-2xl font-extrabold text-slate-900">Booking Summary</h2>
+            <h2 className="mt-1 text-2xl font-extrabold text-slate-900">{t("book.bookingSummary")}</h2>
             <div className="mt-5 space-y-3 text-sm">
               <div className="rounded-2xl bg-slate-50 p-4">
                 {selectedTrip && (
@@ -1252,67 +1250,67 @@ export default function BookTripPage() {
                   />
                 )}
                 <p className="font-extrabold text-slate-900">
-                  {selectedTrip ? getTripTitle(selectedTrip) : "No trip selected"}
+                  {selectedTrip ? getTripTitle(selectedTrip) : t("book.noTripSelected")}
                 </p>
                 <p className="mt-1 text-slate-500">
-                  {selectedTrip ? selectedTrip.location || selectedTrip.city || "Egypt" : "Choose one trip card."}
+                  {selectedTrip ? selectedTrip.location || selectedTrip.city || "Egypt" : t("book.chooseOneTrip")}
                 </p>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Trip price</span>
+                <span className="text-slate-500">{t("book.tripPrice")}</span>
                 <strong>{formatMoney(totals.tripPrice)}</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Number of guests</span>
+                <span className="text-slate-500">{t("book.numberOfGuests")}</span>
                 <strong>{totals.guests || 0}</strong>
               </div>
               {tripDateSummary && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Trip Date</span>
+                  <span className="text-slate-500">{t("book.tripDate")}</span>
                   <strong>{tripDateSummary}</strong>
                 </div>
               )}
               {tripDurationSummary && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Trip Duration</span>
+                  <span className="text-slate-500">{t("book.tripDuration")}</span>
                   <strong>{tripDurationSummary}</strong>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-slate-500">Trip subtotal</span>
+                <span className="text-slate-500">{t("book.tripSubtotal")}</span>
                 <strong>{formatMoney(totals.tripTotal)}</strong>
               </div>
               {includeFlight && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Flight price</span>
+                  <span className="text-slate-500">{t("book.flightPrice")}</span>
                   <strong>{formatMoney(totals.flightPrice)}</strong>
                 </div>
               )}
               {includeHotel && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Hotel price</span>
+                  <span className="text-slate-500">{t("book.hotelPrice")}</span>
                   <strong>{formatMoney(totals.hotelPrice)}</strong>
                 </div>
               )}
               {includeGuide && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Guide fee</span>
+                  <span className="text-slate-500">{t("book.guideFee")}</span>
                   <strong>{formatMoney(totals.guideFee)}</strong>
                 </div>
               )}
               {serviceFee > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Service fee</span>
+                  <span className="text-slate-500">{t("book.serviceFee")}</span>
                   <strong>{formatMoney(totals.serviceFee)}</strong>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-slate-500">Payment method</span>
-                <strong>Stripe card</strong>
+                <span className="text-slate-500">{t("book.paymentMethod")}</span>
+                <strong>{t("book.stripeCard")}</strong>
               </div>
               <div className="border-t border-slate-200 pt-4">
                 <div className="flex justify-between text-lg">
-                  <span className="font-extrabold">Final total</span>
+                  <span className="font-extrabold">{t("book.finalTotal")}</span>
                   <strong className="text-amber-700">{formatMoney(totals.totalPrice)}</strong>
                 </div>
               </div>
@@ -1331,7 +1329,7 @@ export default function BookTripPage() {
               disabled={submitting}
               className="mt-5 w-full rounded-full bg-amber-400 px-5 py-3 text-sm font-extrabold text-slate-950 shadow-sm hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              {submitting ? "Submitting..." : "Create Booking"}
+              {submitting ? t("book.submitting") : t("book.createBooking")}
             </button>
           </aside>
         </form>

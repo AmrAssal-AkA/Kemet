@@ -4,6 +4,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { getHiddenGems } from "@/services/contentServices";
 import { getTrips } from "@/services/tripServices";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATIC DATA
@@ -19,10 +20,10 @@ const cities = [
 ];
 
 const stats = [
-  { value: "6+",   label: "Destinations" },
-  { value: "12k+", label: "Happy Travelers" },
-  { value: "4.9★", label: "Avg Rating" },
-  { value: "100%", label: "Local Guides" },
+  { value: "6+", labelKey: "home.stats.destinations" },
+  { value: "12k+", labelKey: "home.stats.happyTravelers" },
+  { value: "4.9★", labelKey: "home.stats.avgRating" },
+  { value: "100%", labelKey: "home.stats.localGuides" },
 ];
 
 const reviews = [
@@ -179,10 +180,12 @@ function SectionHeading({ eyebrow, title, subtitle, light = false }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function Home({ trips, hiddenGems }) {
+  const { t } = useLanguage();
+
   return (
     <>
       <Head>
-        <title>Kemet Travel — Discover Egypt through Egyptian Eyes</title>
+        <title>{t("home.metaTitle")}</title>
         <meta name="description" content="Plan your smart trip to Egypt with Kemet Travel. Explore temples, beaches, and hidden gems through Egyptian eyes." />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </Head>
@@ -266,7 +269,7 @@ export default function Home({ trips, hiddenGems }) {
 
             <motion.span {...fadeUp(0.1)}
               className="inline-block self-start mb-3 sm:mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-4 py-1.5 rounded-full">
-              ✦ Egypt's #1 Travel Guide
+              {t("home.eyebrow")}
             </motion.span>
 
             {/* FIX: text-3xl on xs → 4xl → 5xl → 7xl; was jumping from 4xl straight to 7xl */}
@@ -275,27 +278,27 @@ export default function Home({ trips, hiddenGems }) {
               className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold leading-[1.08] mb-4 sm:mb-5 max-w-2xl"
               style={SERIF}
             >
-              Discover{" "}
+              {t("home.heroTitleStart")}{" "}
               <em className="not-italic text-yellow-400">KEMET</em>{" "}
-              through Egyptian eyes
+              {t("home.heroTitleEnd")}
             </motion.h1>
 
             {/* FIX: hide on xs so content doesn't overflow short screens */}
             <motion.p {...fadeUp(0.32)}
               className="hidden sm:block mb-6 sm:mb-8 max-w-md text-sm sm:text-base md:text-lg text-gray-300 leading-relaxed">
-              Plan your smart trip to Egypt — from temples to beaches and hidden gems.
+              {t("home.heroSubtitle")}
             </motion.p>
 
             {/* FIX: stack buttons on xs, row on sm+ */}
             <motion.div {...fadeUp(0.42)} className="flex flex-col sm:flex-row gap-3 mb-0">
               <Link href="/blogs" className="w-full sm:w-auto">
                 <button className="btn-gold w-full sm:w-auto rounded-full px-6 sm:px-8 py-3 sm:py-3.5 font-semibold text-black text-sm">
-                  Explore Now
+                  {t("home.exploreNow")}
                 </button>
               </Link>
               <Link href="/Destination" className="w-full sm:w-auto">
                 <button className="btn-ghost-white w-full sm:w-auto rounded-full px-6 sm:px-8 py-3 sm:py-3.5 font-medium text-white text-sm">
-                  View Destinations
+                  {t("home.viewDestinations")}
                 </button>
               </Link>
             </motion.div>
@@ -306,10 +309,10 @@ export default function Home({ trips, hiddenGems }) {
               className="flex gap-2 sm:gap-3 mt-6 sm:mt-10 overflow-x-auto pb-1"
               style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}
             >
-              {stats.map(({ value, label }) => (
-                <div key={label} className="stat-chip shrink-0 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-center">
+              {stats.map(({ value, labelKey }) => (
+                <div key={labelKey} className="stat-chip shrink-0 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-center">
                   <div className="text-base sm:text-lg font-extrabold text-yellow-400 leading-none">{value}</div>
-                  <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 mt-0.5 whitespace-nowrap">{label}</div>
+                  <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-gray-400 mt-0.5 whitespace-nowrap">{t(labelKey)}</div>
                 </div>
               ))}
             </motion.div>
@@ -325,13 +328,13 @@ export default function Home({ trips, hiddenGems }) {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between mb-8 sm:mb-10 md:mb-12">
             <div>
               <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
-                Popular Destinations
+                {t("home.popularDestinations")}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1" style={SERIF}>
-                Explore Popular Cities
+                {t("home.explorePopularCities")}
               </h2>
               <p className="text-gray-500 text-sm mt-2 max-w-md leading-relaxed">
-                Egypt's most iconic destinations — each city with its own story, charm, and unforgettable experiences.
+                {t("home.popularCitiesSubtitle")}
               </p>
             </div>
 
@@ -340,15 +343,15 @@ export default function Home({ trips, hiddenGems }) {
               className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 shrink-0"
               style={{ scrollbarWidth: "none" }}
             >
-              <span className="text-gray-400 text-sm shrink-0">Sort by:</span>
+              <span className="text-gray-400 text-sm shrink-0">{t("home.sortBy")}</span>
               {[
-                ["Popular",     "bg-yellow-400 text-black"],
-                ["Hidden Gems", "bg-gray-100 text-gray-600 hover:bg-gray-200"],
-                ["Top Rated",   "bg-gray-100 text-gray-600 hover:bg-gray-200"],
-              ].map(([label, cls]) => (
-                <Link href="/offerings" key={label}>
+                ["home.sortPopular", "bg-yellow-400 text-black"],
+                ["home.sortHiddenGems", "bg-gray-100 text-gray-600 hover:bg-gray-200"],
+                ["home.sortTopRated", "bg-gray-100 text-gray-600 hover:bg-gray-200"],
+              ].map(([labelKey, cls]) => (
+                <Link href="/offerings" key={labelKey}>
                   <span className={`shrink-0 text-[13px] font-medium px-4 py-1.5 rounded-full cursor-pointer transition-colors ${cls}`}>
-                    {label}
+                    {t(labelKey)}
                   </span>
                 </Link>
               ))}
@@ -403,7 +406,7 @@ export default function Home({ trips, hiddenGems }) {
 
               <div className="absolute top-3 sm:top-4 md:top-5 left-3 sm:left-4 md:left-5">
                 <span className="inline-block bg-yellow-400 text-black text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                  Featured Destination
+                  {t("home.featuredTrips")}
                 </span>
               </div>
 
@@ -413,10 +416,10 @@ export default function Home({ trips, hiddenGems }) {
                 </h3>
                 {/* FIX: description hidden on mobile (no xs breakpoint in Tailwind default config) */}
                 <p className="text-gray-300 text-sm max-w-md leading-relaxed hidden sm:block">
-                  Discover the Valley of the Kings and breathtaking hot air balloons.
+                  {t("home.featuredTripsSubtitle")}
                 </p>
                 <div className="inline-flex items-center gap-1.5 mt-1.5 sm:mt-4 text-yellow-400 text-xs sm:text-sm font-semibold group-hover:gap-3 transition-all duration-200">
-                  Explore Luxor <span>→</span>
+                  {t("common.explore")} Luxor <span>→</span>
                 </div>
               </div>
             </motion.div>
@@ -428,9 +431,9 @@ export default function Home({ trips, hiddenGems }) {
         ═══════════════════════════════════════════ */}
         <section className="py-6 pb-14 sm:pb-16 md:pb-20 px-4 sm:px-8 md:px-20">
           <SectionHeading
-            eyebrow="Top Experiences"
-            title="Explore Our Luxor Packages"
-            subtitle="Hand-picked tours and experiences for every kind of traveler."
+            eyebrow={t("home.featuredTrips")}
+            title={t("home.featuredTripsTitle")}
+            subtitle={t("home.featuredTripsSubtitle")}
           />
           {trips.length > 0 ? (
             // FIX: 1-col → 2-col sm → 2-col md → 4-col lg; md:grid-cols-4 at 768px was too cramped
@@ -460,7 +463,7 @@ export default function Home({ trips, hiddenGems }) {
                       <div className="flex items-center justify-between mt-auto">
                         <span className="text-yellow-500 font-extrabold text-base">{Number(pkg.fullPrice || pkg.finalPrice || 0).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})} EGP</span>
                         <span className="text-xs font-semibold text-gray-500 border border-gray-200 rounded-full px-3 py-1 hover:border-yellow-400 hover:text-yellow-600 transition-colors">
-                          Book →
+                          {t("home.bookNow")} →
                         </span>
                       </div>
                     </div>
@@ -469,13 +472,13 @@ export default function Home({ trips, hiddenGems }) {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm text-center">No packages available at the moment. Check back soon!</p>
+            <p className="text-gray-500 text-sm text-center">{t("home.noTrips")}</p>
           )}
 
           <div className="text-center mt-8 sm:mt-10">
             <Link href="/offerings">
               <button className="btn-gold rounded-full px-7 sm:px-9 py-3 sm:py-3.5 font-semibold text-black text-sm">
-                View All Packages
+                {t("home.seeAllTrips")}
               </button>
             </Link>
           </div>
@@ -488,17 +491,17 @@ export default function Home({ trips, hiddenGems }) {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-4">
             <div>
               <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
-                Off the Beaten Path
+                {t("home.offPath")}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1" style={SERIF}>
-                Egypt's Hidden Gems
+                {t("home.hiddenGemsTitle")}
               </h2>
               <p className="text-gray-500 text-sm mt-2 max-w-md leading-relaxed">
-                Places most tourists never find — secret canyons, ancient oases, and forgotten lakes.
+                {t("home.hiddenGemsSubtitle")}
               </p>
             </div>
             <Link href="/hidden-gems" className="hidden md:flex items-center gap-1 text-sm font-semibold text-gray-500 border-b border-gray-300 hover:text-yellow-600 hover:border-yellow-400 transition-colors whitespace-nowrap">
-              See all gems →
+              {t("home.seeAllGems")}
             </Link>
           </div>
 
@@ -528,7 +531,7 @@ export default function Home({ trips, hiddenGems }) {
                       <h3 className="text-base sm:text-lg md:text-xl font-extrabold text-white leading-tight mb-1 sm:mb-1.5" style={SERIF}>{gem.title}</h3>
                       <p className="text-gray-300 text-xs leading-relaxed line-clamp-2">{gem.desc}</p>
                       <div className="inline-flex items-center gap-1 mt-2 sm:mt-3 text-yellow-400 text-xs font-semibold">
-                        Discover <span>→</span>
+                        {t("common.discover")} <span>→</span>
                       </div>
                     </div>
                   </motion.div>
@@ -536,12 +539,12 @@ export default function Home({ trips, hiddenGems }) {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm text-center">No hidden gems available at the moment. Check back soon!</p>
+            <p className="text-gray-500 text-sm text-center">{t("home.noGems")}</p>
           )}
 
           <div className="text-center mt-7 md:hidden">
             <Link href="/hidden-gems">
-              <button className="btn-gold rounded-full px-8 py-3 font-semibold text-black text-sm">See All Hidden Gems</button>
+              <button className="btn-gold rounded-full px-8 py-3 font-semibold text-black text-sm">{t("home.seeAllHiddenGems")}</button>
             </Link>
           </div>
         </section>
@@ -558,9 +561,9 @@ export default function Home({ trips, hiddenGems }) {
 
             <div className="relative z-10">
               <SectionHeading
-                eyebrow="Real Stories"
-                title="What travelers say about us"
-                subtitle="Over 12,000 explorers have discovered Egypt with Kemet. Here's what some of them shared."
+                eyebrow={t("home.realStories")}
+                title={t("home.travelersSay")}
+                subtitle={t("home.travelersSubtitle")}
                 light
               />
 
@@ -598,7 +601,7 @@ export default function Home({ trips, hiddenGems }) {
                   ))}
                 </div>
                 <p className="text-white font-bold text-lg">4.9 / 5</p>
-                <p className="text-gray-400 text-sm text-center">based on 2,400+ verified reviews</p>
+                <p className="text-gray-400 text-sm text-center">{t("home.ratingBased")}</p>
               </div>
             </div>
           </div>
@@ -611,17 +614,17 @@ export default function Home({ trips, hiddenGems }) {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-4">
             <div>
               <span className="inline-block mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full">
-                Community Hub
+                {t("home.communityHub")}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mt-1" style={SERIF}>
-                Stories from fellow travelers
+                {t("home.storiesTitle")}
               </h2>
               <p className="text-gray-500 text-sm mt-2 max-w-md leading-relaxed">
-                12,400+ explorers sharing their real Egypt — join the conversation.
+                {t("home.storiesSubtitle")}
               </p>
             </div>
             <Link href="/communities" className="hidden md:flex items-center gap-1 text-sm font-semibold text-gray-500 border-b border-gray-300 hover:text-yellow-600 hover:border-yellow-400 transition-colors whitespace-nowrap">
-              View all stories →
+              {t("home.viewAllStories")}
             </Link>
           </div>
 
@@ -654,8 +657,8 @@ export default function Home({ trips, hiddenGems }) {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
-                        <span className="text-xs text-gray-400">♥ {story.likes} likes</span>
-                        <span className="text-xs font-semibold text-yellow-600 ml-auto">Read story →</span>
+                        <span className="text-xs text-gray-400">♥ {story.likes} {t("home.likes")}</span>
+                        <span className="text-xs font-semibold text-yellow-600 ml-auto">{t("home.readStory")}</span>
                       </div>
                     </div>
                   </div>
@@ -670,12 +673,12 @@ export default function Home({ trips, hiddenGems }) {
             style={{ background: "linear-gradient(135deg,#1a1a1a 0%,#2d2519 60%,#3d3020 100%)", border: "1px solid rgba(255,255,255,0.08)" }}
           >
             <div>
-              <p className="text-white font-bold text-base mb-0.5">Ready to share your own story?</p>
-              <p className="text-gray-400 text-sm">Join 12,400+ travelers and become part of Egypt's travel community.</p>
+              <p className="text-white font-bold text-base mb-0.5">{t("home.shareStoryTitle")}</p>
+              <p className="text-gray-400 text-sm">{t("home.shareStorySubtitle")}</p>
             </div>
             <Link href="/communities" className="shrink-0 w-full sm:w-auto">
               <button className="btn-gold w-full sm:w-auto rounded-full px-7 py-3 font-semibold text-black text-sm whitespace-nowrap">
-                Join the Community
+                {t("home.joinCommunity")}
               </button>
             </Link>
           </div>
@@ -693,13 +696,13 @@ export default function Home({ trips, hiddenGems }) {
             <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 sm:gap-10">
               <div className="max-w-lg">
                 <span className="inline-block mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-3 py-1 rounded-full">
-                  Why Kemet?
+                  {t("home.whyKemet")}
                 </span>
                 <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white leading-tight mb-3" style={SERIF}>
-                  Travel Egypt the way Egyptians do
+                  {t("home.travelEgyptTitle")}
                 </h3>
                 <p className="text-gray-400 text-sm leading-relaxed">
-                  Every guide, every route, every hidden spot is curated by locals who grew up between these monuments.
+                  {t("home.travelEgyptSubtitle")}
                 </p>
               </div>
               {/* FIX: chips always 2-col, full-width on mobile, auto on lg */}
@@ -730,13 +733,13 @@ export default function Home({ trips, hiddenGems }) {
 
             <div className="relative z-10 max-w-xl mx-auto">
               <span className="inline-block mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-yellow-900/70 bg-yellow-900/10 px-3 py-1 rounded-full">
-                Stay in the loop
+                {t("footer.stayLoop")}
               </span>
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 leading-tight" style={SERIF}>
-                Get the weekly Egypt digest
+                {t("home.digestTitle")}
               </h3>
               <p className="text-yellow-900/70 text-sm mb-8 leading-relaxed px-2">
-                New stories, hidden gems, community meetups and exclusive deals — straight to your inbox every week.
+                {t("home.digestSubtitle")}
               </p>
               <Link href="/auth/auth">
                 <motion.button
@@ -745,12 +748,12 @@ export default function Home({ trips, hiddenGems }) {
                   className="rounded-full px-8 sm:px-10 py-3 sm:py-3.5 text-sm font-bold text-white border-none cursor-pointer"
                   style={{ background: "#06122e", boxShadow: "0 4px 14px rgba(6,18,46,.35)" }}
                 >
-                  Sign In →
+                  {t("home.signIn")}
                 </motion.button>
               </Link>
               <p className="mt-4 text-xs text-yellow-900/50">
-                for more help.{" "}
-                <Link href="/contact" className="underline font-semibold">contact us</Link>
+                {t("home.moreHelp")}{" "}
+                <Link href="/contact" className="underline font-semibold">{t("home.contactUs")}</Link>
               </p>
             </div>
           </div>

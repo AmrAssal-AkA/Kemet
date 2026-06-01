@@ -5,6 +5,7 @@ import Image from "next/image";
 import { FaChevronDown, FaSearch, FaTimes, FaUserCircle } from "react-icons/fa";
 import { userDashboardMenuItems } from "@/config/dashboardMenus";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { searchTrips } from "@/services/searchServices";
 import { getUserRole } from "@/utils/authSession";
 
@@ -96,12 +97,12 @@ const headerStyles = `
 `;
 
 const navLinks = [
-  { href: "/", label: "Home", match: ["/", "/user-dashboard"] },
-  { href: "/offerings", label: "Offerings" },
-  { href: "/communities", label: "Communities" },
-  { href: "/Destination", label: "Destination" },
-  { href: "/hidden-gems", label: "Hidden Gems" },
-  { href: "/blogs", label: "Blog" },
+  { href: "/", labelKey: "nav.home", match: ["/", "/user-dashboard"] },
+  { href: "/offerings", labelKey: "nav.offerings" },
+  { href: "/communities", labelKey: "nav.communities" },
+  { href: "/Destination", labelKey: "nav.destination" },
+  { href: "/hidden-gems", labelKey: "nav.hiddenGems" },
+  { href: "/blogs", labelKey: "nav.blog" },
 ];
 
 function getTripId(trip) {
@@ -172,6 +173,7 @@ function Header() {
   const searchPanelRef = useRef(null);
   const searchInputRef = useRef(null);
   const { admin, user, logout } = useAuth();
+  const { language, toggleLanguage, t, isArabic } = useLanguage();
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -257,7 +259,7 @@ function Header() {
     setSearchResults([]);
 
     if (!location || !duration) {
-      setSearchError("Please enter location and duration.");
+      setSearchError(t("nav.searchRequired"));
       return;
     }
 
@@ -274,7 +276,7 @@ function Header() {
       setSearchResults(results);
     } catch (error) {
       setSearchResults([]);
-      setSearchError("Search could not be completed.");
+      setSearchError(t("nav.searchFailed"));
     } finally {
       setSearchLoading(false);
     }
@@ -286,7 +288,12 @@ function Header() {
     link.match ? link.match.includes(pathname) : pathname === link.href;
   const homeHref = user ? "/user-dashboard" : "/";
   const userRole = admin ? "admin" : getUserRole(user);
-  const dashboardMenuItems = user ? getHeaderDashboardMenuItems(userRole) : [];
+  const dashboardMenuItems = user ? getHeaderDashboardMenuItems(userRole).map((item) => {
+    if (item.label === "Admin Dashboard") return { ...item, label: t("nav.adminDashboard") };
+    if (item.label === "Guide Dashboard") return { ...item, label: t("nav.guideDashboard") };
+    return item;
+  }) : [];
+  const languageButtonLabel = language === "ar" ? "EN" : "AR";
 
   return (
     <>
@@ -294,7 +301,7 @@ function Header() {
 
       <div className="top-bar hidden items-center justify-center gap-1 px-4 py-1.5 text-xs tracking-wide text-white/80 md:flex">
         <span className="text-yellow-400">*</span>
-        <span>Discover Egypt&apos;s Hidden Wonders - Book your journey today</span>
+        <span>{t("nav.topBar")}</span>
         <span className="text-yellow-400">*</span>
       </div>
 
@@ -314,12 +321,12 @@ function Header() {
             {navLinks.map((link) => (
               <Link
                 key={link.href}
-                href={link.label === "Home" ? homeHref : link.href}
+                href={link.labelKey === "nav.home" ? homeHref : link.href}
                 className={`nav-link whitespace-nowrap transition-colors duration-200 ${
                   isActive(link) ? "active font-semibold text-[#FFCE2A]" : "hover:text-slate-900"
                 }`}
               >
-                {link.label}
+                {t(link.labelKey)}
               </Link>
             ))}
           </nav>
@@ -327,10 +334,18 @@ function Header() {
           <div className="hidden shrink-0 items-center gap-2.5 lg:flex">
             <button
               type="button"
+              onClick={toggleLanguage}
+              className="user-btn rounded-full border border-slate-200 px-3 py-1.5 text-sm font-bold text-slate-700"
+              aria-label={isArabic ? "Switch to English" : "Switch to Arabic"}
+            >
+              {languageButtonLabel}
+            </button>
+            <button
+              type="button"
               data-search-toggle="true"
               onClick={toggleSearch}
               className="user-btn flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-slate-700"
-              aria-label="Open search"
+              aria-label={t("nav.openSearch")}
               aria-expanded={searchOpen}
             >
               <FaSearch className="text-xl text-slate-500" />
@@ -338,8 +353,8 @@ function Header() {
 
             {!user ? (
               <Link href="/auth/auth">
-                <button className="login-btn rounded-full px-4 py-1.5 text-sm font-medium text-slate-700">
-                  Login
+                  <button className="login-btn rounded-full px-4 py-1.5 text-sm font-medium text-slate-700">
+                  {t("nav.login")}
                 </button>
               </Link>
             ) : (
@@ -348,7 +363,7 @@ function Header() {
                   type="button"
                   onClick={() => setMenuOpen((prev) => !prev)}
                   className="user-btn flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-slate-700"
-                  aria-label="User menu"
+                  aria-label={t("nav.userMenu")}
                 >
                   <FaUserCircle className="text-xl text-slate-500" />
                   <FaChevronDown className={`text-xs transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`} />
@@ -373,7 +388,7 @@ function Header() {
                       onClick={handleLogout}
                       className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-rose-500 transition-colors hover:bg-rose-50"
                     >
-                      Logout
+                      {t("nav.logout")}
                     </button>
                   </div>
                 )}
@@ -382,7 +397,7 @@ function Header() {
 
             <Link href="/BookTrip">
               <button className="book-btn rounded-full px-5 py-2 text-sm font-semibold text-black">
-                Book Your Trip Now
+                {t("nav.bookTrip")}
               </button>
             </Link>
           </div>
@@ -390,10 +405,18 @@ function Header() {
           <div className="flex items-center gap-2 lg:hidden">
             <button
               type="button"
+              onClick={toggleLanguage}
+              className="user-btn rounded-full border border-slate-200 px-3 py-1.5 text-sm font-bold text-slate-700"
+              aria-label={isArabic ? "Switch to English" : "Switch to Arabic"}
+            >
+              {languageButtonLabel}
+            </button>
+            <button
+              type="button"
               data-search-toggle="true"
               onClick={toggleSearch}
               className="user-btn flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-slate-700"
-              aria-label="Open search"
+              aria-label={t("nav.openSearch")}
               aria-expanded={searchOpen}
             >
               <FaSearch className="text-xl text-slate-500" />
@@ -402,7 +425,7 @@ function Header() {
             <button
               className="flex flex-col gap-1.5 p-2"
               onClick={() => setOpen(!open)}
-              aria-label="Toggle menu"
+              aria-label={t("nav.toggleMenu")}
             >
               <span className={`block h-0.5 w-6 rounded bg-slate-700 transition-all duration-200 ${open ? "translate-y-2 rotate-45" : ""}`} />
               <span className={`block h-0.5 w-6 rounded bg-slate-700 transition-all duration-200 ${open ? "opacity-0" : ""}`} />
@@ -418,12 +441,12 @@ function Header() {
           >
             <div className="rounded-3xl border border-[#f3df9a] bg-white p-4 text-[#3B2416] shadow-[0_18px_42px_rgba(59,36,22,0.16)]">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-black">Search Trips</p>
+                <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-black">{t("nav.searchTrips")}</p>
                 <button
                   type="button"
                   onClick={closeSearch}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#f3df9a] bg-white text-[#7A5A3A] transition hover:bg-[#fff3bf]"
-                  aria-label="Close search"
+                  aria-label={t("nav.closeSearch")}
                 >
                   <FaTimes className="text-xs" />
                 </button>
@@ -432,7 +455,7 @@ function Header() {
               <form onSubmit={handleSearchSubmit} className="mt-4 space-y-3">
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                   <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-black">
-                    Location
+                    {t("nav.location")}
                     <input
                       ref={searchInputRef}
                       value={searchLocation}
@@ -441,12 +464,12 @@ function Header() {
                         clearSearchFeedback();
                       }}
                       className="mt-1.5 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-black outline-none transition placeholder:text-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
-                      placeholder="Alex"
+                      placeholder={t("nav.searchLocationPlaceholder")}
                     />
                   </label>
 
                   <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-black">
-                    Duration
+                    {t("nav.duration")}
                     <input
                       value={searchDuration}
                       onChange={(event) => {
@@ -454,12 +477,12 @@ function Header() {
                         clearSearchFeedback();
                       }}
                       className="mt-1.5 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-black outline-none transition placeholder:text-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
-                      placeholder="3"
+                      placeholder={t("nav.searchDurationPlaceholder")}
                     />
                   </label>
 
                   <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-black">
-                    Travelers
+                    {t("nav.travelers")}
                     <input
                       type="number"
                       min="1"
@@ -473,7 +496,7 @@ function Header() {
                   </label>
 
                   <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-black">
-                    Adventure Type
+                    {t("nav.adventureType")}
                     <input
                       value={searchAdventureType}
                       onChange={(event) => {
@@ -481,7 +504,7 @@ function Header() {
                         clearSearchFeedback();
                       }}
                       className="mt-1.5 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-black outline-none transition placeholder:text-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
-                      placeholder="safari"
+                      placeholder={t("nav.searchAdventurePlaceholder")}
                     />
                   </label>
                 </div>
@@ -492,7 +515,7 @@ function Header() {
                     disabled={searchLoading}
                     className="book-btn w-full rounded-full px-5 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-70 md:w-auto"
                   >
-                    Search
+                    {t("common.search")}
                   </button>
                 </div>
               </form>
@@ -500,11 +523,11 @@ function Header() {
               {(searchLoading || searchError || searchSubmitted || searchResults.length > 0) && (
                 <div className="mt-4 overflow-hidden rounded-2xl border border-gray-300 bg-gray-50">
                   {searchLoading ? (
-                    <p className="p-3 text-sm font-semibold text-gray-600">Searching...</p>
+                    <p className="p-3 text-sm font-semibold text-gray-600">{t("nav.searching")}</p>
                   ) : searchError ? (
                     <p className="p-3 text-sm font-semibold text-rose-700">{searchError}</p>
                   ) : searchSubmitted && searchResults.length === 0 ? (
-                    <p className="p-3 text-sm font-semibold text-gray-600">No trips found.</p>
+                    <p className="p-3 text-sm font-semibold text-gray-600">{t("nav.noTripsFound")}</p>
                   ) : (
                     <div className="max-h-72 overflow-y-auto">
                     {searchResults.map((trip) => {
@@ -532,7 +555,7 @@ function Header() {
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-extrabold text-black">{getTripTitle(trip)}</p>
                             <p className="mt-1 truncate text-xs font-semibold text-gray-600">
-                              {[trip.city || trip.location, trip.duration ? `${trip.duration} days` : ""]
+                              {[trip.city || trip.location, trip.duration ? `${trip.duration} ${t("nav.days")}` : ""]
                                 .filter(Boolean)
                                 .join(" - ")}
                             </p>
@@ -557,11 +580,11 @@ function Header() {
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
-                  href={link.label === "Home" ? homeHref : link.href}
+                  href={link.labelKey === "nav.home" ? homeHref : link.href}
                   onClick={() => setOpen(false)}
                   className={`mobile-link ${isActive(link) ? "active" : ""}`}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </Link>
               ))}
 
@@ -569,7 +592,7 @@ function Header() {
                 {!user ? (
                   <Link onClick={() => setOpen(false)} href="/auth/auth">
                     <button className="w-full rounded-full border border-slate-200 py-2.5 text-sm font-medium text-slate-700">
-                      Login
+                      {t("nav.login")}
                     </button>
                   </Link>
                 ) : (
@@ -586,13 +609,13 @@ function Header() {
                       onClick={handleLogout}
                       className="w-full rounded-full border border-rose-200 py-2.5 text-sm font-medium text-rose-500"
                     >
-                      Logout
+                      {t("nav.logout")}
                     </button>
                   </>
                 )}
                 <Link href="/BookTrip" onClick={() => setOpen(false)}>
                   <button className="book-btn w-full rounded-full py-2.5 text-sm font-semibold text-black">
-                    Book Your Trip Now
+                    {t("nav.bookTrip")}
                   </button>
                 </Link>
               </div>

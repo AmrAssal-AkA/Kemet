@@ -6,6 +6,7 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 
 import AddBlogForm from "@/components/BlogCards/AddBlogForm";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { buildApiUrl } from "@/utils/apiBaseUrl";
 import { VscChromeClose } from "react-icons/vsc";
 
@@ -37,6 +38,7 @@ function getBlogDate(blog) {
 
 export default function BlogPage(props) {
   const { blogs = [], fetchError = null } = props;
+  const { t } = useLanguage();
   const router = useRouter();
   const recentArticlesRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -81,7 +83,7 @@ export default function BlogPage(props) {
   }, [activeFilters, blogs, hasActiveSearch]);
 
   const blogPosts = filteredBlogs.map((blog) => ({
-    title: blog.title || "Untitled Article",
+    title: blog.title || t("blog.untitled"),
     content: blog.content ? `${blog.content.slice(0, 100)}...` : "",
     image: getBlogImage(blog.images) || heroImage.src,
     id: blog._id || blog.id || blog.blogId,
@@ -138,7 +140,7 @@ export default function BlogPage(props) {
   return (
     <>
       <Head>
-        <title>Blogs - Kemet Travel</title>
+        <title>{t("blog.title")}</title>
         <meta
           name="description"
           content="Discover the wonders of Egypt through our travel blog. Explore ancient temples, vibrant culture, and hidden gems with us."
@@ -164,12 +166,12 @@ export default function BlogPage(props) {
 
           <div className="relative z-10 mx-auto w-full max-w-4xl text-white">
             <h1 className="text-3xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-              Let&apos;s Explore
+              {t("blog.heroTitle1")}
               <br />
-              <span className="text-sky-300">New Possibilities...</span>
+              <span className="text-sky-300">{t("blog.heroTitle2")}</span>
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-100 sm:mt-5 sm:text-base md:text-lg lg:text-xl">
-              Plan your smart trip to Egypt – from temples to turquoise seas
+              {t("blog.heroSubtitle")}
             </p>
           </div>
 
@@ -181,11 +183,11 @@ export default function BlogPage(props) {
               <div className="flex flex-col lg:flex-row lg:items-center">
                 <div className="flex-1 border-b border-gray-100 px-5 py-3 lg:border-b-0 lg:border-r lg:border-gray-200">
                   <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                    Search
+                    {t("common.search")}
                   </span>
                   <input
                     type="text"
-                    placeholder="e.g. Luxor temples, Nile cruise"
+                    placeholder={t("blog.searchPlaceholder")}
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
@@ -194,7 +196,7 @@ export default function BlogPage(props) {
 
                 <div className="flex-1 border-b border-gray-100 px-5 py-3 lg:border-b-0 lg:border-r lg:border-gray-200">
                   <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                    Date
+                    {t("offerings.date")}
                   </span>
                   <input
                     type="date"
@@ -206,11 +208,11 @@ export default function BlogPage(props) {
 
                 <div className="flex-1 border-b border-gray-100 px-5 py-3 lg:border-b-0 lg:border-r lg:border-gray-200">
                   <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                    Category
+                    {t("blog.category")}
                   </span>
                   <input
                     type="text"
-                    placeholder="e.g. Culture, Tips"
+                    placeholder={t("blog.categoryPlaceholder")}
                     value={categoryInput}
                     onChange={(e) => setCategoryInput(e.target.value)}
                     className="w-full bg-transparent text-sm font-bold text-[#111827] outline-none placeholder-[#111827]"
@@ -222,7 +224,7 @@ export default function BlogPage(props) {
                     type="submit"
                     className="w-full rounded-full bg-[#FBBF24] px-8 py-3 text-sm font-bold tracking-wide text-white transition-colors hover:bg-[#e5a913] lg:w-auto"
                   >
-                    FIND
+                    {t("common.find")}
                   </button>
                 </div>
               </div>
@@ -236,26 +238,26 @@ export default function BlogPage(props) {
             className="rounded-full bg-yellow-500 px-6 py-3 text-sm font-bold text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-yellow-600 sm:px-8 sm:text-base"
             onClick={handleAddArticle}
           >
-            Add Your Article
+            {t("blog.addArticle")}
           </button>
         </div>
 
         <section ref={recentArticlesRef} className="py-12 px-4 md:px-12">
           <h2 className="text-3xl font-semibold mb-3 text-center">
-            Recent Articles
+            {t("blog.recentArticles")}
           </h2>
 
           {fetchError ? (
             <p className="mx-auto mt-8 max-w-2xl rounded-lg bg-white px-6 py-5 text-center text-gray-600 shadow-sm">
-              Articles could not be loaded right now.
+              {t("blog.loadError")}
             </p>
           ) : blogPosts.length > 0 ? (
             <BlogGrid blogPosts={blogPosts} />
           ) : (
             <p className="mx-auto mt-8 max-w-2xl rounded-lg bg-white px-6 py-5 text-center text-gray-600 shadow-sm">
               {hasActiveSearch
-                ? "No matching articles found."
-                : "No articles available yet."}
+                ? t("blog.noMatching")
+                : t("blog.noArticles")}
             </p>
           )}
 
@@ -264,7 +266,7 @@ export default function BlogPage(props) {
               onClick={handleViewAllArticles}
               className="rounded-full bg-yellow-500 px-8 py-3 text-lg font-bold text-black shadow-lg transition-all duration-300 hover:scale-105 hover:bg-yellow-600 cursor-pointer"
             >
-              View All Articles
+              {t("blog.viewAllArticles")}
             </button>
           </div>
         </section>
@@ -281,7 +283,7 @@ export default function BlogPage(props) {
               <VscChromeClose className="text-2xl" />
             </button>
             <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">
-              Add Your Blog Post
+              {t("blog.addPost")}
             </h1>
             <AddBlogForm onSuccess={handleCloseAddArticle} />
           </div>

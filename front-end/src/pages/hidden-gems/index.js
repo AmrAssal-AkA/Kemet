@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const ArrowRightIcon = ({ className }) => (
   <svg
@@ -183,10 +184,12 @@ const cityCards = [
 ];
 
 function HiddenGemsPage() {
+  const { t } = useLanguage();
+
   return (
     <>
       <Head>
-        <title>Explore Hidden Gems | KEMET Tourism</title>
+        <title>{t("hidden.title")}</title>
       </Head>
 
       <div className="bg-white min-h-screen font-sans text-[#111827]">
@@ -194,16 +197,16 @@ function HiddenGemsPage() {
           <section className="relative mb-16 grid grid-cols-[1.5fr_1fr] gap-x-12 items-center">
             <div className="flex flex-col gap-6 items-start">
               <span className="bg-[#FBBF24] text-[#111827] px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-wider">
-                explore hidden gems
+                {t("hidden.eyebrow")}
               </span>
               <h1 className="text-6xl md:text-8xl font-black mb-2 tracking-tight leading-tight">
-                Traveling opens the door to creating{" "}
-                <span className="text-[#FBBF24]">memories</span>
+                {t("hidden.heroTitle1")}{" "}
+                <span className="text-[#FBBF24]">{t("hidden.memories")}</span>
               </h1>
               <p className="text-xl text-[#111827] opacity-80 max-w-2xl">
-                Because the best memories are made
+                {t("hidden.heroSubtitle")}
                 <br />
-                in the places few ever find
+                {t("hidden.heroSubtitle2")}
               </p>
             </div>
 
@@ -240,11 +243,11 @@ function HiddenGemsPage() {
                 <LocationIcon />
                 <div className="flex flex-col w-full gap-0.5">
                   <span className="text-xs text-[#111827] font-bold">
-                    Location
+                    {t("offerings.location")}
                   </span>
                   <input
                     type="text"
-                    placeholder="Where are you going?"
+                    placeholder={t("hidden.whereGoing")}
                     className="w-full text-xs font-medium text-gray-500 bg-transparent outline-none placeholder-gray-400"
                   />
                 </div>
@@ -253,11 +256,11 @@ function HiddenGemsPage() {
                 <DistanceIcon />
                 <div className="flex flex-col w-full gap-0.5">
                   <span className="text-xs text-[#111827] font-bold">
-                    Distance
+                    {t("hidden.distance")}
                   </span>
                   <input
                     type="text"
-                    placeholder="Distance in Km"
+                    placeholder={t("hidden.distancePlaceholder")}
                     className="w-full text-xs font-medium text-gray-500 bg-transparent outline-none placeholder-gray-400"
                   />
                 </div>
@@ -266,7 +269,7 @@ function HiddenGemsPage() {
                 <PeopleIcon />
                 <div className="flex flex-col w-full gap-0.5">
                   <span className="text-xs text-[#111827] font-bold">
-                    Max People
+                    {t("hidden.maxPeople")}
                   </span>
                   <input
                     type="text"
@@ -283,27 +286,27 @@ function HiddenGemsPage() {
 
           <section className="mb-32 flex flex-col items-center">
             <span className="text-[#FBBF24] font-black text-sm mb-4">
-              What we serve
+              {t("hidden.whatServe")}
             </span>
             <h2 className="text-4xl font-black text-[#111827] mb-16 text-center">
-              We offer our best services
+              {t("hidden.bestServices")}
             </h2>
             <div className="grid grid-cols-3 gap-12 w-full max-w-6xl">
               {[
                 {
                   icon: "sun",
-                  title: "Calculate Weather",
-                  text: "Travel planning, ideal weather forecast with real time info.",
+                  title: t("hidden.weather"),
+                  text: t("hidden.weatherText"),
                 },
                 {
                   icon: "map",
-                  title: "Hidden gems",
-                  text: "Discover secret spots and hidden treasures only with KEMET.",
+                  title: t("hidden.hiddenGems"),
+                  text: t("hidden.hiddenGemsText"),
                 },
                 {
                   icon: "heart",
-                  title: "Customization",
-                  text: "Tailor your experience exactly to your preferences.",
+                  title: t("hidden.customization"),
+                  text: t("hidden.customizationText"),
                 },
               ].map((service) => (
                 <div
@@ -324,7 +327,7 @@ function HiddenGemsPage() {
 
           <section className="mb-32">
             <h2 className="text-4xl font-black text-[#111827] mb-12 uppercase tracking-wide">
-              Explore by city
+              {t("hidden.exploreByCity")}
             </h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {cityCards.map((city) => (
@@ -344,7 +347,7 @@ function HiddenGemsPage() {
                       {city.name}
                     </h4>
                     <span className="mt-4 inline-flex bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
-                      Explore
+                      {t("common.explore")}
                     </span>
                   </div>
                 </Link>
@@ -355,29 +358,29 @@ function HiddenGemsPage() {
           <section className="mb-32 grid grid-cols-[1fr_1.2fr] gap-x-12 items-center">
             <div className="flex flex-col gap-6 items-start">
               <span className="bg-[#FBBF24] text-[#111827] px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-wider">
-                Experience
+                {t("hidden.experience")}
               </span>
               <h1 className="text-5xl font-black mb-2 tracking-tight leading-tight">
-                With our all experience we will serve you
+                {t("hidden.experienceTitle")}
               </h1>
               <p className="text-xl text-[#111827] opacity-80 max-w-2xl leading-relaxed">
-                Delivering excellence in every detail of your trip.
+                {t("hidden.experienceText")}
               </p>
               <div className="grid grid-cols-3 gap-6 mt-6 w-full">
                 {[
                   {
                     metric: "20+",
-                    title: "Successful trip",
+                    title: t("hidden.successfulTrip"),
                     icon: "/images/hidden-gems/Rectangle 185.png",
                   },
                   {
                     metric: "30+",
-                    title: "Recurring clients",
+                    title: t("hidden.recurringClients"),
                     icon: "/images/hidden-gems/Rectangle 186.png",
                   },
                   {
                     metric: "10+",
-                    title: "Years experience",
+                    title: t("hidden.yearsExperience"),
                     icon: "/images/hidden-gems/Rectangle 187.png",
                   },
                 ].map((item) => (
@@ -420,10 +423,10 @@ function HiddenGemsPage() {
 
           <section className="mb-32 flex flex-col items-start w-full">
             <span className="bg-[#FBBF24] text-[#111827] px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-wider mb-4">
-              Gallery
+              {t("hidden.gallery")}
             </span>
             <h2 className="text-4xl font-black text-[#111827] mb-12">
-              Visit our customers tour gallery
+              {t("hidden.galleryTitle")}
             </h2>
             <div className="grid grid-cols-4 gap-4 w-full">
               <div className="flex flex-col gap-4">
@@ -495,10 +498,10 @@ function HiddenGemsPage() {
 
           <section className="mb-32 flex flex-col items-start w-full">
             <span className="bg-[#FBBF24] text-[#111827] px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-wider mb-4">
-              customer Love
+              {t("hidden.customerLove")}
             </span>
             <h2 className="text-4xl font-black text-[#111827] mb-12">
-              What our customer say about us
+              {t("hidden.customerSay")}
             </h2>
 
             <div className="grid grid-cols-3 gap-8 w-full max-w-7xl">

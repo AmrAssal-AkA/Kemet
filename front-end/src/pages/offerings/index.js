@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { getOfferings } from "@/services/contentServices";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 import { PeopleIcon } from "@/components/ui/PeopleIcon";
 import { MenuIcon } from "@/components/ui/MenuIcon";
@@ -116,11 +117,12 @@ const testimonialsData = [
 function Offerings(props) {
   const { Offerings } = props;
   const offerings = Array.isArray(Offerings) ? Offerings : [];
+  const { t } = useLanguage();
 
   return (
     <>
       <Head>
-        <title>Offerings | KEMET</title>
+        <title>{t("offerings.title")}</title>
         <meta
           name="description"
           content="Discover unforgettable travel experiences in Egypt with EG-KEMET. Explore unique offerings, from ancient wonders to luxurious stays, all curated for your perfect trip."
@@ -138,11 +140,11 @@ function Offerings(props) {
 
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full px-4 z-10">
               <h1 className="text-6xl md:text-8xl font-black mb-2 tracking-tight drop-shadow-lg">
-                <span className="text-white">It&apos;s more than </span>
-                <span className="text-[#FBBF24]">just a trip</span>
+                <span className="text-white">{t("offerings.heroPrefix")} </span>
+                <span className="text-[#FBBF24]">{t("offerings.heroAccent")}</span>
               </h1>
               <p className="text-xl text-white font-medium drop-shadow-md">
-                Every path in Egypt has a story to tell
+                {t("offerings.heroSubtitle")}
               </p>
             </div>
 
@@ -152,11 +154,11 @@ function Offerings(props) {
                   <LocationIcon />
                   <div className="flex flex-col w-full">
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
-                      Location
+                      {t("offerings.location")}
                     </span>
                     <input
                       type="text"
-                      placeholder="Where to?"
+                      placeholder={t("offerings.whereTo")}
                       className="w-full text-sm font-bold text-[#111827] bg-transparent outline-none placeholder-[#111827]"
                     />
                   </div>
@@ -165,7 +167,7 @@ function Offerings(props) {
                   <CalendarIcon />
                   <div className="flex flex-col w-full">
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
-                      Date
+                      {t("offerings.date")}
                     </span>
                     <input
                       type="date"
@@ -177,11 +179,11 @@ function Offerings(props) {
                   <PeopleIcon />
                   <div className="flex flex-col w-full">
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
-                      Travelers
+                      {t("offerings.travelers")}
                     </span>
                     <input
                       type="text"
-                      placeholder="Guests"
+                      placeholder={t("offerings.guests")}
                       className="w-full text-sm font-bold text-[#111827] bg-transparent outline-none placeholder-[#111827]"
                     />
                   </div>
@@ -190,11 +192,11 @@ function Offerings(props) {
                   <MenuIcon />
                   <div className="flex flex-col w-full">
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
-                      Category
+                      {t("offerings.category")}
                     </span>
                     <input
                       type="text"
-                      placeholder="Type"
+                      placeholder={t("offerings.type")}
                       className="w-full text-sm font-bold text-[#111827] bg-transparent outline-none placeholder-[#111827]"
                     />
                   </div>
@@ -203,7 +205,7 @@ function Offerings(props) {
                   href="/Destination"
                   className="bg-[#FBBF24] text-white px-10 py-5 rounded-full font-bold text-sm tracking-widest hover:bg-[#e5a913] transition-colors ml-2 shadow-sm text-center"
                 >
-                  FIND
+                  {t("common.find")}
                 </Link>
               </div>
             </div>
@@ -213,14 +215,14 @@ function Offerings(props) {
           <section className="mb-32">
             <div className="flex items-end justify-between mb-12">
               <h2 className="text-4xl font-bold text-[#111827]">
-                Find your next adventure with{" "}
+                {t("offerings.findAdventure")}{" "}
                 <span className="text-[#FBBF24]">KEMET</span>
               </h2>
               <a
                 href="#"
                 className="flex items-center gap-x-1 text-[#111827] font-bold text-sm hover:text-[#FBBF24] transition-colors pb-1"
               >
-                All <ArrowRightIcon className="w-4 h-4" />
+                {t("common.all")} <ArrowRightIcon className="w-4 h-4" />
               </a>
             </div>
 
@@ -265,13 +267,13 @@ function Offerings(props) {
               </div>
             ) : (
               <p className="text-gray-600 text-center w-full col-span-3">
-                No offers available at the moment. Please check back later.
+                {t("offerings.noOffers")}
               </p>
             )}
 
             <div className="flex justify-center mt-16">
               <button className="bg-[#FBBF24] text-white px-10 py-4 rounded-full font-bold text-sm tracking-wide hover:bg-[#e5a913] hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                Discover more
+                {t("offerings.discoverMore")}
               </button>
             </div>
           </section>
@@ -288,28 +290,24 @@ function Offerings(props) {
             <div className="flex justify-between items-start">
               <div>
                 <h2 className="text-3xl font-bold text-[#FBBF24] italic mb-4 tracking-wide">
-                  ASWAN-EGYPT
+                  {t("offerings.aswanTitle")}
                 </h2>
                 <p className="text-[#111827] text-lg leading-relaxed max-w-5xl opacity-90">
-                  Imagine waking up to the gentle flow of the Nile, with the
-                  timeless temples of Luxor and Aswan drifting by your window.
-                  From the golden hues of sunset over the water to the
-                  star-filled desert sky at night, a Nile cruise is more than a
-                  vacation it&apos;s magic brought to life.
+                  {t("offerings.aswanText")}
                 </p>
               </div>
               <a
                 href="#"
                 className="flex items-center gap-x-1 text-gray-400 font-bold text-sm hover:text-[#FBBF24] transition-colors whitespace-nowrap mt-2"
               >
-                All <ArrowRightIcon className="w-4 h-4" />
+                {t("common.all")} <ArrowRightIcon className="w-4 h-4" />
               </a>
             </div>
           </section>
 
           <section className="mb-24">
             <h2 className="text-4xl font-bold text-[#111827]">
-              wonderful adavanture in Alexandria{" "}
+              {t("offerings.alexTitle")}{" "}
               <span className="text-[#FBBF24]">KEMET</span>
             </h2>
             {offerings.length > 0 ? (
@@ -353,18 +351,18 @@ function Offerings(props) {
               </div>
             ) : (
               <p className="text-gray-600 text-center w-full col-span-3">
-                No offers in Alexandria right now
+                {t("offerings.noAlex")}
               </p>
             )}
           </section>
 
           <section className="mb-16">
             <h2 className="text-3xl font-bold text-[#111827] mb-14 text-center">
-              What{" "}
+              {t("offerings.what")}{" "}
               <span className="text-[#FBBF24] uppercase tracking-wide">
                 EG-KEMET
               </span>{" "}
-              users are saying
+              {t("offerings.usersSaying")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {testimonialsData.map((item) => (
@@ -407,7 +405,7 @@ function Offerings(props) {
                     href="#"
                     className="flex items-center gap-x-1 text-[#FBBF24] font-bold text-xs hover:text-[#e5a913] transition-colors w-max"
                   >
-                    See more{" "}
+                    {t("offerings.seeMore")}{" "}
                     <ArrowRightIcon className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                   </a>
                 </div>

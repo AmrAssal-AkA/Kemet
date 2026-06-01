@@ -6,6 +6,7 @@ import "@/styles/globals.css";
 import Header from "@/components/Header&Footer/header";
 import Footer from "@/components/Header&Footer/footer";
 import { AuthProvider } from "@/context/AuthContext";
+import { LanguageProvider } from "@/i18n/LanguageContext";
 
 
 
@@ -26,12 +27,14 @@ export default function App({ Component, pageProps }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <AuthProvider>
-        {!dashboardLayout && <Header />}
-        <Toaster position="top-right" size="2xl" reverseOrder={false} />
-        <Component {...pageProps} />
-        {!dashboardLayout && <Footer />}
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          {!dashboardLayout && <Header />}
+          <Toaster position="top-right" size="2xl" reverseOrder={false} />
+          <Component {...pageProps} />
+          {!dashboardLayout && <Footer />}
+        </AuthProvider>
+      </LanguageProvider>
     </>
   );
 }

@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 
 import { loginWithGoogle } from "@/services/authServices";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function RegisterForm() {
     Nationality: "",
   });
   const { register, loading, error } = useAuth();
+  const { t, isArabic } = useLanguage();
 
   const handleChange = (e) => {
     setFormData({
@@ -24,15 +26,15 @@ export default function RegisterForm() {
   const handleRegister = async (e) => {
     e.preventDefault();
     await register(formData);
-    toast.success("Registration successful");
+    toast.success(t("auth.registrationSuccess"));
   };
 
   const handleGoogleRegister = () => {
     try{
       loginWithGoogle();
-      toast.success("Registration with google successful");
+      toast.success(t("auth.googleRegisterSuccess"));
     }catch(error){
-      toast.error("Registration with google failed")
+      toast.error(t("auth.googleRegisterFailed"))
     }
   };
 
@@ -40,13 +42,13 @@ export default function RegisterForm() {
     <form onSubmit={handleRegister}>
       <div className="mb-4">
         <label htmlFor="name" className="block text-gray-700 font-bold mb-2">
-          Name
+          {t("auth.name")}
         </label>
         <input
           type="text"
           id="name"
           name="name"
-          placeholder="Enter your name"
+          placeholder={t("auth.namePlaceholder")}
           value={formData.name}
           onChange={handleChange}
           required
@@ -56,13 +58,13 @@ export default function RegisterForm() {
       </div>
       <div className="mb-4">
         <label htmlFor="email" className="block text-gray-700 font-bold mb-2">
-          Email Address
+          {t("auth.emailAddress")}
         </label>
         <input
           type="email"
           id="email"
           name="email"
-          placeholder="Enter your email"
+          placeholder={t("auth.emailPlaceholder")}
           value={formData.email}
           onChange={handleChange}
           required
@@ -75,13 +77,13 @@ export default function RegisterForm() {
           htmlFor="password"
           className="block text-gray-700 font-bold mb-2"
         >
-          Password
+          {t("auth.password")}
         </label>
         <input
           type="password"
           id="password"
           name="password"
-          placeholder="Enter your password"
+          placeholder={t("auth.passwordPlaceholder")}
           value={formData.password}
           onChange={handleChange}
           required
@@ -89,7 +91,7 @@ export default function RegisterForm() {
         />
     </div>
       <div className="mb-4">
-        <label htmlFor="Nationality" className="block text-gray-700 font-bold mb-2">Nationality</label>
+        <label htmlFor="Nationality" className="block text-gray-700 font-bold mb-2">{t("auth.nationality")}</label>
         <select
           id="Nationality"
           name="Nationality"
@@ -98,7 +100,7 @@ export default function RegisterForm() {
           required
           className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 error:border-red-500"
         >
-          <option value="">Select your nationality</option>
+          <option value="">{t("auth.selectNationality")}</option>
           <option value="EG">Egypt</option>
           <option value="US">United States</option>
           <option value="UK">United Kingdom</option>
@@ -129,16 +131,16 @@ export default function RegisterForm() {
         className="w-full text-black py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer mt-4 font-semibold shadow-[0_2px_10px_rgba(255,206,42,0.28)] disabled:cursor-not-allowed disabled:opacity-70"
         style={{ background: "linear-gradient(135deg, #FFCE2A 0%, #f5b800 100%)" }}
       >
-        {loading ? "Registering..." : "Register"}
+        {loading ? t("auth.registering") : t("auth.register")}
       </button>
-      <p className="text-gray-600 text-lg mt-4 text-center">Or</p>
+      <p className="text-gray-600 text-lg mt-4 text-center">{t("auth.or")}</p>
       <button
         type="button"
         className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer mt-4 flex items-center justify-center"
         onClick={handleGoogleRegister}
       >
-        <FaGoogle className="mr-2" />
-        continue with Google
+        <FaGoogle className={isArabic ? "ml-2" : "mr-2"} />
+        {t("auth.continueGoogle")}
       </button>
       {error && <p className="text-red-600 text-xl">{error}</p>}
     </form>
