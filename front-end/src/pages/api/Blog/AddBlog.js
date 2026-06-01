@@ -32,18 +32,12 @@ export default async function handler(req, res) {
   try {
     await runMiddleware(req, res, upload.array("images", 5));
 
-    const { title, content, userId } = req.body;
+    const { title, content } = req.body;
 
     if (!title || !content) {
       return res
         .status(400)
         .json({ message: "Title and content are required" });
-    }
-
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ message: "User ID is required" });
     }
 
     const formData = new FormData();
@@ -59,26 +53,29 @@ export default async function handler(req, res) {
       });
     }
 
-    const response = await axios.post(
-      `${API_BASE_URL}/api/blog`,
-      formData,
-      {
-        headers: {
-          ...formData.getHeaders(),
-          Cookie: req.headers.cookie,
-        },
-      },
-    );
+    const headers = {
+      ...formData.getHeaders(),
+    };
 
-    return res.status(201).json(response.data);
+    if (req.headers.cookie) {
+      headers.Cookie = req.headers.cookie;
+    }
+
+    const response = await axios.post(`${API_BASE_URL}/api/blog`, formData, {
+      headers,
+    });
+
+    return res.status(response.status || 201).json(response.data);
   } catch (error) {
     console.error(
       "Error processing request:",
       error.response?.status,
       error.response?.data || error.message,
     );
+
     const errorMessage =
       error.response?.data?.message || error.message || "Internal server error";
+
     return res
       .status(error.response?.status || 500)
       .json({ message: errorMessage });
