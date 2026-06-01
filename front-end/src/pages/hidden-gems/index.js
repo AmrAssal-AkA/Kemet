@@ -427,7 +427,7 @@ function HiddenGemsPage() {
             </h2>
             <div className="grid grid-cols-4 gap-4 w-full">
               <div className="flex flex-col gap-4">
-                <div className="relative aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm">
+                <div className="relative aspect-3/4 rounded-[15px] overflow-hidden shadow-sm">
                   <img
                     src="/images/hidden-gems/Rectangle 186.png"
                     alt="Gallery 1"
