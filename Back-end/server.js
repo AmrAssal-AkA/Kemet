@@ -9,6 +9,11 @@ const app = express();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const passport = require("passport");
 
+// Validate critical environment variables
+if (!process.env.MONGO_URI) {
+  console.error("❌ CRITICAL: MONGO_URI environment variable is not set!");
+}
+
 app.set("trust proxy", 1);
 
 // Importing routes
@@ -42,35 +47,53 @@ const port = process.env.PORT || 8000;
 // Track DB connection state
 let dbConnectionPromise = null;
 let connectionAttempted = false;
+let lastConnectionError = null;
 
-// Health check middleware - ensure DB is connected before processing requests
+
 const dbHealthCheck = async (req, res, next) => {
-  // If connection hasn't been attempted yet, initiate it
-  if (!connectionAttempted) {
-    connectionAttempted = true;
-    dbConnectionPromise = connectDB().catch((err) => {
-      connectionAttempted = false; // Allow retry on next request
-      throw err;
-    });
+  if (req.path === "/" || req.path.includes("/api-docs")) {
+    return next();
   }
 
-  // Wait for connection to complete (whether successful or failed)
+  if (!connectionAttempted) {
+    connectionAttempted = true;
+    dbConnectionPromise = connectDB()
+      .then((conn) => {
+        lastConnectionError = null;
+        return conn;
+      })
+      .catch((err) => {
+        lastConnectionError = err.message;
+        Logger.error("Initial DB connection failed:", err.message);
+        connectionAttempted = false;
+        throw err;
+      });
+  }
+
   try {
     if (dbConnectionPromise) {
-      await dbConnectionPromise;
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database connection timeout")), 5000)
+      );
+      await Promise.race([dbConnectionPromise, timeoutPromise]);
     }
 
     if (!isDBConnected()) {
-      return res
-        .status(503)
-        .json({ message: "Database connection not ready. Please try again." });
+      Logger.warn("Database state check failed, will retry");
+      connectionAttempted = false;
+      dbConnectionPromise = null;
+      return res.status(503).json({
+        message: "Database initializing. Please retry.",
+      });
     }
-    next();
+    return next();
   } catch (err) {
-    Logger.error("Database connection error:", err);
-    return res
-      .status(503)
-      .json({ message: "Database connection failed. Please try again." });
+    Logger.error("Health check error:", err.message);
+    connectionAttempted = false;
+    dbConnectionPromise = null;
+    return res.status(503).json({
+      message: "Service temporarily unavailable. Please try again.",
+    });
   }
 };
 
