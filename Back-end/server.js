@@ -9,11 +9,10 @@ const app = express();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const passport = require("passport");
 
-
 app.set("trust proxy", 1);
 
 // Importing routes
-const connectDB = require("./config/db");
+const { connectDB, isDBConnected } = require("./config/db");
 const addTripRoute = require("./routes/AddTripRoutes");
 const FlightRoute = require("./routes/flightRoutes");
 const HotelRoute = require("./routes/HotelRoutes");
@@ -40,13 +39,43 @@ const offeringsRoute = require("./routes/offeringsRoutes");
 const hiddenGemRoute = require("./routes/hiddenGemRoutes");
 const port = process.env.PORT || 8000;
 
+// Track DB connection state
+let dbConnectionPromise = null;
+let connectionAttempted = false;
 
+// Health check middleware - ensure DB is connected before processing requests
+const dbHealthCheck = async (req, res, next) => {
+  // If connection hasn't been attempted yet, initiate it
+  if (!connectionAttempted) {
+    connectionAttempted = true;
+    dbConnectionPromise = connectDB().catch((err) => {
+      connectionAttempted = false; // Allow retry on next request
+      throw err;
+    });
+  }
 
-// Connect to database
-connectDB();
+  // Wait for connection to complete (whether successful or failed)
+  try {
+    if (dbConnectionPromise) {
+      await dbConnectionPromise;
+    }
+
+    if (!isDBConnected()) {
+      return res
+        .status(503)
+        .json({ message: "Database connection not ready. Please try again." });
+    }
+    next();
+  } catch (err) {
+    Logger.error("Database connection error:", err);
+    return res
+      .status(503)
+      .json({ message: "Database connection failed. Please try again." });
+  }
+};
 
 // Middleware
-app.use(cors({origin: "https://kemet-9qva.vercel.app", credentials: true}));
+app.use(cors({ origin: "https://kemet-9qva.vercel.app", credentials: true }));
 app.use("/api/payments", paymentRoutes);
 app.use(cookieParser());
 app.use(express.json());
@@ -73,6 +102,9 @@ app.use(
 );
 require("./controller/auth/authController");
 app.use(passport.initialize());
+
+// Apply health check middleware to API routes
+app.use("/api", dbHealthCheck);
 
 const swaggerUiOptions = {
   swaggerOptions: {
@@ -151,7 +183,6 @@ app.use("/api/newsletter", newsletterRoute);
 app.use("/api/offerings", offeringsRoute);
 app.use("/api/hiddenGem", hiddenGemRoute);
 
-
 app.get("/", (req, res) => {
   Logger.info("Root endpoint accessed");
   res.send("Welcome to the Travel Agency API");
@@ -159,10 +190,22 @@ app.get("/", (req, res) => {
 
 app.use(errorHandlerMW);
 
+// Local development server startup
+if (process.env.NODE_ENV !== "production") {
+  const startServer = async () => {
+    try {
+      await connectDB();
+      Logger.info("Database connection established");
+      app.listen(port, () => {
+        Logger.info(`Server is running on port ${port}`);
+      });
+    } catch (err) {
+      Logger.error("Failed to start server:", err);
+      process.exit(1);
+    }
+  };
 
-  if (process.env.NODE_ENV !== "production") {
-    app.listen(port, () => {
-      Logger.info(`Server is running on port ${port}`);
-    });
-  }
+  startServer();
+}
+
 module.exports = app;

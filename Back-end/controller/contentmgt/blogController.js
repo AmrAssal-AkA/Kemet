@@ -18,7 +18,7 @@ function getValidationMessage(error) {
 // Create Blog
 const createBlog = async (req, res) => {
   const { title, content } = req.body;
-  const author = req.user.id;
+  const author = req.user?.id;
   if (!title?.trim() || !content?.trim()) {
     return res.status(400).json({ message: "Please fill the blog" });
   }
@@ -31,7 +31,9 @@ const createBlog = async (req, res) => {
 
   try {
     const imageResult = await Promise.all(
-      req.files.map((file) => cloudinary.uploadImage(file.path, "blog_images")),
+      req.files.map((file) =>
+        cloudinary.uploadImage(getFileSource(file), "blog_images"),
+      ),
     );
     const blogs = new blog({
       title,
@@ -81,7 +83,9 @@ const getOneBlogById = async (req, res) => {
 
     const BlogLikes = await PostLike.countDocuments({ blogId });
     const blogData = blogByOne.toObject();
-    blogData.comments = Array.isArray(blogData.comments) ? blogData.comments : [];
+    blogData.comments = Array.isArray(blogData.comments)
+      ? blogData.comments
+      : [];
     blogData.likes = BlogLikes;
 
     res.status(200).json(blogData);
@@ -99,7 +103,10 @@ const updateBlogById = async (req, res) => {
     if (req.body.content !== undefined) updateData.content = req.body.content;
 
     if (req.file) {
-      const imageResult = await cloudinary.uploadImage(getFileSource(req.file), "blog_images");
+      const imageResult = await cloudinary.uploadImage(
+        getFileSource(req.file),
+        "blog_images",
+      );
       updateData.images = [
         {
           imageUrl: imageResult.secure_url,
@@ -116,7 +123,9 @@ const updateBlogById = async (req, res) => {
     if (!blogUpdate) {
       return res.status(404).json({ message: "Blog not found" });
     }
-    res.status(201).json({ message: "Blog updated successfully", blog: blogUpdate });
+    res
+      .status(201)
+      .json({ message: "Blog updated successfully", blog: blogUpdate });
   } catch (error) {
     const validationMessage = getValidationMessage(error);
     if (validationMessage) {
@@ -140,52 +149,57 @@ const deleteBlogById = async (req, res) => {
   }
 };
 
-
 const WriteBlogComments = async (req, res) => {
-    const { blogId } = req.params;
-    const commentText =
-        req.body?.comment ||
-        req.body?.commentText ||
-        req.body?.text ||
-        req.body?.content;
-    const userId = req.user?.id || req.user?._id || req.user?.userId;
+  const { blogId } = req.params;
+  const commentText =
+    req.body?.comment ||
+    req.body?.commentText ||
+    req.body?.text ||
+    req.body?.content;
+  const userId = req.user?.id || req.user?._id || req.user?.userId;
 
-    if (!userId) {
-        return res.status(401).json({ message: "Unauthorized: user is required to comment" });
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized: user is required to comment" });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(blogId)) {
+    return res.status(400).json({ message: "Invalid blog ID" });
+  }
+
+  if (!String(commentText || "").trim()) {
+    return res.status(400).json({ message: "Comment text is required" });
+  }
+
+  try {
+    const newComment = {
+      user: userId,
+      comment: String(commentText).trim(),
+      createdAt: new Date(),
+    };
+
+    const updatedBlog = await blog.findByIdAndUpdate(
+      blogId,
+      { $push: { comments: newComment } },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedBlog) {
+      return res.status(404).json({ message: "Blog not found" });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(blogId)) {
-        return res.status(400).json({ message: "Invalid blog ID" });
+    res
+      .status(201)
+      .json({ message: "Comment added successfully", blog: updatedBlog });
+  } catch (error) {
+    const validationMessage = getValidationMessage(error);
+    if (validationMessage) {
+      return res.status(400).json({ message: validationMessage });
     }
-
-    if (!String(commentText || "").trim()) {
-        return res.status(400).json({ message: "Comment text is required" });
-    }
-
-    try {
-        const blogPost = await blog.findById(blogId);
-        if (!blogPost) {
-            return res.status(404).json({ message: "Blog not found" });
-        }
-        if (!Array.isArray(blogPost.comments)) {
-            blogPost.comments = [];
-        }
-        const newComment = {
-           user: userId,
-            comment: String(commentText).trim(),
-            createdAt: new Date(),
-        };
-        blogPost.comments.push(newComment);
-        await blogPost.save();
-        res.status(201).json({ message: "Comment added successfully" });
-    }catch (error) {
-        const validationMessage = getValidationMessage(error);
-        if (validationMessage) {
-            return res.status(400).json({ message: validationMessage });
-        }
-        res.status(500).json({ message: "Server Error", error: error.message });
-    }
-}
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
 
 module.exports = {
   createBlog,
@@ -193,5 +207,5 @@ module.exports = {
   getOneBlogById,
   updateBlogById,
   deleteBlogById,
-  WriteBlogComments
+  WriteBlogComments,
 };
