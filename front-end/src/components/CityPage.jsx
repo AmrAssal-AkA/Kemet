@@ -312,7 +312,7 @@ export default function CityPage({
                   Plan My Trip
                 </button>
               </Link>
-              <Link href="/communities" className="w-full sm:w-auto">
+              <Link href="/blogs" className="w-full sm:w-auto">
                 <button className="btn-ghost-white w-full sm:w-auto rounded-full px-7 sm:px-8 py-3 sm:py-3.5 font-medium text-white text-sm whitespace-nowrap">
                   Read Stories
                 </button>

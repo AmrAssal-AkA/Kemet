@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 
 import LikeHeart from "@/components/ui/LikeHeart";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { addBlogComment, getBlogComments } from "@/services/contentServices";
 import { buildApiUrl } from "@/utils/apiBaseUrl";
 
@@ -78,6 +79,7 @@ function getLikedBlogIds(data) {
 }
 
 function BlogDetailPage(props) {
+  const { t } = useLanguage();
   const { blog } = props;
   const blogId = blog._id || blog.id || blog.blogId;
   const primaryImage = getBlogImage(blog.images, 0);
@@ -210,11 +212,11 @@ function BlogDetailPage(props) {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-yellow-600">
-                  Community
+                  {t("blog.travelerFeedback")}
                 </p>
-                <h2 className="mt-1 text-2xl font-extrabold text-gray-950">Comments</h2>
+                <h2 className="mt-1 text-2xl font-extrabold text-gray-950">{t("blog.comments")}</h2>
               </div>
-              {commentsLoading && <p className="text-sm font-semibold text-slate-500">Loading comments...</p>}
+              {commentsLoading && <p className="text-sm font-semibold text-slate-500">{t("blog.loadingComments")}</p>}
             </div>
 
             {commentsError && (

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 import LikeHeart from "@/components/ui/LikeHeart";
 import { userDashboardMenuItems } from "@/config/dashboardMenus";
 import { getBookedTrips, getLikedBlogs } from "@/services/userServices";
@@ -28,7 +29,7 @@ const pastTrips = [
   },
 ];
 
-const communityActivity = [
+const travelStoriesActivity = [
   {
     initials: "SA",
     avatarBg: "#c0392b",
@@ -62,7 +63,7 @@ const recommendedCities = [
 ];
 
 const STORIES_SHARED_COUNT = 3;
-const VALID_DASHBOARD_TABS = ["overview", "trips", "liked", "community", "settings"];
+const VALID_DASHBOARD_TABS = ["overview", "trips", "liked", "settings"];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -283,6 +284,7 @@ function SectionHeading({ eyebrow, title, subtitle, light = false }) {
 
 function Sidebar({ activeTab, setActiveTab, onLogout }) {
   const router = useRouter();
+  const { t, isArabic } = useLanguage();
   const nav = userDashboardMenuItems;
   const handleTabClick = (key, href) => {
     setActiveTab(key);
@@ -301,11 +303,11 @@ function Sidebar({ activeTab, setActiveTab, onLogout }) {
           border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {nav.map(({ key, icon, label, href }) => (
+        {nav.map(({ key, icon, href }) => (
           <button
             key={key}
             onClick={() => handleTabClick(key, href)}
-            className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 text-sm font-medium transition-all duration-200"
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl mb-1 text-sm font-medium transition-all duration-200 ${isArabic ? "text-right" : "text-left"}`}
             style={{
               background: activeTab === key ? "rgba(255,206,42,0.15)" : "transparent",
               color: activeTab === key ? "#FFCE2A" : "rgba(255,255,255,0.55)",
@@ -313,7 +315,7 @@ function Sidebar({ activeTab, setActiveTab, onLogout }) {
             }}
           >
             <span style={{ fontSize: 15, opacity: activeTab === key ? 1 : 0.7 }}>{icon}</span>
-            {label}
+            {t(`userDashboard.menu.${key}`)}
           </button>
         ))}
 
@@ -325,7 +327,7 @@ function Sidebar({ activeTab, setActiveTab, onLogout }) {
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
           style={{ color: "rgba(255,255,255,0.4)" }}>
           <span style={{ fontSize: 15 }}>↩</span>
-          Logout
+          {t("userDashboard.logout")}
         </button>
       </div>
     </aside>
@@ -336,6 +338,7 @@ function Sidebar({ activeTab, setActiveTab, onLogout }) {
 
 export default function UserDashboard() {
   const { user, sessionReady, logout } = useAuth();
+  const { language, toggleLanguage, t, isArabic } = useLanguage();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const [bookedTrips, setBookedTrips] = useState([]);
@@ -446,30 +449,31 @@ export default function UserDashboard() {
     () => [
       {
         value: String(bookedTrips.filter(isCompletedBooking).length),
-        label: "Trips Taken",
+        label: t("userDashboard.stats.tripsTaken"),
       },
-      { value: String(upcomingTripCards.length), label: "Upcoming" },
-      { value: String(likedBlogs.length), label: "Liked Articles" },
-      { value: String(STORIES_SHARED_COUNT), label: "Stories Shared" },
+      { value: String(upcomingTripCards.length), label: t("userDashboard.stats.upcoming") },
+      { value: String(likedBlogs.length), label: t("userDashboard.stats.likedArticles") },
+      { value: String(STORIES_SHARED_COUNT), label: t("userDashboard.stats.storiesShared") },
     ],
-    [bookedTrips, upcomingTripCards.length, likedBlogs.length],
+    [bookedTrips, likedBlogs.length, t, upcomingTripCards.length],
   );
   const settingsFields = useMemo(
     () => [
-      { label: "Full Name", value: dashboardName },
-      { label: "Email", value: dashboardEmail },
-      { label: "Phone", value: user?.phone || user?.phoneNumber || "+20 100 000 0000" },
-      { label: "Location", value: dashboardLocation },
+      { label: t("userDashboard.fullName"), value: dashboardName },
+      { label: t("userDashboard.email"), value: dashboardEmail },
+      { label: t("userDashboard.phone"), value: user?.phone || user?.phoneNumber || "+20 100 000 0000" },
+      { label: t("userDashboard.location"), value: dashboardLocation },
     ],
-    [dashboardEmail, dashboardLocation, dashboardName, user?.phone, user?.phoneNumber],
+    [dashboardEmail, dashboardLocation, dashboardName, t, user?.phone, user?.phoneNumber],
   );
   const canShowDashboard = sessionReady && user && userRole === "user";
+  const languageButtonLabel = language === "ar" ? "EN" : "AR";
 
   if (!canShowDashboard) {
     return (
       <>
         <Head>
-          <title>My Dashboard â€” Kemet Travel</title>
+          <title>{t("userDashboard.title")}</title>
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </Head>
         <main className="font-sans bg-[#f9fafb] min-h-screen" />
@@ -480,7 +484,7 @@ export default function UserDashboard() {
   return (
     <>
       <Head>
-        <title>My Dashboard — Kemet Travel</title>
+        <title>{t("userDashboard.title")}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap"
@@ -546,6 +550,15 @@ export default function UserDashboard() {
             }}
           />
 
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className={`absolute top-5 z-10 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-extrabold text-white shadow-sm backdrop-blur transition hover:bg-white/20 ${isArabic ? "left-6 md:left-20" : "right-6 md:right-20"}`}
+            aria-label={isArabic ? t("userDashboard.switchEnglish") : t("userDashboard.switchArabic")}
+          >
+            {languageButtonLabel}
+          </button>
+
           {/* User Identity */}
           <div className="absolute inset-0 flex items-end px-6 md:px-20 pb-8">
             <motion.div {...fadeUp(0.1)} className="flex items-end gap-5">
@@ -568,7 +581,7 @@ export default function UserDashboard() {
 
               <div className="pb-1">
                 <span className="inline-block mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-yellow-400 bg-yellow-400/15 px-3 py-0.5 rounded-full">
-                  ✦ Explorer Member
+                  {t("userDashboard.explorerMember")}
                 </span>
                 <h1
                   className="text-2xl md:text-3xl font-extrabold text-white leading-none"
@@ -577,7 +590,7 @@ export default function UserDashboard() {
                   {dashboardName}
                 </h1>
                 <p className="text-gray-400 text-xs mt-1">
-                  📍 {dashboardLocation} &nbsp;·&nbsp; Explorer Member
+                  {dashboardLocation} &nbsp;·&nbsp; {t("userDashboard.explorerMember")}
                 </p>
               </div>
             </motion.div>
@@ -642,7 +655,7 @@ export default function UserDashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {isDashboardLoading && (
                       <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
-                        Loading your booked trips...
+                        {t("userDashboard.loadingBookings")}
                       </p>
                     )}
                     {!isDashboardLoading && bookedError && (
@@ -652,7 +665,7 @@ export default function UserDashboard() {
                     )}
                     {!isDashboardLoading && !bookedError && upcomingTripCards.length === 0 && (
                       <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
-                        No confirmed upcoming trips yet.
+                        {t("userDashboard.noBookings")}
                       </p>
                     )}
                     {!isDashboardLoading && !bookedError && upcomingTripCards.map((trip, i) => (
@@ -768,14 +781,15 @@ export default function UserDashboard() {
                   </div>
                 </motion.div>
 
-                {/* ── Community Activity ── */}
+                {/* Travel Stories */}
                 <motion.div {...fadeUp(0.15)}>
                   <SectionHeading
-                    eyebrow="Activity"
-                    title="Community Notifications"
+                    eyebrow={t("home.storiesTitle")}
+                    title={t("userDashboard.travelStories")}
+                    subtitle={t("userDashboard.travelStoriesSubtitle")}
                   />
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
-                    {communityActivity.map((n, i) => (
+                    {[].map((n, i) => (
                       <div key={i} className="notif-row flex items-center gap-4 px-5 py-4 cursor-pointer rounded-xl">
                         <div
                           className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
@@ -794,9 +808,9 @@ export default function UserDashboard() {
                       </div>
                     ))}
                     <div className="px-5 py-3">
-                      <Link href="/communities">
+                      <Link href="/blogs">
                         <span className="text-sm font-semibold text-yellow-600 hover:text-yellow-500 transition-colors cursor-pointer">
-                          View all activity →
+                          {t("userDashboard.readTravelStories")}
                         </span>
                       </Link>
                     </div>
@@ -848,7 +862,7 @@ export default function UserDashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
                     {isDashboardLoading && (
                       <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
-                        Loading your booked trips...
+                        {t("userDashboard.loadingBookings")}
                       </p>
                     )}
                     {!isDashboardLoading && bookedError && (
@@ -858,7 +872,7 @@ export default function UserDashboard() {
                     )}
                     {!isDashboardLoading && !bookedError && upcomingTripCards.length === 0 && (
                       <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
-                        No confirmed upcoming trips yet.
+                        {t("userDashboard.noBookings")}
                       </p>
                     )}
                     {!isDashboardLoading && !bookedError && upcomingTripCards.map((trip, i) => (
@@ -947,8 +961,8 @@ export default function UserDashboard() {
               <motion.div {...fadeUp(0)}>
                 <SectionHeading
                   eyebrow="Articles"
-                  title="Liked Articles"
-                  subtitle="Blog articles you've liked will appear here."
+                  title={t("userDashboard.menu.liked")}
+                  subtitle={t("userDashboard.noSavedTrips")}
                 />
 
                 {/* Loading */}
@@ -979,7 +993,7 @@ export default function UserDashboard() {
                 {/* Empty */}
                 {!isLikedLoading && !likedError && likedBlogs.length === 0 && (
                   <p className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6 text-sm text-gray-400">
-                    No liked articles yet.
+                    {t("userDashboard.noSavedTrips")}
                   </p>
                 )}
 
@@ -1088,13 +1102,13 @@ export default function UserDashboard() {
               </motion.div>
             )}
 
-            {/* ── COMMUNITY ── */}
-            {activeTab === "community" && (
+            {/* Old stories tab kept unreachable after menu cleanup */}
+            {false && (
               <motion.div {...fadeUp(0)} className="flex flex-col gap-8">
                 <SectionHeading
-                  eyebrow="Community Hub"
-                  title="Your Stories & Activity"
-                  subtitle="Share your Egypt journey with 12,400+ fellow travelers."
+                  eyebrow={t("home.storiesTitle")}
+                  title={t("userDashboard.travelStories")}
+                  subtitle={t("userDashboard.travelStoriesSubtitle")}
                 />
 
                 {/* My stories placeholder */}
@@ -1104,14 +1118,14 @@ export default function UserDashboard() {
                 >
                   <span style={{ fontSize: 40 }}>✍️</span>
                   <h3 className="font-bold text-gray-800 text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
-                    Share your first story
+                    {t("blog.addArticle")}
                   </h3>
                   <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
-                    Tell the community about your Egypt experience — a photo, a tip, a moment.
+                    {t("userDashboard.travelStoriesBody")}
                   </p>
-                  <Link href="/communities">
+                  <Link href="/blogs">
                     <button className="btn-gold rounded-full px-8 py-3 font-semibold text-black text-sm">
-                      Write a Story
+                      {t("userDashboard.readTravelStories")}
                     </button>
                   </Link>
                 </div>
@@ -1120,7 +1134,7 @@ export default function UserDashboard() {
                 <div>
                   <p className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-widest">Recent Activity</p>
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
-                    {communityActivity.map((n, i) => (
+                    {travelStoriesActivity.map((n, i) => (
                       <div key={i} className="notif-row flex items-center gap-4 px-5 py-4 cursor-pointer rounded-xl">
                         <div
                           className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
@@ -1146,7 +1160,7 @@ export default function UserDashboard() {
             {/* ── SETTINGS ── */}
             {activeTab === "settings" && (
               <motion.div {...fadeUp(0)} className="flex flex-col gap-8">
-                <SectionHeading eyebrow="Account" title="Profile & Preferences" />
+                <SectionHeading eyebrow={t("userDashboard.settings")} title={t("userDashboard.profile")} />
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col gap-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1168,7 +1182,7 @@ export default function UserDashboard() {
                     <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">
                       Notifications
                     </p>
-                    {["Trip reminders", "Community activity", "Newsletter & deals"].map((pref) => (
+                    {["Trip reminders", "Blog updates", "Newsletter & deals"].map((pref) => (
                       <div key={pref} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
                         <span className="text-sm text-gray-700">{pref}</span>
                         <div

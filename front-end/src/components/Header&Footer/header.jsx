@@ -99,7 +99,6 @@ const headerStyles = `
 const navLinks = [
   { href: "/", labelKey: "nav.home", match: ["/", "/user-dashboard"] },
   { href: "/offerings", labelKey: "nav.offerings" },
-  { href: "/communities", labelKey: "nav.communities" },
   { href: "/Destination", labelKey: "nav.destination" },
   { href: "/hidden-gems", labelKey: "nav.hiddenGems" },
   { href: "/blogs", labelKey: "nav.blog" },

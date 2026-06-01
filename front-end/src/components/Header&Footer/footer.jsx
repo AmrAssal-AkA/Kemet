@@ -123,7 +123,6 @@ function Footer() {
                 { href: "/offerings", label: t("footer.smartPlanner") },
                 { href: "/Destination", label: t("footer.destinationDiscovery") },
                 { href: "/offerings", label: t("footer.localExperiences") },
-                { href: "/Communities", label: t("footer.travelCommunity") },
               ].map(({ href, label }) => (
                 <Link
                   key={label}

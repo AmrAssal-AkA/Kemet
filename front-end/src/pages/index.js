@@ -53,7 +53,7 @@ const reviews = [
   },
 ];
 
-const communityPreviews = [
+const travelStoryPreviews = [
   {
     img: "/images/communities/story1.jpg",
     category: "Luxor · Featured",
@@ -623,14 +623,14 @@ export default function Home({ trips, hiddenGems }) {
                 {t("home.storiesSubtitle")}
               </p>
             </div>
-            <Link href="/communities" className="hidden md:flex items-center gap-1 text-sm font-semibold text-gray-500 border-b border-gray-300 hover:text-yellow-600 hover:border-yellow-400 transition-colors whitespace-nowrap">
+            <Link href="/blogs" className="hidden md:flex items-center gap-1 text-sm font-semibold text-gray-500 border-b border-gray-300 hover:text-yellow-600 hover:border-yellow-400 transition-colors whitespace-nowrap">
               {t("home.viewAllStories")}
             </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {communityPreviews.map((story, i) => (
-              <Link href="/communities" key={i}>
+            {travelStoryPreviews.map((story, i) => (
+              <Link href="/blogs" key={i}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -676,7 +676,7 @@ export default function Home({ trips, hiddenGems }) {
               <p className="text-white font-bold text-base mb-0.5">{t("home.shareStoryTitle")}</p>
               <p className="text-gray-400 text-sm">{t("home.shareStorySubtitle")}</p>
             </div>
-            <Link href="/communities" className="shrink-0 w-full sm:w-auto">
+            <Link href="/blogs" className="shrink-0 w-full sm:w-auto">
               <button className="btn-gold w-full sm:w-auto rounded-full px-7 py-3 font-semibold text-black text-sm whitespace-nowrap">
                 {t("home.joinCommunity")}
               </button>
