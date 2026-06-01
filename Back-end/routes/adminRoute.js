@@ -92,11 +92,134 @@ router.get(
   authenticate,
   authorize("admin"),
   async (req, res) => {
-    const totalRevenue = await Booking.aggregate([
-      { $group: { _id: null, total: { $sum: "$totalPrice" } } },
-    ]);
+    const normalizeText = (value) => String(value || "").trim().toLowerCase();
+    const toMoneyNumber = (value) => {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    };
+    const firstMoneyNumber = (values) => {
+      for (const value of values) {
+        const number = toMoneyNumber(value);
+        if (number > 0) return number;
+      }
+      return 0;
+    };
+    const getItemExpense = (booking, expenseType) => {
+      if (!Array.isArray(booking.items)) return 0;
+
+      return booking.items.reduce((total, item) => {
+        const label = normalizeText(
+          item.type || item.category || item.name || item.title || item.bookingType,
+        );
+        if (!label.includes(expenseType)) return total;
+
+        return (
+          total +
+          firstMoneyNumber([
+            item.cost,
+            item.price,
+            item.totalPrice,
+            item.amount,
+            item.price?.total,
+          ])
+        );
+      }, 0);
+    };
+    const getHotelExpense = (booking) =>
+      firstMoneyNumber([
+        booking.hotelCost,
+        booking.hotelPrice,
+        booking.selectedHotel?.cost,
+        booking.selectedHotel?.price,
+        booking.selectedHotel?.price?.total,
+        booking.selectedHotel?.offers?.[0]?.price?.total,
+        booking.hotel?.cost,
+        booking.hotel?.price,
+        booking.hotel?.price?.total,
+        booking.hotel?.data?.cost,
+        booking.hotel?.data?.price,
+        booking.hotel?.data?.price?.total,
+        getItemExpense(booking, "hotel"),
+      ]);
+    const getFlightExpense = (booking) =>
+      firstMoneyNumber([
+        booking.flightCost,
+        booking.flightPrice,
+        booking.selectedFlight?.cost,
+        booking.selectedFlight?.price,
+        booking.selectedFlight?.price?.total,
+        booking.flight?.cost,
+        booking.flight?.price,
+        booking.flight?.price?.total,
+        booking.flight?.data?.cost,
+        booking.flight?.data?.price,
+        booking.flight?.data?.price?.total,
+        getItemExpense(booking, "flight"),
+      ]);
+    const getRefundAmount = (booking) => {
+      const refundsTotal = Array.isArray(booking.refunds)
+        ? booking.refunds.reduce(
+            (total, refund) => total + toMoneyNumber(refund.amount),
+            0,
+          )
+        : 0;
+
+      return firstMoneyNumber([
+        booking.refundAmount,
+        booking.refundedAmount,
+        refundsTotal,
+        booking.totalPrice,
+      ]);
+    };
+    const isConfirmedPaidBooking = (booking) => {
+      const status = normalizeText(booking.status);
+      const paymentStatus = normalizeText(booking.paymentStatus);
+
+      return status === "confirmed" && paymentStatus === "paid";
+    };
+    const isRefundedOrCancelledBooking = (booking) => {
+      const status = normalizeText(booking.status);
+      const paymentStatus = normalizeText(booking.paymentStatus);
+
+      return (
+        status === "cancelled" ||
+        status === "canceled" ||
+        paymentStatus === "refunded"
+      );
+    };
+
+    const bookings = await Booking.find().lean();
+    const validBookings = bookings.filter(isConfirmedPaidBooking);
+    const refundedBookings = bookings.filter(isRefundedOrCancelledBooking);
+    const totalRevenue = validBookings.reduce(
+      (total, booking) => total + toMoneyNumber(booking.totalPrice),
+      0,
+    );
+    const hotelExpenses = validBookings.reduce(
+      (total, booking) => total + getHotelExpense(booking),
+      0,
+    );
+    const flightExpenses = validBookings.reduce(
+      (total, booking) => total + getFlightExpense(booking),
+      0,
+    );
+    const refundsTotal = refundedBookings.reduce(
+      (total, booking) => total + getRefundAmount(booking),
+      0,
+    );
+    // totalRevenue already excludes refunded/cancelled bookings; refundsTotal is
+    // shown separately for finance visibility and is not subtracted from it twice.
+    const kemetRevenue =
+      totalRevenue - hotelExpenses - flightExpenses - refundsTotal;
+
     res.status(200).json({
-      totalRevenue: totalRevenue[0] ? totalRevenue[0].total : 0,
+      totalRevenue,
+      kemetRevenue,
+      hotelExpenses,
+      flightExpenses,
+      refundsTotal,
+      validBookingCount: validBookings.length,
+      refundedBookingCount: refundedBookings.length,
     });
   },
 );

@@ -1,6 +1,5 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 
 const ArrowRightIcon = ({ className }) => (
   <svg
@@ -150,41 +149,40 @@ const testimonialsData = [
   },
 ];
 
+const cityCards = [
+  {
+    name: "Cairo",
+    href: "/hidden-gems/cairo",
+    image: "/images/hidden-gems/Rectangle 180.png",
+  },
+  {
+    name: "Alexandria",
+    href: "/hidden-gems/alexandria",
+    image: "/images/hidden-gems/Rectangle 179.png",
+  },
+  {
+    name: "Luxor",
+    href: "/hidden-gems/luxor",
+    image: "/images/hidden-gems/Rectangle 181.png",
+  },
+  {
+    name: "Aswan",
+    href: "/hidden-gems/aswan",
+    image: "/images/hidden-gems/Rectangle 184.png",
+  },
+  {
+    name: "Siwa",
+    href: "/hidden-gems/siwa",
+    image: "/images/hidden-gems/Rectangle 185.png",
+  },
+  {
+    name: "Sharm El Sheikh",
+    href: "/hidden-gems/sharm-el-sheikh",
+    image: "/images/hidden-gems/Rectangle 182.png",
+  },
+];
+
 function HiddenGemsPage() {
-  const [hiddenGems, setHiddenGems] = useState([]);
-  const [tours, setTours] = useState([]);
-  const [gallery, setGallery] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchHiddenGems = async () => {
-      try {
-        const hiddenGemResponse = await fetch(
-          "http://localhost:8000/api/hiddenGem",
-        );
-        if (hiddenGemResponse.ok) {
-          const hiddenGemData = await hiddenGemResponse.json();
-          setHiddenGems(hiddenGemData);
-        }
-
-        const toursResponse = await fetch(
-          "http://localhost:8000/api/hidden-gems",
-        );
-        if (toursResponse.ok) {
-          const toursData = await toursResponse.json();
-          setTours(toursData.tours || []);
-          setGallery(toursData.gallery || []);
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching hidden gems:", error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchHiddenGems();
-  }, []);
-
   return (
     <>
       <Head>
@@ -326,119 +324,31 @@ function HiddenGemsPage() {
 
           <section className="mb-32">
             <h2 className="text-4xl font-black text-[#111827] mb-12 uppercase tracking-wide">
-              OUR FEATURED TOURS
+              Explore by city
             </h2>
-            <div className="grid grid-cols-[1fr_1fr_1fr] gap-x-6 gap-y-6">
-              <div className="flex flex-col gap-6">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {cityCards.map((city) => (
                 <Link
-                  href="/hidden-gems/nuweiba"
-                  className="group relative block aspect-4/5 rounded-[15px] overflow-hidden shadow-sm"
+                  key={city.name}
+                  href={city.href}
+                  className="group relative block h-72 overflow-hidden rounded-[18px] shadow-sm sm:h-80"
                 >
                   <img
-                    src="/images/hidden-gems/Rectangle 181.png"
-                    alt="Nuweiba"
+                    src={city.image}
+                    alt={city.name}
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black opacity-30"></div>
-                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
-                    Nuweiba
-                  </h4>
-                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
-                    Explore
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    <h4 className="text-3xl font-black text-white italic tracking-wide drop-shadow-sm md:text-4xl">
+                      {city.name}
+                    </h4>
+                    <span className="mt-4 inline-flex bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
+                      Explore
+                    </span>
                   </div>
                 </Link>
-                <Link
-                  href="/hidden-gems/cairo"
-                  className="group relative block aspect-square rounded-[15px] overflow-hidden shadow-sm"
-                >
-                  <img
-                    src="/images/hidden-gems/Rectangle 180.png"
-                    alt="Cairo"
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-black opacity-30"></div>
-                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
-                    cairo
-                  </h4>
-                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
-                    Explore
-                  </div>
-                </Link>
-              </div>
-
-              <div className="flex flex-col gap-6 mt-8">
-                <Link
-                  href="/hidden-gems/alexandria"
-                  className="group relative block aspect-3/4 rounded-[15px] overflow-hidden shadow-sm"
-                >
-                  <img
-                    src="/images/hidden-gems/Rectangle 179.png"
-                    alt="Alexandria"
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-black opacity-30"></div>
-                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
-                    Alex
-                  </h4>
-                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
-                    Explore
-                  </div>
-                </Link>
-                <Link
-                  href="/hidden-gems/sharm"
-                  className="group relative block aspect-[4/5] rounded-[15px] overflow-hidden shadow-sm"
-                >
-                  <img
-                    src="/images/hidden-gems/Rectangle 182.png"
-                    alt="Sharm"
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-black opacity-30"></div>
-                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
-                    sharm
-                  </h4>
-                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
-                    Explore
-                  </div>
-                </Link>
-              </div>
-
-              <div className="flex flex-col gap-6">
-                <Link
-                  href="/hidden-gems/siwa"
-                  className="group relative block aspect-square rounded-[15px] overflow-hidden shadow-sm"
-                >
-                  <img
-                    src="/images/hidden-gems/Rectangle 185.png"
-                    alt="Siwa"
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-black opacity-30"></div>
-                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
-                    siwa
-                  </h4>
-                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
-                    Explore
-                  </div>
-                </Link>
-                <Link
-                  href="/hidden-gems/aswan"
-                  className="group relative block aspect-[3/4] rounded-[15px] overflow-hidden shadow-sm"
-                >
-                  <img
-                    src="/images/hidden-gems/Rectangle 184.png"
-                    alt="Aswan"
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-black opacity-30"></div>
-                  <h4 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl font-black text-white italic tracking-wide opacity-80 group-hover:opacity-100 transition-opacity">
-                    aswan
-                  </h4>
-                  <div className="absolute bottom-4 right-4 bg-[#FBBF24] text-white px-5 py-2.5 rounded-[15px] font-black text-xs group-hover:bg-[#e5a913] transition-colors">
-                    Explore
-                  </div>
-                </Link>
-              </div>
+              ))}
             </div>
           </section>
 
@@ -451,7 +361,7 @@ function HiddenGemsPage() {
                 With our all experience we will serve you
               </h1>
               <p className="text-xl text-[#111827] opacity-80 max-w-2xl leading-relaxed">
-                "Delivering excellence in every detail of your trip."
+                Delivering excellence in every detail of your trip.
               </p>
               <div className="grid grid-cols-3 gap-6 mt-6 w-full">
                 {[
@@ -477,6 +387,7 @@ function HiddenGemsPage() {
                   >
                     <img
                       src={item.icon}
+                      alt={item.title}
                       className="w-10 h-10 aspect-square rounded-full object-cover"
                     />
                     <h4 className="font-black text-3xl text-[#111827] mb-0.5">
@@ -597,7 +508,7 @@ function HiddenGemsPage() {
                   className="bg-white p-10 rounded-[25px] border border-gray-100 shadow-sm hover:shadow-lg transition-shadow flex flex-col justify-between gap-6 group cursor-pointer h-full"
                 >
                   <p className="text-gray-600 leading-relaxed text-sm grow">
-                    "{item.text}"
+                    {item.text}
                   </p>
                   <div className="flex items-center gap-4">
                     <img

@@ -1,107 +1,197 @@
-import Head from 'next/head';
-import { useRouter } from 'next/router';
+import Head from "next/head";
+import Link from "next/link";
 
-// Real-life data for your locations matching your selected images
-const locationData = {
-  nuweiba: {
-    title: "Nuweiba",
-    tagline: "The Peaceful Coastal Haven",
-    image: "/images/hidden-gems/Rectangle 181.png",
-    description: "Nestled between the rugged Sinai mountains and the deep blue waters of the Gulf of Aqaba, Nuweiba is a serene escape from the bustling world. Once a thriving port and an important stopover for pilgrims, it has evolved into a laid-back destination famous for its pristine beaches, vibrant coral reefs, and traditional Bedouin camps. It is the perfect place to disconnect, stargaze, and enjoy the untouched natural beauty of the Red Sea."
-  },
-  cairo: {
-    title: "Cairo",
-    tagline: "The City of a Thousand Minarets",
-    image: "/images/hidden-gems/Rectangle 180.png",
-    description: "Cairo is a sprawling, vibrant metropolis where ancient history and modern life collide. From the awe-inspiring Pyramids of Giza on its western edge to the labyrinthine alleys of Khan el-Khalili, every corner tells a story. While famous for its monuments, its true hidden gems lie within the narrow streets of Islamic Cairo, the tranquil courtyards of ancient mosques, and the rich, complex flavors of its local street food."
-  },
-  alexandria: {
-    title: "Alexandria",
-    tagline: "The Pearl of the Mediterranean",
-    image: "/images/hidden-gems/Rectangle 179.png",
-    description: "Founded by Alexander the Great, this coastal city offers a distinctly Mediterranean vibe, blending Greco-Roman history with early 20th-century grandeur. Explore the legendary Catacombs of Kom el Shoqafa, stroll along the breezy Corniche, or dive into the intellectual legacy of the new Bibliotheca Alexandrina. Alexandria holds an air of nostalgia, with faded European-style cafes and stunning seaside fortresses."
-  },
-  sharm: {
-    title: "Sharm El-Sheikh",
-    tagline: "The Gateway to the Deep Blue",
-    image: "/images/hidden-gems/Rectangle 182.png",
-    description: "Sharm El-Sheikh is globally renowned for some of the most spectacular underwater scenery on the planet. Beyond its luxury resorts, the true magic lies in the Ras Mohammed National Park, where sheer drop-offs plunge into the abyss, teeming with colorful marine life. For land explorers, the dramatic desert landscapes and nearby Mount Sinai offer unforgettable sunrise treks."
-  },
-  siwa: {
-    title: "Siwa Oasis",
-    tagline: "Egypt's Desert Secret",
-    image: "/images/hidden-gems/Rectangle 185.png",
-    description: "Isolated deep within the Western Desert, the Siwa Oasis feels like another world. Surrounded by salt lakes, endless sand dunes, and thousands of date palms, Siwa is rich in unique Berber culture and ancient ruins, including the Temple of the Oracle where Alexander the Great once sought answers. Float in the crystal-clear salt pools or soak in the famous Cleopatra's Spring."
-  },
-  aswan: {
-    title: "Aswan",
-    tagline: "The Jewel of the Nile",
-    image: "/images/hidden-gems/Rectangle 184.png",
-    description: "Aswan is Egypt's most relaxed city, where the Nile flows gently past granite boulders and lush, palm-studded islands. This southern frontier is the gateway to Nubia, known for its vibrantly painted villages and incredibly hospitable people. Sail on a traditional felucca at sunset, visit the majestic Philae Temple salvaged from the rising waters, and experience a slower, more magical pace of life."
-  }
-};
+import { getHiddenGems } from "@/services/contentServices";
 
-function HiddenGemDetail() {
-  const router = useRouter();
-  const { location } = router.query;
+function normalizeCity(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "");
+}
 
-  // Wait for Next.js to determine the route
-  if (!location) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+function formatLocationName(value) {
+  return String(value || "")
+    .replace(/-/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
-  // Retrieve the specific data based on the URL (e.g. "cairo")
-  const data = locationData[location.toLowerCase()];
+function getGemTitle(gem) {
+  return gem?.placeName || gem?.PlaceName || gem?.name || "Hidden Gem";
+}
 
-  // If someone types an invalid location in the URL, show this
-  if (!data) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-[#111827]">
-        <h1 className="text-4xl font-black mb-4">Location Not Found</h1>
-        <button onClick={() => router.push('/hidden-gems')} className="bg-[#FBBF24] px-6 py-2 rounded-full font-bold">Go Back</button>
+function getGemDescription(gem) {
+  return gem?.description || gem?.Description || "";
+}
+
+function getGemCity(gem) {
+  return gem?.city || "";
+}
+
+function getImageUrl(image) {
+  if (!image) return "";
+  if (typeof image === "string") return image;
+  return image.imageUrl || image.url || image.secure_url || "";
+}
+
+function getGemImages(gem) {
+  const images = Array.isArray(gem?.images) ? gem.images : [];
+  const normalizedImages = images.map(getImageUrl).filter(Boolean);
+  const fallbackImage = getImageUrl(gem?.imageUrl || gem?.image);
+
+  if (normalizedImages.length > 0) return normalizedImages;
+  return fallbackImage ? [fallbackImage] : [];
+}
+
+function HiddenGemCard({ gem }) {
+  const title = getGemTitle(gem);
+  const description = getGemDescription(gem);
+  const city = getGemCity(gem);
+  const images = getGemImages(gem);
+  const primaryImage = images[0];
+  const galleryImages = images.slice(1, 4);
+
+  return (
+    <article className="flex min-w-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+      {primaryImage ? (
+        <img
+          src={primaryImage}
+          alt={title}
+          className="h-64 w-full object-cover"
+        />
+      ) : (
+        <div className="grid h-64 w-full place-items-center bg-slate-100 px-5 text-center text-sm font-semibold text-slate-400">
+          No image available
+        </div>
+      )}
+
+      <div className="flex grow flex-col p-5">
+        {city && (
+          <span className="w-fit rounded-full bg-[#FBBF24] px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] text-[#111827]">
+            {city}
+          </span>
+        )}
+        <h2 className="mt-4 text-2xl font-black leading-tight text-[#111827]">
+          {title}
+        </h2>
+        {description ? (
+          <p className="mt-3 text-sm leading-7 text-slate-600">
+            {description}
+          </p>
+        ) : (
+          <p className="mt-3 text-sm leading-7 text-slate-400">
+            No description provided.
+          </p>
+        )}
+
+        {galleryImages.length > 0 && (
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {galleryImages.map((image, index) => (
+              <img
+                key={`${image}-${index}`}
+                src={image}
+                alt={`${title} gallery ${index + 2}`}
+                className="h-20 w-full rounded-2xl object-cover"
+              />
+            ))}
+          </div>
+        )}
       </div>
-    );
-  }
+    </article>
+  );
+}
 
+export default function HiddenGemsByLocation({
+  locationName,
+  hiddenGems = [],
+  loadError = "",
+}) {
   return (
     <>
       <Head>
-        <title>{data.title} | KEMET Hidden Gems</title>
+        <title>{locationName} Hidden Gems | KEMET Tourism</title>
       </Head>
 
-      <div className="bg-white min-h-screen font-sans text-[#111827] pb-32">
-        {/* Large Hero Image Section */}
-        <section className="relative w-full h-[60vh] md:h-[70vh]">
-          <img src={data.image} alt={data.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black opacity-40"></div>
-          
-          <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-8">
-            <h1 className="text-6xl md:text-8xl font-black text-white italic tracking-wide drop-shadow-lg mb-4 capitalize">
-              {data.title}
-            </h1>
-            <span className="bg-[#FBBF24] text-[#111827] px-6 py-2 rounded-full font-bold text-sm uppercase tracking-widest shadow-md">
-              {data.tagline}
-            </span>
-          </div>
-        </section>
+      <main className="min-h-screen bg-linear-to-b from-slate-50 to-white px-4 py-10 text-[#111827] md:px-8 lg:px-12">
+        <div className="mx-auto max-w-7xl">
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-8 lg:p-10">
+            <Link
+              href="/hidden-gems"
+              className="inline-flex rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 transition hover:border-[#111827] hover:text-[#111827]"
+            >
+              Back to hidden gems page
+            </Link>
+            <div className="mt-8 max-w-3xl">
+              <span className="inline-flex rounded-full bg-[#FBBF24] px-4 py-2 text-xs font-extrabold uppercase tracking-[0.16em] text-[#111827]">
+                Hidden Gems
+              </span>
+              <h1 className="mt-5 text-4xl font-black leading-tight text-[#111827] md:text-6xl">
+                {locationName}
+              </h1>
+            </div>
+          </section>
 
-        {/* Description Section */}
-        <section className="max-w-4xl mx-auto px-8 mt-20 text-center">
-          <h2 className="text-4xl font-black mb-8 text-[#111827]">About {data.title}</h2>
-          <p className="text-xl text-gray-600 leading-relaxed">
-            {data.description}
-          </p>
-          
-          <div className="mt-16 flex justify-center gap-6">
-            <button onClick={() => router.back()} className="px-8 py-3 rounded-full font-bold border-2 border-gray-200 hover:border-[#111827] transition-colors">
-              ← Back to Tours
-            </button>
-            <button className="bg-[#111827] text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-black transition-colors">
-              Book a Trip Here
-            </button>
-          </div>
-        </section>
-      </div>
+          {loadError && (
+            <p className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm font-semibold text-amber-700">
+              {loadError}
+            </p>
+          )}
+
+          <section className="mt-8">
+            {hiddenGems.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {hiddenGems.map((gem, index) => (
+                  <HiddenGemCard
+                    key={gem._id || gem.id || `${getGemTitle(gem)}-${index}`}
+                    gem={gem}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
+                <p className="text-base font-bold text-slate-600">
+                  No hidden gems in DB yet for this city.
+                </p>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
     </>
   );
 }
 
-export default HiddenGemDetail;
+export async function getServerSideProps(context) {
+  const location = context.params?.location || "";
+  const locationName = formatLocationName(location);
+  const normalizedLocation = normalizeCity(location);
+
+  try {
+    const hiddenGems = await getHiddenGems(context.req.headers.cookie || "");
+    const filteredHiddenGems = hiddenGems.filter((gem) => {
+      const city = getGemCity(gem);
+      if (!city) return false;
+      return normalizeCity(city) === normalizedLocation;
+    });
+
+    return {
+      props: {
+        locationName,
+        hiddenGems: filteredHiddenGems,
+        loadError: "",
+      },
+    };
+  } catch (error) {
+    console.error("Hidden gems could not be loaded:", error.message);
+    return {
+      props: {
+        locationName,
+        hiddenGems: [],
+        loadError: "Hidden gems could not be loaded right now.",
+      },
+    };
+  }
+}

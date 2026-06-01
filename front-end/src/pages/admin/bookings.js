@@ -16,6 +16,33 @@ const PENDING_STATUSES = ["pending", "waiting for confirmation"];
 const CONFIRMED_STATUSES = ["confirmed"];
 const CANCELLED_STATUSES = ["cancelled", "canceled"];
 
+const BOOKING_SECTIONS = [
+  {
+    key: "pending",
+    label: "Pending",
+    title: "Waiting for Confirmation",
+    emptyMessage: "No pending bookings.",
+    match: isPendingBooking,
+    badgeClass: "bg-gray-50 text-gray-700",
+  },
+  {
+    key: "confirmed",
+    label: "Confirmed",
+    title: "Confirmed Bookings",
+    emptyMessage: "No confirmed bookings.",
+    match: isConfirmedBooking,
+    badgeClass: "bg-emerald-50 text-emerald-700",
+  },
+  {
+    key: "cancelled",
+    label: "Cancelled",
+    title: "Cancelled Bookings",
+    emptyMessage: "No cancelled bookings.",
+    match: isCancelledBooking,
+    badgeClass: "bg-red-50 text-red-700",
+  },
+];
+
 function isPendingBooking(booking) {
   return PENDING_STATUSES.includes(
     String(booking.status || "")
@@ -266,6 +293,7 @@ function mapBooking(booking) {
 export default function AdminBookings({ admin }) {
   const { user, logout } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const [activeSection, setActiveSection] = useState("pending");
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState("");
   const [confirmStatus, setConfirmStatus] = useState({});
@@ -276,32 +304,37 @@ export default function AdminBookings({ admin }) {
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const statusBookings = useMemo(
+    () => bookings.filter(isVisibleBooking).map(mapBooking),
+    [bookings],
+  );
+  const sectionCounts = useMemo(
+    () =>
+      BOOKING_SECTIONS.reduce(
+        (counts, section) => ({
+          ...counts,
+          [section.key]: statusBookings.filter(section.match).length,
+        }),
+        {},
+      ),
+    [statusBookings],
+  );
+  const activeSectionConfig =
+    BOOKING_SECTIONS.find((section) => section.key === activeSection) ||
+    BOOKING_SECTIONS[0];
+
   const displayedBookings = useMemo(() => {
     const normalizedSearch = searchQuery.trim().toLowerCase();
 
-    return bookings
-      .filter(isVisibleBooking)
+    return statusBookings
+      .filter(activeSectionConfig.match)
       .filter((booking) => {
         if (!normalizedSearch) return true;
         return String(getBookingId(booking))
           .toLowerCase()
           .includes(normalizedSearch);
       })
-      .map(mapBooking);
-  }, [bookings, searchQuery]);
-
-  const pendingBookings = useMemo(
-    () => displayedBookings.filter(isPendingBooking),
-    [displayedBookings],
-  );
-  const confirmedBookings = useMemo(
-    () => displayedBookings.filter(isConfirmedBooking),
-    [displayedBookings],
-  );
-  const cancelledBookings = useMemo(
-    () => displayedBookings.filter(isCancelledBooking),
-    [displayedBookings],
-  );
+  }, [activeSectionConfig, searchQuery, statusBookings]);
   const hasActiveSearch = searchQuery.trim().length > 0;
 
   useEffect(() => {
@@ -517,7 +550,7 @@ export default function AdminBookings({ admin }) {
     const guideOptions = guideOptionsByBooking[booking.id] || {};
     const assignAction = assignStatus[booking.id] || {};
     const canConfirm = isPendingBooking(booking);
-    const canCancel = !isCancelledBooking(booking);
+    const canCancel = isPendingBooking(booking) || isConfirmedBooking(booking);
     const canAssignGuide =
       booking.guideIncluded && !isCancelledBooking(booking);
     const selectedGuideId =
@@ -743,14 +776,37 @@ export default function AdminBookings({ admin }) {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Bookings</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Pending and confirmed customer bookings from the admin booking
-              endpoint.
+              Switch between pending, confirmed, and cancelled customer
+              bookings.
             </p>
           </div>
           <span className="w-fit rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
-            {pendingBookings.length} pending / {confirmedBookings.length}{" "}
-            confirmed / {cancelledBookings.length} cancelled
+            {sectionCounts.pending || 0} pending /{" "}
+            {sectionCounts.confirmed || 0} confirmed /{" "}
+            {sectionCounts.cancelled || 0} cancelled
           </span>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2 rounded-2xl bg-slate-50 p-2">
+          {BOOKING_SECTIONS.map((section) => {
+            const isActive = activeSection === section.key;
+
+            return (
+              <button
+                key={section.key}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setActiveSection(section.key)}
+                className={`min-w-0 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                  isActive
+                    ? "bg-[#0b1d3a] text-white shadow-sm"
+                    : "bg-white text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {section.label} ({sectionCounts[section.key] || 0})
+              </button>
+            );
+          })}
         </div>
 
         <form
@@ -792,66 +848,28 @@ export default function AdminBookings({ admin }) {
             Loading bookings...
           </p>
         ) : displayedBookings.length > 0 ? (
-          <div className="mt-5 space-y-8">
-            {pendingBookings.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Waiting for Confirmation
-                  </h2>
-                  <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-700">
-                    {pendingBookings.length}
-                  </span>
-                </div>
-                <ul className="mt-3 space-y-4">
-                  {pendingBookings.map((booking, index) =>
-                    renderBookingCard(booking, index),
-                  )}
-                </ul>
-              </section>
-            )}
-
-            {confirmedBookings.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Confirmed Bookings
-                  </h2>
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    {confirmedBookings.length}
-                  </span>
-                </div>
-                <ul className="mt-3 space-y-4">
-                  {confirmedBookings.map((booking, index) =>
-                    renderBookingCard(booking, index),
-                  )}
-                </ul>
-              </section>
-            )}
-
-            {cancelledBookings.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Cancelled Bookings
-                  </h2>
-                  <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
-                    {cancelledBookings.length}
-                  </span>
-                </div>
-                <ul className="mt-3 space-y-4">
-                  {cancelledBookings.map((booking, index) =>
-                    renderBookingCard(booking, index),
-                  )}
-                </ul>
-              </section>
-            )}
-          </div>
+          <section className="mt-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-slate-900">
+                {activeSectionConfig.title}
+              </h2>
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${activeSectionConfig.badgeClass}`}
+              >
+                {displayedBookings.length}
+              </span>
+            </div>
+            <ul className="mt-3 space-y-4">
+              {displayedBookings.map((booking, index) =>
+                renderBookingCard(booking, index),
+              )}
+            </ul>
+          </section>
         ) : pageError ? null : (
           <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-5 text-sm font-medium text-slate-500">
             {hasActiveSearch
               ? "No booking found for this ID."
-              : "No pending, confirmed, or cancelled bookings found."}
+              : activeSectionConfig.emptyMessage}
           </p>
         )}
       </section>

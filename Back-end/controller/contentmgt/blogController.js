@@ -143,22 +143,46 @@ const deleteBlogById = async (req, res) => {
 
 const WriteBlogComments = async (req, res) => {
     const { blogId } = req.params;
-    const { comment } = req.body;
-    const userId = req.user.id;
+    const commentText =
+        req.body?.comment ||
+        req.body?.commentText ||
+        req.body?.text ||
+        req.body?.content;
+    const userId = req.user?.id || req.user?._id || req.user?.userId;
+
+    if (!userId) {
+        return res.status(401).json({ message: "Unauthorized: user is required to comment" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(blogId)) {
+        return res.status(400).json({ message: "Invalid blog ID" });
+    }
+
+    if (!String(commentText || "").trim()) {
+        return res.status(400).json({ message: "Comment text is required" });
+    }
+
     try {
         const blogPost = await blog.findById(blogId);
         if (!blogPost) {
             return res.status(404).json({ message: "Blog not found" });
         }
+        if (!Array.isArray(blogPost.comments)) {
+            blogPost.comments = [];
+        }
         const newComment = {
            user: userId,
-            comment,
+            comment: String(commentText).trim(),
             createdAt: new Date(),
         };
         blogPost.comments.push(newComment);
         await blogPost.save();
         res.status(201).json({ message: "Comment added successfully" });
     }catch (error) {
+        const validationMessage = getValidationMessage(error);
+        if (validationMessage) {
+            return res.status(400).json({ message: validationMessage });
+        }
         res.status(500).json({ message: "Server Error", error: error.message });
     }
 }

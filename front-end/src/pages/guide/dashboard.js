@@ -209,10 +209,6 @@ function getBookingDetails(booking) {
 }
 
 function getGuideFeeCards(guideFee) {
-  const confirmedBookings = findNumericField(guideFee, [
-    "confirmedBookings",
-    "confirmedBookingsCount",
-  ]);
   const fee = findNumericField(guideFee, [
     "guideRevenue",
     "totalGuideProfit",
@@ -220,13 +216,8 @@ function getGuideFeeCards(guideFee) {
 
   return [
     {
-      label: "Confirmed Bookings",
-      value: Number(confirmedBookings ?? 0).toLocaleString(),
-    },
-    {
       label: "Guide Profit",
       value: formatMoney(fee ?? 0),
-      note: `${Number(confirmedBookings ?? 0)} confirmed bookings`,
     },
   ];
 }
@@ -400,8 +391,10 @@ export default function GuideDashboard() {
       }
     }
 
-    return [...cards, ...getGuideFeeCards(guideFee)];
-  }, [bookings, bookingsStatus, guideFee]);
+    return statsStatus === "success"
+      ? [...cards, ...getGuideFeeCards(guideFee)]
+      : cards;
+  }, [bookings, bookingsStatus, guideFee, statsStatus]);
 
   async function handleLogout() {
     await logout();
