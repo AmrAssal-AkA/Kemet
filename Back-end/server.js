@@ -9,15 +9,11 @@ const app = express();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const passport = require("passport");
 
-// Validate critical environment variables
-if (!process.env.MONGO_URI) {
-  console.error("❌ CRITICAL: MONGO_URI environment variable is not set!");
-}
 
 app.set("trust proxy", 1);
 
 // Importing routes
-const { connectDB, isDBConnected } = require("./config/db");
+const connectDB  = require("./config/db");
 const addTripRoute = require("./routes/AddTripRoutes");
 const FlightRoute = require("./routes/flightRoutes");
 const HotelRoute = require("./routes/HotelRoutes");
@@ -44,60 +40,8 @@ const offeringsRoute = require("./routes/offeringsRoutes");
 const hiddenGemRoute = require("./routes/hiddenGemRoutes");
 const port = process.env.PORT || 8000;
 
-// Track DB connection state
-let dbConnectionPromise = null;
-let connectionAttempted = false;
-let lastConnectionError = null;
-
-
-const dbHealthCheck = async (req, res, next) => {
-  if (req.path === "/" || req.path.includes("/api-docs")) {
-    return next();
-  }
-
-  if (!connectionAttempted) {
-    connectionAttempted = true;
-    dbConnectionPromise = connectDB()
-      .then((conn) => {
-        lastConnectionError = null;
-        return conn;
-      })
-      .catch((err) => {
-        lastConnectionError = err.message;
-        Logger.error("Initial DB connection failed:", err.message);
-        connectionAttempted = false;
-        throw err;
-      });
-  }
-
-  try {
-    if (dbConnectionPromise) {
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Database connection timeout")), 5000)
-      );
-      await Promise.race([dbConnectionPromise, timeoutPromise]);
-    }
-
-    if (!isDBConnected()) {
-      Logger.warn("Database state check failed, will retry");
-      connectionAttempted = false;
-      dbConnectionPromise = null;
-      return res.status(503).json({
-        message: "Database initializing. Please retry.",
-      });
-    }
-    return next();
-  } catch (err) {
-    Logger.error("Health check error:", err.message);
-    connectionAttempted = false;
-    dbConnectionPromise = null;
-    return res.status(503).json({
-      message: "Service temporarily unavailable. Please try again.",
-    });
-  }
-};
-
 // Middleware
+connectDB();
 app.use(cors({ origin: "https://kemet-9qva.vercel.app", credentials: true }));
 app.use("/api/payments", paymentRoutes);
 app.use(cookieParser());
@@ -126,8 +70,6 @@ app.use(
 require("./controller/auth/authController");
 app.use(passport.initialize());
 
-// Apply health check middleware to API routes
-app.use("/api", dbHealthCheck);
 
 const swaggerUiOptions = {
   swaggerOptions: {
@@ -144,7 +86,6 @@ const swaggerUiOptions = {
   customSiteTitle: "Kemet Travel API Docs",
 };
 
-// Redirect static assets to CDN to avoid Vercel serving HTML for missing files
 app.get("/api-docs/swagger-ui-bundle.js", (req, res) =>
   res.redirect(
     "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui-bundle.min.js",
@@ -215,20 +156,8 @@ app.use(errorHandlerMW);
 
 // Local development server startup
 if (process.env.NODE_ENV !== "production") {
-  const startServer = async () => {
-    try {
-      await connectDB();
-      Logger.info("Database connection established");
-      app.listen(port, () => {
-        Logger.info(`Server is running on port ${port}`);
-      });
-    } catch (err) {
-      Logger.error("Failed to start server:", err);
-      process.exit(1);
-    }
-  };
-
-  startServer();
+  app.listen(port, () => {
+    Logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${port}`);
+  });
 }
-
 module.exports = app;

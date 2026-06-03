@@ -209,13 +209,13 @@ _The UI will be available at `http://localhost:3000`_
 
 ### Frontend Team
 
-- **Youssef Yeser** — Team Lead
+- **Youssef Yesser** — Team Lead
 - **Shahd Mahmoud**
 - **Ahmed Khaled**
 
 ## 12. License & Usage Restrictions
 
-**Copyright (c) 2026 Amr Assal, Mahmoud Hazem Shahtout, Youssef Yeser, Shahd Mahmoud, and Ahmed Khaled. All Rights Reserved.**
+**Copyright (c) 2026 Amr Assal, Mahmoud Hazem Shahtout, Youssef Yesser, Shahd Mahmoud, and Ahmed Khaled. All Rights Reserved.**
 
 This project was developed as an academic graduation project, and all intellectual property remains with the authors. The source code is published strictly for **portfolio, demonstration, and evaluation purposes only**.
 

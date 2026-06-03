@@ -1,42 +1,177 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Frontend README
 
-## Getting Started
+## 1. Project Overview
 
-First, run the development server:
+This repository contains the **Frontend** of the project, built to provide users with a modern, responsive, and user-friendly experience. The application allows users to interact with the platform through an intuitive interface, access key features, and seamlessly communicate with backend services through APIs.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The frontend is designed with scalability, maintainability, and performance in mind, making it suitable for both development and production environments.
+
+---
+
+## 2. Features
+
+- Responsive and mobile-friendly design
+- Modern and intuitive user interface
+- Fast and optimized page rendering
+- API integration for dynamic data handling
+- Reusable and maintainable component architecture
+- Client-side routing and navigation
+- Form handling and validation
+- Error handling and user feedback
+- Clean and scalable code structure
+
+---
+
+## 3. Tech Stack
+
+The frontend is built using modern JavaScript technologies:
+
+- **JavaScript** – Core programming language
+- **React.js** – Component-based UI library
+- **Next.js** – React framework for optimized web applications
+- **Tailwind CSS** – Utility-first CSS framework for styling
+- **Axios / Fetch API** – API communication
+- **ESLint** – Code quality and consistency
+
+---
+
+## 4. Project Structure
+
+A simplified overview of the project structure:
+
+```
+frontend/
+├── public/          # Static assets
+├── src/
+│   ├── components/  # Reusable UI components
+│   ├── pages/       # Application pages/routes
+│   ├── hooks/       # Custom React hooks
+│   ├── services/    # API requests and utilities
+│   ├── styles/      # Global styles
+│   └── utils/       # Helper functions
+├── .env.local       # Environment variables
+├── package.json
+└── README.md
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This structure helps keep the codebase organized, scalable, and easy to maintain.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+---
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+## 5. Getting Started
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+Follow the steps below to set up and run the frontend project locally.
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
 
-## Learn More
+Make sure you have the following installed:
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js (v18 or later recommended)
+- npm or yarn
+- Git
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 6. Installation
 
-## Deploy on Vercel
+Clone the repository:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+git clone
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
-# KEMET
-# KEMET
+Navigate to the project directory:
+
+```
+cd frontend
+```
+
+Install dependencies:
+
+```
+npm install
+```
+
+Or using Yarn:
+
+```
+yarn install
+```
+
+---
+
+## 7. Environment Variables
+
+Create a `.env.local` file in the root directory and add the required environment variables.
+
+Example:
+
+```
+NEXT_PUBLIC_API_URL=https://api.example.com
+```
+
+> Replace the values with the appropriate configuration for your environment.
+
+---
+
+## 8. Running the Project
+
+Start the development server:
+
+```
+npm run dev
+```
+
+Or:
+
+```
+yarn dev
+```
+
+The application will be available at:
+
+```
+http://localhost:3000
+```
+
+---
+
+## 9. Production Build
+
+Create a production build:
+
+```
+npm run build
+```
+
+Start the production server:
+
+```
+npm run start
+```
+
+Using Yarn:
+
+```
+yarn build
+yarn start
+```
+
+---
+
+## 10. Contributors
+
+### Frontend Team
+
+- **Youssef Yasser** — Frontend Team Leader
+- **Shahd Mahmoud** — Frontend Developer
+- **Ahmed Khaled** — Frontend Developer
+
+---
+
+## Notes
+
+- This README focuses exclusively on the frontend implementation.
+- The frontend communicates with backend services through APIs when required.
+- The project follows modern development practices to ensure maintainability, scalability, and performance.
+- Contributions and improvements are welcome.
